@@ -10,9 +10,9 @@ Diese Datenschutzerklaerung beschreibt, welche Daten der Discord-Bot "Der Fabelb
 
 ## 1. Verantwortlicher
 
-Verantwortlich: [Betreibername ergaenzen]
+Verantwortlich: Petrisis
 
-Kontakt: [Kontaktadresse oder Support-Link ergaenzen]
+Kontakt: via Github
 
 ## 2. Welche Daten verarbeitet werden
 
@@ -66,7 +66,7 @@ Soweit gesetzlich anwendbar, koennen Nutzer Auskunft, Berichtigung, Loeschung, E
 
 Anfragen bitte an:
 
-[Kontaktadresse oder Support-Link ergaenzen]
+https://github.com/Petrisis/der-fabelbund/issues
 
 ## 9. Sicherheit
 

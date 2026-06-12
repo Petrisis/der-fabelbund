@@ -1,0 +1,1 @@
+"""Speicherklassen fuer die Datenbank."""

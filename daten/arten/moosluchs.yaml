@@ -1,0 +1,52 @@
+art_id: "moosluchs"
+name: "Moosluchs"
+grundseltenheit: "selten"
+element: "wald"
+lebensraum: "mooswald"
+
+grundwerte:
+  schoenheit: 40
+  eleganz: 55
+  charme: 35
+  intelligenz: 45
+  ausdruck: 35
+  disziplin: 30
+  harmonie: 45
+  staerke: 25
+  beweglichkeit: 50
+  ausdauer: 35
+  technik: 40
+  deckung: 25
+  kontrolle: 35
+  kampfgeist: 30
+
+genpools:
+  farben:
+    gewoehnlich: ["moosgruen", "rindenbraun"]
+    selten: ["silberblatt"]
+    episch: ["mondschein"]
+  muster:
+    gewoehnlich: ["einfarbig", "gefleckt"]
+    selten: ["rankenmale"]
+    episch: ["leuchtlinien"]
+
+persoenlichkeits_gewichte:
+  scheu: 30
+  neugierig: 25
+  treu: 20
+  wild: 10
+  stolz: 15
+
+wettbewerbs_neigungen:
+  schoenheit: 1.1
+  eleganz: 1.3
+  charme: 0.8
+  intelligenz: 1.0
+  ausdruck: 0.9
+
+sport_neigungen:
+  beweglichkeit: 1.2
+  technik: 1.1
+  deckung: 0.8
+  staerke: 0.7
+

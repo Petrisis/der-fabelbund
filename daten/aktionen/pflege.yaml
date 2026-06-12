@@ -1,0 +1,21 @@
+pflegeaktionen:
+  sanfte_fellpflege:
+    name: "Sanfte Fellpflege"
+    beschreibung: "Eine ruhige Pflegeeinheit mit geringem Risiko."
+    effekte:
+      fellpflege: 12
+      stimmung: 4
+      stress: -3
+      energie: -2
+    markierungen: ["schoenheit", "geringes_risiko"]
+
+  kontrollierte_ruhe:
+    name: "Kontrollierte Ruhe"
+    beschreibung: "Reduziert Belastung, kostet aber Trainingszeit."
+    effekte:
+      energie: 14
+      stress: -6
+      muskelkater: -5
+      stimmung: 2
+    markierungen: ["erholung", "geringes_risiko"]
+

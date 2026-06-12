@@ -1,0 +1,1 @@
+"""Dienstschicht fuer Spielregeln."""

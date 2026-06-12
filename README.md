@@ -1,5 +1,7 @@
 # Der Fabelbund
 
+![Der Fabelbund Logo](docs/assets/fabelbund-logo.png)
+
 Der Fabelbund ist ein Python-Discord-Bot für ein datengetriebenes Sammel- und Managementspiel rund um fiktive Fabelwesen.
 
 Spieler übernehmen die Rolle von Betreuern: Sie pflegen Fabelwesen, nehmen Aufträge an, bauen Ruf auf und schalten später anspruchsvollere Lizenzen, Wettbewerbe, Zuchtlinien und Handel frei.

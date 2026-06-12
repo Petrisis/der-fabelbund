@@ -16,6 +16,9 @@ from fabelbund.modelle.inhalte import InhaltsKatalog
 from fabelbund.modelle.laufzeit import AktiverAuftrag, Aktivität, Fabelwesen, SpielerProfil
 
 
+MAXIMALE_FABLINGE_PRO_SPIELER = 25
+
+
 @dataclass
 class PflegeErgebnis:
     fabelwesen: Fabelwesen
@@ -33,6 +36,17 @@ class AktivitätErgebnis:
     auftrag_abgeschlossen: bool
     geld_erhalten: int
     ruf_erhalten: dict[str, int]
+
+
+@dataclass(frozen=True)
+class StallBelegung:
+    stalltyp: str
+    kapazität: int
+    fabelwesen_ids: tuple[str, ...]
+
+    @property
+    def belegt(self) -> int:
+        return len(self.fabelwesen_ids)
 
 
 class SpielDienst:
@@ -61,22 +75,83 @@ class SpielDienst:
         if spieler is None:
             spieler = SpielerProfil(nutzer_id=nutzer_id)
             self.spieler.speichern(spieler)
-        if not self.fabelwesen.für_besitzer_auflisten(nutzer_id):
-            starter_art = self.inhalte.arten.get("gluthase") or next(iter(self.inhalte.arten.values()))
-            starter = self.fabrik.erzeuge_starter(nutzer_id, starter_art)
-            self.fabelwesen.speichern(starter)
         return spieler
 
     def sammlung(self, nutzer_id: str) -> list[Fabelwesen]:
         self.stelle_spieler_sicher(nutzer_id)
         return self.fabelwesen.für_besitzer_auflisten(nutzer_id)
 
+    def stall_kapazität(self, nutzer_id: str) -> int:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        return min(MAXIMALE_FABLINGE_PRO_SPIELER, spieler.freigeschaltete_ställe)
+
+    def hat_freien_stall(self, nutzer_id: str) -> bool:
+        return len(self.sammlung(nutzer_id)) < self.stall_kapazität(nutzer_id)
+
+    def stalltypen(self, nutzer_id: str) -> dict[str, int]:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        return {
+            stalltyp: int(anzahl)
+            for stalltyp, anzahl in spieler.stalltypen.items()
+            if int(anzahl) > 0
+        }
+
+    def stallbelegung(self, nutzer_id: str) -> list[StallBelegung]:
+        stalltypen = self.stalltypen(nutzer_id)
+        fabelwesen = self.sammlung(nutzer_id)
+        belegung: dict[str, list[str]] = {stalltyp: [] for stalltyp in stalltypen}
+
+        for fabling in fabelwesen:
+            stalltyp = self._passenden_stall_finden(fabling, stalltypen, belegung)
+            if stalltyp is not None:
+                belegung[stalltyp].append(fabling.id)
+
+        return [
+            StallBelegung(stalltyp=stalltyp, kapazität=kapazität, fabelwesen_ids=tuple(belegung.get(stalltyp, [])))
+            for stalltyp, kapazität in stalltypen.items()
+        ]
+
+    def stallpriorität_setzen(self, nutzer_id: str, fabelwesen_id: str, stalltyp: str | None) -> Fabelwesen:
+        fabelwesen = self.fabelwesen.holen(fabelwesen_id)
+        if fabelwesen is None or fabelwesen.besitzer_id != nutzer_id:
+            raise ValueError("Dieser Fabling wurde nicht gefunden.")
+        if stalltyp is not None and stalltyp not in self.stalltypen(nutzer_id):
+            raise ValueError("Dieser Stalltyp ist nicht verfügbar.")
+
+        aktualisiert = fabelwesen.model_copy(deep=True)
+        aktualisiert.status["stall_priorität"] = stalltyp
+        self.fabelwesen.speichern(aktualisiert)
+        return aktualisiert
+
+    def _passenden_stall_finden(
+        self,
+        fabelwesen: Fabelwesen,
+        stalltypen: dict[str, int],
+        belegung: dict[str, list[str]],
+    ) -> str | None:
+        priorität = fabelwesen.status.get("stall_priorität")
+        kandidaten: list[str] = []
+        if isinstance(priorität, str) and priorität:
+            kandidaten.append(priorität)
+        if fabelwesen.element not in kandidaten:
+            kandidaten.append(fabelwesen.element)
+        if "neutral" not in kandidaten:
+            kandidaten.append("neutral")
+
+        for stalltyp in kandidaten:
+            if stalltyp in stalltypen and len(belegung.setdefault(stalltyp, [])) < stalltypen[stalltyp]:
+                return stalltyp
+        return None
+
     def pflegeauftrag_starten(self, nutzer_id: str) -> AktiverAuftrag:
         self.stelle_spieler_sicher(nutzer_id)
         aktiver_auftrag = self.aufträge.aktiven_holen(nutzer_id)
         if aktiver_auftrag is not None:
             return aktiver_auftrag
-        fabelwesen = self.fabelwesen.für_besitzer_auflisten(nutzer_id)[0]
+        fabelwesen_liste = self.fabelwesen.für_besitzer_auflisten(nutzer_id)
+        if not fabelwesen_liste:
+            raise ValueError("Du hast noch keinen Fabling. Das Tutorial wird dir den ersten Fabling anvertrauen.")
+        fabelwesen = fabelwesen_liste[0]
         auftrag = self.inhalte.aufträge["pflege_einfach_001"]
         aktiver_auftrag = self.auftrag_dienst.erstelle_aktiven_auftrag(nutzer_id, auftrag, fabelwesen.id)
         self.aufträge.speichern(aktiver_auftrag)
@@ -121,6 +196,9 @@ class SpielDienst:
         if not aktivitäten:
             return None
         return aktivitäten[0]
+
+    def laufende_aktivität_für_fabelwesen(self, fabelwesen_id: str) -> Aktivität | None:
+        return self.aktivitäten.laufende_für_fabelwesen_holen(fabelwesen_id)
 
     def pflegeaktivität_starten(self, nutzer_id: str, aktion_id: str) -> Aktivität:
         self.stelle_spieler_sicher(nutzer_id)

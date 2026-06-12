@@ -10,6 +10,7 @@ from fabelbund.discord.befehle.auftrag import AuftragBefehle
 from fabelbund.discord.befehle.pflege import PflegeBefehle
 from fabelbund.discord.befehle.profil import ProfilBefehle
 from fabelbund.discord.befehle.sammlung import SammlungBefehle
+from fabelbund.discord.befehle.stall import StallBefehle
 from fabelbund_bot.konfiguration import lade_konfiguration
 
 
@@ -27,6 +28,7 @@ class FabelbundBot(commands.Bot):
     async def setup_hook(self) -> None:
         await self.add_cog(ProfilBefehle(self.kontext))
         await self.add_cog(SammlungBefehle(self.kontext))
+        await self.add_cog(StallBefehle(self.kontext))
         await self.add_cog(AuftragBefehle(self.kontext))
         await self.add_cog(PflegeBefehle(self.kontext))
         if self.befehle_synchronisieren:

@@ -14,7 +14,11 @@ class AuftragBefehle(commands.Cog):
 
     @app_commands.command(name="auftrag", description="Startet oder zeigt deinen aktuellen Pflegeauftrag.")
     async def auftrag(self, interaction: discord.Interaction) -> None:
-        aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(str(interaction.user.id))
+        try:
+            aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(str(interaction.user.id))
+        except ValueError as fehler:
+            await interaction.response.send_message(str(fehler), ephemeral=True)
+            return
         auftrag = self.kontext.spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
         embed = auftrag_einbettung(aktiver_auftrag, auftrag.name)
         embed.add_field(

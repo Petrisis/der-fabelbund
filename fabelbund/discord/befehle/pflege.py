@@ -16,7 +16,11 @@ class PflegeBefehle(commands.Cog):
     @app_commands.command(name="pflege", description="Öffnet Pflegeaktionen für deinen aktuellen Auftrag.")
     async def pflege(self, interaction: discord.Interaction) -> None:
         nutzer_id = str(interaction.user.id)
-        aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(nutzer_id)
+        try:
+            aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(nutzer_id)
+        except ValueError as fehler:
+            await interaction.response.send_message(str(fehler), ephemeral=True)
+            return
         fabelwesen = self.kontext.spiel.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
         if fabelwesen is None:
             await interaction.response.send_message("Das Auftrags-Fabelwesen wurde nicht gefunden.", ephemeral=True)

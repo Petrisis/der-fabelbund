@@ -29,6 +29,8 @@ class Datenbank:
                 CREATE TABLE IF NOT EXISTS spieler (
                     nutzer_id TEXT PRIMARY KEY,
                     geld INTEGER NOT NULL,
+                    freigeschaltete_ställe INTEGER NOT NULL DEFAULT 1,
+                    stalltypen_json TEXT NOT NULL DEFAULT '{"neutral": 1}',
                     ruf_json TEXT NOT NULL,
                     lizenzen_json TEXT NOT NULL,
                     erstellt_am TEXT NOT NULL
@@ -70,3 +72,11 @@ class Datenbank:
                 );
                 """
             )
+            spalten = {
+                zeile["name"]
+                for zeile in verbindung.execute("PRAGMA table_info(spieler)").fetchall()
+            }
+            if "freigeschaltete_ställe" not in spalten:
+                verbindung.execute("ALTER TABLE spieler ADD COLUMN freigeschaltete_ställe INTEGER NOT NULL DEFAULT 1")
+            if "stalltypen_json" not in spalten:
+                verbindung.execute("ALTER TABLE spieler ADD COLUMN stalltypen_json TEXT NOT NULL DEFAULT '{\"neutral\": 1}'")

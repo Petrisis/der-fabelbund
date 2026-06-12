@@ -19,6 +19,8 @@ class SpielerSpeicher:
             {
                 "nutzer_id": zeile["nutzer_id"],
                 "geld": zeile["geld"],
+                "freigeschaltete_ställe": zeile["freigeschaltete_ställe"],
+                "stalltypen": json.loads(zeile["stalltypen_json"]),
                 "ruf": json.loads(zeile["ruf_json"]),
                 "lizenzen": json.loads(zeile["lizenzen_json"]),
                 "erstellt_am": zeile["erstellt_am"],
@@ -29,6 +31,8 @@ class SpielerSpeicher:
         nutzlast = (
             spieler.nutzer_id,
             spieler.geld,
+            spieler.freigeschaltete_ställe,
+            json.dumps(spieler.stalltypen, sort_keys=True),
             json.dumps(spieler.ruf, sort_keys=True),
             json.dumps(spieler.lizenzen),
             spieler.erstellt_am.isoformat(),
@@ -36,10 +40,12 @@ class SpielerSpeicher:
         with self.datenbank.verbinden() as verbindung:
             verbindung.execute(
                 """
-                INSERT INTO spieler (nutzer_id, geld, ruf_json, lizenzen_json, erstellt_am)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO spieler (nutzer_id, geld, freigeschaltete_ställe, stalltypen_json, ruf_json, lizenzen_json, erstellt_am)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(nutzer_id) DO UPDATE SET
                     geld = excluded.geld,
+                    freigeschaltete_ställe = excluded.freigeschaltete_ställe,
+                    stalltypen_json = excluded.stalltypen_json,
                     ruf_json = excluded.ruf_json,
                     lizenzen_json = excluded.lizenzen_json
                 """,

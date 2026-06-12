@@ -9,6 +9,8 @@ from fabelbund.modelle.basis import standard_ruf
 class SpielerProfil(BaseModel):
     nutzer_id: str
     geld: int = 500
+    freigeschaltete_ställe: int = Field(default=1, ge=1)
+    stalltypen: dict[str, int] = Field(default_factory=lambda: {"neutral": 1})
     ruf: dict[str, int] = Field(default_factory=standard_ruf)
     lizenzen: list[str] = Field(default_factory=list)
     erstellt_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -89,19 +89,30 @@ class SpielDienstTests(unittest.TestCase):
             auftrag_dienst=AuftragDienst(),
         )
 
-    def test_profil_erzeugung_erstellt_starter(self) -> None:
+    def erzeuge_starter(self, spiel: SpielDienst, nutzer_id: str = "123") -> None:
+        art = spiel.inhalte.arten["gluthase"]
+        starter = spiel.fabrik.erzeuge_starter(nutzer_id, art)
+        spiel.fabelwesen.speichern(starter)
+
+    def test_profil_erzeugung_startet_ohne_fabling(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             spieler = spiel.stelle_spieler_sicher("123")
             sammlung = spiel.sammlung("123")
+            kapazität = spiel.stall_kapazität("123")
+            hat_freien_stall = spiel.hat_freien_stall("123")
 
         self.assertEqual(spieler.geld, 500)
-        self.assertEqual(len(sammlung), 1)
-        self.assertEqual(sammlung[0].art_id, "gluthase")
+        self.assertEqual(spieler.freigeschaltete_ställe, 1)
+        self.assertEqual(spieler.stalltypen, {"neutral": 1})
+        self.assertEqual(len(sammlung), 0)
+        self.assertEqual(kapazität, 1)
+        self.assertTrue(hat_freien_stall)
 
     def test_pflegeaktion_kann_einfachen_auftrag_abschließen(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
             spiel.pflegeauftrag_starten("123")
             ergebnis = spiel.pflege_anwenden("123", "sanfte_fellpflege")
             spieler = spiel.spieler.holen("123")
@@ -114,9 +125,29 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(spieler.ruf["pflege"], 12)
         self.assertEqual(spieler.ruf["zuverlässigkeit"], 5)
 
+    def test_pflegeauftrag_braucht_fabling(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            with self.assertRaisesRegex(ValueError, "noch keinen Fabling"):
+                spiel.pflegeauftrag_starten("123")
+
+    def test_stallpriorität_wird_am_fabling_gespeichert(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+
+            aktualisiert = spiel.stallpriorität_setzen("123", fabling.id, "neutral")
+            belegung = spiel.stallbelegung("123")
+
+        self.assertEqual(aktualisiert.status["stall_priorität"], "neutral")
+        self.assertEqual(belegung[0].stalltyp, "neutral")
+        self.assertEqual(belegung[0].belegt, 1)
+
     def test_pflegeaktivität_wird_nach_ablauf_abgeholt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
             aktivität = spiel.pflegeaktivität_starten("123", "sanfte_fellpflege")
 
             mit_vergangenem_ende = aktivität.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)})

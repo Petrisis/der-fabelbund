@@ -70,8 +70,11 @@ Für die erste Befehlsregistrierung während der Entwicklung:
 
 ```powershell
 $env:FABELBUND_BEFEHLE_SYNCHRONISIEREN = "1"
+$env:FABELBUND_TESTSERVER_ID = "deine Discord-Server-ID"
 python -m fabelbund_bot.bot
 ```
+
+Wenn `FABELBUND_TESTSERVER_ID` gesetzt ist, werden Slash-Befehle nur für diesen Testserver synchronisiert. Das ist für MVP-Tests schneller als eine globale Registrierung.
 
 ## Tests
 

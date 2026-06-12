@@ -53,5 +53,20 @@ class Datenbank:
                     gestartet_am TEXT NOT NULL,
                     abgeschlossen_am TEXT
                 );
+
+                CREATE TABLE IF NOT EXISTS aktivitäten (
+                    id TEXT PRIMARY KEY,
+                    spieler_id TEXT NOT NULL,
+                    fabelwesen_id TEXT NOT NULL,
+                    art TEXT NOT NULL,
+                    aktion_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    braucht_spieler INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    effekte_json TEXT NOT NULL,
+                    gestartet_am TEXT NOT NULL,
+                    endet_am TEXT NOT NULL,
+                    beendet_am TEXT
+                );
                 """
             )

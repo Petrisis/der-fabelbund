@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fabelbund.datenbank.datenbank import Datenbank
+from fabelbund.datenbank.speicher.aktivität_speicher import AktivitätSpeicher
 from fabelbund.datenbank.speicher.auftrag_speicher import AuftragSpeicher
 from fabelbund.datenbank.speicher.fabelwesen_speicher import FabelwesenSpeicher
 from fabelbund.datenbank.speicher.spieler_speicher import SpielerSpeicher
@@ -81,6 +83,7 @@ class SpielDienstTests(unittest.TestCase):
             spieler=SpielerSpeicher(datenbank),
             fabelwesen=FabelwesenSpeicher(datenbank),
             aufträge=AuftragSpeicher(datenbank),
+            aktivitäten=AktivitätSpeicher(datenbank),
             fabrik=FabelwesenFabrik(),
             pflege=PflegeDienst(),
             auftrag_dienst=AuftragDienst(),
@@ -110,6 +113,24 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(spieler.geld, 800)
         self.assertEqual(spieler.ruf["pflege"], 12)
         self.assertEqual(spieler.ruf["zuverlässigkeit"], 5)
+
+    def test_pflegeaktivität_wird_nach_ablauf_abgeholt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            aktivität = spiel.pflegeaktivität_starten("123", "sanfte_fellpflege")
+
+            mit_vergangenem_ende = aktivität.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)})
+            spiel.aktivitäten.speichern(mit_vergangenem_ende)
+
+            ergebnis = spiel.aktivität_abholen("123")
+            spieler = spiel.spieler.holen("123")
+
+        self.assertEqual(ergebnis.aktivität.status, "abgeschlossen")
+        self.assertEqual(ergebnis.änderungen["fellpflege"], 12)
+        self.assertTrue(ergebnis.auftrag_abgeschlossen)
+        self.assertIsNotNone(spieler)
+        assert spieler is not None
+        self.assertEqual(spieler.geld, 800)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *.sqlite3
 *.db
+bot.log
+bot.err
 .env
 .pytest_cache/
 .mypy_cache/

@@ -42,3 +42,18 @@ class AktiverAuftrag(BaseModel):
     fortschritt: dict[str, object] = Field(default_factory=dict)
     gestartet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     abgeschlossen_am: datetime | None = None
+
+
+class Aktivität(BaseModel):
+    id: str
+    spieler_id: str
+    fabelwesen_id: str
+    art: str
+    aktion_id: str
+    name: str
+    braucht_spieler: bool
+    status: str = "läuft"
+    effekte: dict[str, int] = Field(default_factory=dict)
+    gestartet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    endet_am: datetime
+    beendet_am: datetime | None = None

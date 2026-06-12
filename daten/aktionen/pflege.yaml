@@ -2,6 +2,8 @@ pflegeaktionen:
   sanfte_fellpflege:
     name: "Sanfte Fellpflege"
     beschreibung: "Eine ruhige Pflegeeinheit mit geringem Risiko."
+    dauer_sekunden: 600
+    braucht_spieler: true
     effekte:
       fellpflege: 12
       stimmung: 4
@@ -12,6 +14,8 @@ pflegeaktionen:
   kontrollierte_ruhe:
     name: "Kontrollierte Ruhe"
     beschreibung: "Reduziert Belastung, kostet aber Trainingszeit."
+    dauer_sekunden: 1800
+    braucht_spieler: false
     effekte:
       energie: 14
       stress: -6

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from fabelbund.datenbank.datenbank import Datenbank
+from fabelbund.datenbank.speicher.aktivität_speicher import AktivitätSpeicher
 from fabelbund.datenbank.speicher.auftrag_speicher import AuftragSpeicher
 from fabelbund.datenbank.speicher.fabelwesen_speicher import FabelwesenSpeicher
 from fabelbund.datenbank.speicher.spieler_speicher import SpielerSpeicher
@@ -27,12 +28,14 @@ class Anwendungskontext:
         spieler_speicher = SpielerSpeicher(datenbank)
         fabelwesen_speicher = FabelwesenSpeicher(datenbank)
         auftrag_speicher = AuftragSpeicher(datenbank)
+        aktivität_speicher = AktivitätSpeicher(datenbank)
 
         spiel = SpielDienst(
             inhalte=inhalte,
             spieler=spieler_speicher,
             fabelwesen=fabelwesen_speicher,
             aufträge=auftrag_speicher,
+            aktivitäten=aktivität_speicher,
             fabrik=FabelwesenFabrik(),
             pflege=PflegeDienst(),
             auftrag_dienst=AuftragDienst(),

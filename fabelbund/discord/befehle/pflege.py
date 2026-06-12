@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.ansichten.pflege_ansicht import PflegeAnsicht
-from fabelbund.discord.darstellung import fabelwesen_einbettung
+from fabelbund.discord.darstellung import aktivität_einbettung, fabelwesen_einbettung
 
 
 class PflegeBefehle(commands.Cog):
@@ -20,6 +20,14 @@ class PflegeBefehle(commands.Cog):
         fabelwesen = self.kontext.spiel.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
         if fabelwesen is None:
             await interaction.response.send_message("Das Auftrags-Fabelwesen wurde nicht gefunden.", ephemeral=True)
+            return
+        laufende_aktivität = self.kontext.spiel.laufende_aktivität(nutzer_id)
+        if laufende_aktivität is not None:
+            await interaction.response.send_message(
+                embed=aktivität_einbettung(laufende_aktivität),
+                view=PflegeAnsicht(self.kontext.spiel, nutzer_id),
+                ephemeral=True,
+            )
             return
         await interaction.response.send_message(
             embed=fabelwesen_einbettung(fabelwesen, titel="Pflege"),

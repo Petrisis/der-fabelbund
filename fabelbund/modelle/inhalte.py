@@ -31,6 +31,9 @@ class PflegeaktionDefinition(BaseModel):
     name: str
     beschreibung: str = ""
     effekte: dict[str, int]
+    dauer_sekunden: int = Field(default=180, gt=0)
+    braucht_spieler: bool = True
+    abbrechbar: bool = True
     markierungen: list[str] = Field(default_factory=list)
 
     @field_validator("effekte")

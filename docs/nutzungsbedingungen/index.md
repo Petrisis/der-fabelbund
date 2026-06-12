@@ -10,9 +10,9 @@ Diese Nutzungsbedingungen gelten fuer den Discord-Bot und das Spiel "Der Fabelbu
 
 ## 1. Anbieter
 
-Betreiber: [Betreibername ergaenzen]
+Betreiber: Petrisis
 
-Kontakt: [Kontaktadresse oder Support-Link ergaenzen]
+Kontakt: via Github
 
 ## 2. Zweck des Dienstes
 
@@ -62,7 +62,7 @@ Informationen zur Verarbeitung von Daten stehen in der [Datenschutzerklaerung](.
 
 Probleme, Missbrauch oder Regelverstoesse koennen gemeldet werden an:
 
-[Support-Link oder Kontaktadresse ergaenzen]
+https://github.com/Petrisis/der-fabelbund/issues
 
 ## 11. Aenderungen dieser Bedingungen
 

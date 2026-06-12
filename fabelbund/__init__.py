@@ -1,1 +1,1 @@
-"""Spielsysteme fuer Der Fabelbund."""
+"""Spielsysteme für Der Fabelbund."""

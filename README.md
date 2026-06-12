@@ -1,17 +1,17 @@
 # Der Fabelbund
 
-Der Fabelbund ist ein Python-Discord-Bot fuer ein datengetriebenes Sammel- und Managementspiel rund um fiktive Fabelwesen.
+Der Fabelbund ist ein Python-Discord-Bot für ein datengetriebenes Sammel- und Managementspiel rund um fiktive Fabelwesen.
 
-Spieler uebernehmen die Rolle von Betreuern: Sie pflegen Fabelwesen, nehmen Auftraege an, bauen Ruf auf und schalten spaeter anspruchsvollere Lizenzen, Wettbewerbe, Zuchtlinien und Handel frei.
+Spieler übernehmen die Rolle von Betreuern: Sie pflegen Fabelwesen, nehmen Aufträge an, bauen Ruf auf und schalten später anspruchsvollere Lizenzen, Wettbewerbe, Zuchtlinien und Handel frei.
 
 ## Status
 
-Frueher MVP. Der spielbare Kern ist bewusst klein gehalten, damit Datenmodell, Persistenz und Discord-Interaktion sauber wachsen koennen.
+Früher MVP. Der spielbare Kern ist bewusst klein gehalten, damit Datenmodell, Persistenz und Discord-Interaktion sauber wachsen können.
 
 Aktuell umgesetzt:
 
 - Discord-Bot-Start mit Slash-Befehlen
-- YAML-Inhaltsdaten fuer Arten, Pflegeaktionen und Auftraege
+- YAML-Inhaltsdaten für Arten, Pflegeaktionen und Aufträge
 - Pydantic-Validierung der YAML-Daten
 - SQLite-Persistenz
 - Spielerprofil mit Geld, Ruf und Lizenzen
@@ -19,21 +19,21 @@ Aktuell umgesetzt:
 - `/profil`, `/sammlung`, `/auftrag`, `/pflege`
 - einfache Pflegeaktion per Button
 - einfacher Pflegeauftrag mit Geld- und Rufbelohnung
-- GitHub-Pages-Vorbereitung fuer Rechtstexte
+- GitHub-Pages-Vorbereitung für Rechtstexte
 
 Noch nicht umgesetzt:
 
 - Wettbewerbe
 - Zucht
 - Eier und Vererbung
-- Vertragslogik fuer fremde Fabelwesen
-- Sportwettkaempfe
+- Vertragslogik für fremde Fabelwesen
+- Sportwettkämpfe
 - Handel und Markt
 - Events und Saisons
 
 ## Lore-Sprache
 
-Die Organisation spricht offiziell von Fabelwesen. Ausgebildete Betreuer nennen sie meist Fablinge. In Akten kann spaeter eine sachliche Klassifikation wie `FW-Klasse II` verwendet werden.
+Die Organisation spricht offiziell von Fabelwesen. Ausgebildete Betreuer nennen sie meist Fablinge. In Akten kann später eine sachliche Klassifikation wie `FW-Klasse II` verwendet werden.
 
 ## Projektstruktur
 
@@ -47,7 +47,7 @@ fabelbund/
 fabelbund_bot/   Bot-Start und Konfiguration
 daten/           YAML-Inhalte
 docs/            GitHub-Pages-Quelle
-rechtliches/     Rechtliche Markdown-Entwuerfe
+rechtliches/     Rechtliche Markdown-Entwürfe
 tests/           Automatisierte Tests
 ```
 
@@ -66,7 +66,7 @@ Setze danach `DISCORD_TOKEN` in `.env` oder in deiner Shell-Umgebung.
 python -m fabelbund_bot.bot
 ```
 
-Fuer die erste Befehlsregistrierung waehrend der Entwicklung:
+Für die erste Befehlsregistrierung während der Entwicklung:
 
 ```powershell
 $env:FABELBUND_BEFEHLE_SYNCHRONISIEREN = "1"
@@ -83,18 +83,18 @@ python -m pytest
 
 Die GitHub-Pages-Quelle liegt in `docs/`.
 
-Vorgesehene oeffentliche Links:
+Vorgesehene öffentliche Links:
 
 - Nutzungsbedingungen: `https://petrisis.github.io/der-fabelbund/nutzungsbedingungen/`
-- Datenschutzerklaerung: `https://petrisis.github.io/der-fabelbund/datenschutzerklaerung/`
+- Datenschutz: `https://petrisis.github.io/der-fabelbund/datenschutz/`
 
-Vor der Verwendung im Discord Developer Portal muessen Betreibername, Kontaktadresse und Support-Link in den Rechtstexten ersetzt werden.
+Vor der Verwendung im Discord Developer Portal müssen Betreibername, Kontaktadresse und Support-Link in den Rechtstexten ersetzt werden.
 
-## Oeffentliches Repo
+## Öffentliches Repo
 
-Das Bot-Token gehoert ausschliesslich in `.env`. Diese Datei ist durch `.gitignore` ausgeschlossen und darf nicht committed werden.
+Das Bot-Token gehört ausschließlich in `.env`. Diese Datei ist durch `.gitignore` ausgeschlossen und darf nicht committed werden.
 
-Vor dem Umschalten auf `public` sollte die Git-Historie bereinigt werden, damit keine alten Arbeitstitel oder internen Zwischenstaende sichtbar bleiben.
+Vor dem Umschalten auf `public` sollte die Git-Historie bereinigt werden, damit keine alten Arbeitstitel oder internen Zwischenstände sichtbar bleiben.
 
 ## Entwicklung
 
@@ -102,7 +102,7 @@ Empfohlener Ablauf:
 
 - `main` bleibt der stabile Stand
 - neue Systeme kommen in kleinen Feature-Branches
-- jede Aenderung wird mit Tests abgesichert
+- jede Änderung wird mit Tests abgesichert
 - Inhalte bleiben datengetrieben in YAML
-- persistente Spielstaende gehoeren in die Datenbank, nicht in YAML
+- persistente Spielstände gehören in die Datenbank, nicht in YAML
 

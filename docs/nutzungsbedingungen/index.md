@@ -2,11 +2,11 @@
 title: Nutzungsbedingungen
 ---
 
-# Nutzungsbedingungen fuer Der Fabelbund
+# Nutzungsbedingungen für Der Fabelbund
 
 Stand: 12. Juni 2026
 
-Diese Nutzungsbedingungen gelten fuer den Discord-Bot und das Spiel "Der Fabelbund".
+Diese Nutzungsbedingungen gelten für den Discord-Bot und das Spiel "Der Fabelbund".
 
 ## 1. Anbieter
 
@@ -16,13 +16,13 @@ Kontakt: via Github
 
 ## 2. Zweck des Dienstes
 
-Der Fabelbund ist ein Discord-Spiel rund um Pflege, Training, Auftraege und Entwicklung fiktiver Fabelwesen. Ausgebildete Betreuer nennen diese Wesen im Spiel meist Fablinge.
+Der Fabelbund ist ein Discord-Spiel rund um Pflege, Training, Aufträge und Entwicklung fiktiver Fabelwesen. Ausgebildete Betreuer nennen diese Wesen im Spiel meist Fablinge.
 
-Der Dienst wird als Freizeit- und Community-Angebot bereitgestellt. Es besteht kein Anspruch auf dauerhafte Verfuegbarkeit, bestimmte Spielfortschritte, Belohnungen oder Funktionen.
+Der Dienst wird als Freizeit- und Community-Angebot bereitgestellt. Es besteht kein Anspruch auf dauerhafte Verfügbarkeit, bestimmte Spielfortschritte, Belohnungen oder Funktionen.
 
 ## 3. Nutzungsvoraussetzungen
 
-Du darfst Der Fabelbund nur nutzen, wenn du Discord nach den fuer dich geltenden Discord-Regeln nutzen darfst. Der Dienst richtet sich nicht an Personen unter 13 Jahren oder unter dem jeweils hoeheren Mindestalter, das in ihrem Land gilt.
+Du darfst Der Fabelbund nur nutzen, wenn du Discord nach den für dich geltenden Discord-Regeln nutzen darfst. Der Dienst richtet sich nicht an Personen unter 13 Jahren oder unter dem jeweils höheren Mindestalter, das in ihrem Land gilt.
 
 Mit der Nutzung des Bots akzeptierst du diese Nutzungsbedingungen.
 
@@ -31,39 +31,39 @@ Mit der Nutzung des Bots akzeptierst du diese Nutzungsbedingungen.
 Nicht erlaubt sind:
 
 - Ausnutzen technischer Fehler
-- Automatisierte Nutzung ausserhalb normaler Discord-Interaktionen
-- Manipulation von Spielstaenden
-- Belaestigung anderer Nutzer
-- Inhalte oder Verhalten, die gegen Discord-Regeln oder geltendes Recht verstossen
+- Automatisierte Nutzung außerhalb normaler Discord-Interaktionen
+- Manipulation von Spielständen
+- Belästigung anderer Nutzer
+- Inhalte oder Verhalten, die gegen Discord-Regeln oder geltendes Recht verstoßen
 
-Bei Missbrauch koennen Spielfunktionen eingeschraenkt, Spielstaende korrigiert oder Nutzer vom Dienst ausgeschlossen werden.
+Bei Missbrauch können Spielfunktionen eingeschränkt, Spielstände korrigiert oder Nutzer vom Dienst ausgeschlossen werden.
 
 ## 5. Virtuelle Inhalte
 
-Fabelwesen, Gegenstaende, Ruf, Geldwerte, Auftraege und andere Spielwerte sind rein virtuelle Inhalte innerhalb des Spiels. Sie haben keinen Geldwert und begruenden keinen Anspruch auf Auszahlung, Uebertragung ausserhalb des Spiels oder Ersatz.
+Fabelwesen, Gegenstände, Ruf, Geldwerte, Aufträge und andere Spielwerte sind rein virtuelle Inhalte innerhalb des Spiels. Sie haben keinen Geldwert und begründen keinen Anspruch auf Auszahlung, Übertragung außerhalb des Spiels oder Ersatz.
 
-## 6. Verfuegbarkeit und Aenderungen
+## 6. Verfügbarkeit und Änderungen
 
-Der Dienst kann jederzeit geaendert, pausiert oder beendet werden. Spielwerte, Balancing, Auftraege, Funktionen und Regeln koennen angepasst werden, wenn dies fuer Betrieb, Sicherheit, Fairness oder Weiterentwicklung des Spiels noetig ist.
+Der Dienst kann jederzeit geändert, pausiert oder beendet werden. Spielwerte, Balancing, Aufträge, Funktionen und Regeln können angepasst werden, wenn dies für Betrieb, Sicherheit, Fairness oder Weiterentwicklung des Spiels nötig ist.
 
 ## 7. Inhalte der Nutzer
 
-Wenn du ueber Discord mit dem Bot interagierst, bleiben deine Discord-Nachrichten und Discord-Inhalte den jeweiligen Discord-Regeln unterworfen. Der Fabelbund verarbeitet nur Daten, die fuer die Spielfunktion erforderlich sind.
+Wenn du über Discord mit dem Bot interagierst, bleiben deine Discord-Nachrichten und Discord-Inhalte den jeweiligen Discord-Regeln unterworfen. Der Fabelbund verarbeitet nur Daten, die für die Spielfunktion erforderlich sind.
 
 ## 8. Haftung
 
-Der Dienst wird ohne Gewaehr fuer Fehlerfreiheit oder dauerhafte Verfuegbarkeit bereitgestellt. Soweit gesetzlich zulaessig, haftet der Betreiber nicht fuer indirekte Schaeden, Datenverluste, Spielstandsverluste oder entgangene Vorteile aus der Nutzung des Dienstes.
+Der Dienst wird ohne Gewähr für Fehlerfreiheit oder dauerhafte Verfügbarkeit bereitgestellt. Soweit gesetzlich zulässig, haftet der Betreiber nicht für indirekte Schäden, Datenverluste, Spielstandsverluste oder entgangene Vorteile aus der Nutzung des Dienstes.
 
 ## 9. Datenschutz
 
-Informationen zur Verarbeitung von Daten stehen in der [Datenschutzerklaerung](../datenschutzerklaerung/).
+Informationen zur Verarbeitung von Daten stehen in der [Datenschutz](../datenschutz/).
 
 ## 10. Kontakt und Meldungen
 
-Probleme, Missbrauch oder Regelverstoesse koennen gemeldet werden an:
+Probleme, Missbrauch oder Regelverstöße können gemeldet werden an:
 
 https://github.com/Petrisis/der-fabelbund/issues
 
-## 11. Aenderungen dieser Bedingungen
+## 11. Änderungen dieser Bedingungen
 
-Diese Nutzungsbedingungen koennen aktualisiert werden. Die jeweils veroeffentlichte Fassung gilt ab dem angegebenen Stand.
+Diese Nutzungsbedingungen können aktualisiert werden. Die jeweils veröffentlichte Fassung gilt ab dem angegebenen Stand.

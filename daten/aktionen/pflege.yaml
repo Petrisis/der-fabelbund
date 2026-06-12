@@ -7,7 +7,7 @@ pflegeaktionen:
       stimmung: 4
       stress: -3
       energie: -2
-    markierungen: ["schoenheit", "geringes_risiko"]
+    markierungen: ["schönheit", "geringes_risiko"]
 
   kontrollierte_ruhe:
     name: "Kontrollierte Ruhe"

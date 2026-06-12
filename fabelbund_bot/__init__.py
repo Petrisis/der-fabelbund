@@ -1,1 +1,1 @@
-"""Startpaket fuer den Bot von Der Fabelbund."""
+"""Startpaket für den Bot von Der Fabelbund."""

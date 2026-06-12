@@ -1,1 +1,1 @@
-"""Discord-Oberflaeche."""
+"""Discord-Oberfläche."""

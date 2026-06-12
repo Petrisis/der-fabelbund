@@ -1,12 +1,12 @@
 # Rechtliche Links
 
-Discord erwartet fuer verifizierte oder oeffentlich auffindbare Apps typischerweise oeffentlich erreichbare Links zu Nutzungsbedingungen und Datenschutzinformationen.
+Discord erwartet für verifizierte oder öffentlich auffindbare Apps typischerweise öffentlich erreichbare Links zu Nutzungsbedingungen und Datenschutzinformationen.
 
-Ziel-URLs nach Veroeffentlichung ueber GitHub Pages:
+Ziel-URLs nach Veröffentlichung über GitHub Pages:
 
 - Nutzungsbedingungen: `https://petrisis.github.io/der-fabelbund/nutzungsbedingungen/`
-- Datenschutzerklaerung: `https://petrisis.github.io/der-fabelbund/datenschutzerklaerung/`
+- Datenschutz: `https://petrisis.github.io/der-fabelbund/datenschutz/`
 
-Vor der Veroeffentlichung muessen die Platzhalter fuer Betreiber, Kontakt und Support ersetzt werden.
+Vor der Veröffentlichung müssen die Platzhalter für Betreiber, Kontakt und Support ersetzt werden.
 
 Die GitHub-Pages-Quelle liegt im Ordner `docs/`.

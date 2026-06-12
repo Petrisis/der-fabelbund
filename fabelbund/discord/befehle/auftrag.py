@@ -15,7 +15,7 @@ class AuftragBefehle(commands.Cog):
     @app_commands.command(name="auftrag", description="Startet oder zeigt deinen aktuellen Pflegeauftrag.")
     async def auftrag(self, interaction: discord.Interaction) -> None:
         aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(str(interaction.user.id))
-        auftrag = self.kontext.spiel.inhalte.auftraege[aktiver_auftrag.auftrag_id]
+        auftrag = self.kontext.spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
         embed = auftrag_einbettung(aktiver_auftrag, auftrag.name)
         embed.add_field(
             name="Ziele",
@@ -23,7 +23,7 @@ class AuftragBefehle(commands.Cog):
                 [
                     f"Gesundheit >= {auftrag.ziele.get('gesundheit_mindestens')}",
                     f"Stimmung >= {auftrag.ziele.get('stimmung_mindestens')}",
-                    f"Stress <= {auftrag.ziele.get('stress_hoechstens')}",
+                    f"Stress <= {auftrag.ziele.get('stress_höchstens')}",
                     f"Fellpflege >= {auftrag.ziele.get('fellpflege_mindestens')}",
                 ]
             ),

@@ -37,7 +37,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
     konfiguration = lade_konfiguration()
     if not konfiguration.token:
-        raise RuntimeError("DISCORD_TOKEN wird benoetigt.")
+        raise RuntimeError("DISCORD_TOKEN wird benötigt.")
 
     kontext = Anwendungskontext.aus_pfaden(konfiguration.daten_ordner, konfiguration.datenbank_pfad)
     bot = FabelbundBot(kontext, befehle_synchronisieren=konfiguration.befehle_synchronisieren)

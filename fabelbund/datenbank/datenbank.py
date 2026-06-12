@@ -43,7 +43,7 @@ class Datenbank:
                     daten_json TEXT NOT NULL
                 );
 
-                CREATE TABLE IF NOT EXISTS aktive_auftraege (
+                CREATE TABLE IF NOT EXISTS aktive_aufträge (
                     id TEXT PRIMARY KEY,
                     spieler_id TEXT NOT NULL,
                     auftrag_id TEXT NOT NULL,

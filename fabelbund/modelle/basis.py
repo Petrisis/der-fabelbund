@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-WETTBEWERBSWERT_SCHLUESSEL = {
-    "schoenheit",
+WETTBEWERBSWERT_SCHLÜSSEL = {
+    "schönheit",
     "eleganz",
     "charme",
     "intelligenz",
@@ -10,8 +10,8 @@ WETTBEWERBSWERT_SCHLUESSEL = {
     "harmonie",
 }
 
-SPORTWERT_SCHLUESSEL = {
-    "staerke",
+SPORTWERT_SCHLÜSSEL = {
+    "stärke",
     "beweglichkeit",
     "ausdauer",
     "technik",
@@ -20,7 +20,7 @@ SPORTWERT_SCHLUESSEL = {
     "kampfgeist",
 }
 
-ZUSTAND_SCHLUESSEL = {
+ZUSTAND_SCHLÜSSEL = {
     "gesundheit",
     "stimmung",
     "energie",
@@ -31,14 +31,14 @@ ZUSTAND_SCHLUESSEL = {
     "verletzungsrisiko",
 }
 
-RUF_SCHLUESSEL = {
+RUF_SCHLÜSSEL = {
     "pflege",
     "training",
     "zucht",
-    "schoenheit",
+    "schönheit",
     "eleganz",
     "sport",
-    "zuverlaessigkeit",
+    "zuverlässigkeit",
     "handel",
 }
 
@@ -48,4 +48,4 @@ def begrenze_prozent(wert: int) -> int:
 
 
 def standard_ruf() -> dict[str, int]:
-    return {schluessel: 0 for schluessel in RUF_SCHLUESSEL}
+    return {schlüssel: 0 for schlüssel in RUF_SCHLÜSSEL}

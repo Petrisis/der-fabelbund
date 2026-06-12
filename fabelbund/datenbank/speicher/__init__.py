@@ -1,1 +1,1 @@
-"""Speicherklassen fuer die Datenbank."""
+"""Speicherklassen für die Datenbank."""

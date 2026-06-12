@@ -17,7 +17,7 @@ class FabelwesenSpeicher:
             return None
         return Fabelwesen.model_validate(json.loads(zeile["daten_json"]))
 
-    def fuer_besitzer_auflisten(self, besitzer_id: str) -> list[Fabelwesen]:
+    def für_besitzer_auflisten(self, besitzer_id: str) -> list[Fabelwesen]:
         with self.datenbank.verbinden() as verbindung:
             zeilen = verbindung.execute(
                 "SELECT daten_json FROM fabelwesen WHERE besitzer_id = ? ORDER BY spitzname, id",

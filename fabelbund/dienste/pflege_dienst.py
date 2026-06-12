@@ -8,9 +8,9 @@ from fabelbund.modelle.laufzeit import Fabelwesen
 class PflegeDienst:
     def anwenden(self, fabelwesen: Fabelwesen, aktion: PflegeaktionDefinition) -> Fabelwesen:
         daten = fabelwesen.model_copy(deep=True)
-        for schluessel, veraenderung in aktion.effekte.items():
-            aktueller_wert = int(daten.zustand.get(schluessel, 0))
-            daten.zustand[schluessel] = begrenze_prozent(aktueller_wert + veraenderung)
+        for schlüssel, veränderung in aktion.effekte.items():
+            aktueller_wert = int(daten.zustand.get(schlüssel, 0))
+            daten.zustand[schlüssel] = begrenze_prozent(aktueller_wert + veränderung)
         daten.zustand["verletzungsrisiko"] = self._risiko_aus_zustand(daten)
         return daten
 

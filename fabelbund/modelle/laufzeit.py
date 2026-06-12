@@ -25,7 +25,7 @@ class Fabelwesen(BaseModel):
     lebensraum: str
     herkunft: dict[str, object]
     gene: dict[str, str]
-    persoenlichkeit: dict[str, object]
+    persönlichkeit: dict[str, object]
     wettbewerbswerte: dict[str, int]
     sportwerte: dict[str, int]
     zustand: dict[str, int]

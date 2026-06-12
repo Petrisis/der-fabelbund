@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from fabelbund.modelle.basis import SPORTWERT_SCHLUESSEL, WETTBEWERBSWERT_SCHLUESSEL, ZUSTAND_SCHLUESSEL
+from fabelbund.modelle.basis import SPORTWERT_SCHLÜSSEL, WETTBEWERBSWERT_SCHLÜSSEL, ZUSTAND_SCHLÜSSEL
 
 
 class ArtDefinition(BaseModel):
@@ -13,16 +13,16 @@ class ArtDefinition(BaseModel):
     lebensraum: str
     grundwerte: dict[str, int]
     genpools: dict[str, dict[str, list[str]]] = Field(default_factory=dict)
-    persoenlichkeits_gewichte: dict[str, int] = Field(default_factory=dict)
+    persönlichkeits_gewichte: dict[str, int] = Field(default_factory=dict)
     wettbewerbs_neigungen: dict[str, float] = Field(default_factory=dict)
     sport_neigungen: dict[str, float] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def pruefe_grundwerte(self) -> "ArtDefinition":
-        erwartete_schluessel = WETTBEWERBSWERT_SCHLUESSEL | SPORTWERT_SCHLUESSEL
-        fehlende_schluessel = erwartete_schluessel - set(self.grundwerte)
-        if fehlende_schluessel:
-            raise ValueError(f"{self.art_id} hat fehlende Grundwerte: {sorted(fehlende_schluessel)}")
+    def prüfe_grundwerte(self) -> "ArtDefinition":
+        erwartete_schlüssel = WETTBEWERBSWERT_SCHLÜSSEL | SPORTWERT_SCHLÜSSEL
+        fehlende_schlüssel = erwartete_schlüssel - set(self.grundwerte)
+        if fehlende_schlüssel:
+            raise ValueError(f"{self.art_id} hat fehlende Grundwerte: {sorted(fehlende_schlüssel)}")
         return self
 
 
@@ -35,10 +35,10 @@ class PflegeaktionDefinition(BaseModel):
 
     @field_validator("effekte")
     @classmethod
-    def pruefe_effekte(cls, effekte: dict[str, int]) -> dict[str, int]:
-        unbekannt = set(effekte) - ZUSTAND_SCHLUESSEL
+    def prüfe_effekte(cls, effekte: dict[str, int]) -> dict[str, int]:
+        unbekannt = set(effekte) - ZUSTAND_SCHLÜSSEL
         if unbekannt:
-            raise ValueError(f"Unbekannte Pflegeeffekt-Schluessel: {sorted(unbekannt)}")
+            raise ValueError(f"Unbekannte Pflegeeffekt-Schlüssel: {sorted(unbekannt)}")
         return effekte
 
 
@@ -56,4 +56,4 @@ class AuftragDefinition(BaseModel):
 class InhaltsKatalog(BaseModel):
     arten: dict[str, ArtDefinition]
     pflegeaktionen: dict[str, PflegeaktionDefinition]
-    auftraege: dict[str, AuftragDefinition]
+    aufträge: dict[str, AuftragDefinition]

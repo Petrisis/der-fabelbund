@@ -14,7 +14,7 @@ class YamlLader:
         return InhaltsKatalog(
             arten=self.lade_arten(),
             pflegeaktionen=self.lade_pflegeaktionen(),
-            auftraege=self.lade_auftraege(),
+            aufträge=self.lade_aufträge(),
         )
 
     def lade_arten(self) -> dict[str, ArtDefinition]:
@@ -40,25 +40,25 @@ class YamlLader:
             raise ValueError(f"Keine Pflegeaktionen gefunden in {pfad}")
         return aktionen
 
-    def lade_auftraege(self) -> dict[str, AuftragDefinition]:
-        pfad = self.daten_ordner / "auftraege" / "pflege.yaml"
+    def lade_aufträge(self) -> dict[str, AuftragDefinition]:
+        pfad = self.daten_ordner / "aufträge" / "pflege.yaml"
         roh = self._lies_yaml(pfad)
-        auftraege: dict[str, AuftragDefinition] = {}
-        for nutzlast in roh.get("auftraege", []):
+        aufträge: dict[str, AuftragDefinition] = {}
+        for nutzlast in roh.get("aufträge", []):
             definition = AuftragDefinition.model_validate(nutzlast)
-            if definition.auftrag_id in auftraege:
+            if definition.auftrag_id in aufträge:
                 raise ValueError(f"Doppelte auftrag_id: {definition.auftrag_id}")
-            auftraege[definition.auftrag_id] = definition
-        if not auftraege:
-            raise ValueError(f"Keine Auftraege gefunden in {pfad}")
-        return auftraege
+            aufträge[definition.auftrag_id] = definition
+        if not aufträge:
+            raise ValueError(f"Keine Aufträge gefunden in {pfad}")
+        return aufträge
 
     @staticmethod
     def _lies_yaml(pfad: Path) -> dict[str, Any]:
         try:
             import yaml
         except ImportError as exc:
-            raise RuntimeError("PyYAML wird benoetigt. Installation: pip install -r requirements.txt") from exc
+            raise RuntimeError("PyYAML wird benötigt. Installation: pip install -r requirements.txt") from exc
 
         if not pfad.exists():
             raise FileNotFoundError(pfad)

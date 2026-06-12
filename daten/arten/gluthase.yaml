@@ -1,18 +1,18 @@
 art_id: "gluthase"
 name: "Gluthase"
-grundseltenheit: "gewoehnlich"
+grundseltenheit: "gewöhnlich"
 element: "glut"
 lebensraum: "warmfeld"
 
 grundwerte:
-  schoenheit: 34
+  schönheit: 34
   eleganz: 38
   charme: 52
   intelligenz: 36
   ausdruck: 45
   disziplin: 28
   harmonie: 42
-  staerke: 32
+  stärke: 32
   beweglichkeit: 56
   ausdauer: 40
   technik: 35
@@ -22,13 +22,13 @@ grundwerte:
 
 genpools:
   farben:
-    gewoehnlich: ["kohle", "glutrot"]
+    gewöhnlich: ["kohle", "glutrot"]
     selten: ["sonnenfunke"]
   muster:
-    gewoehnlich: ["einfarbig", "ohrspitzen"]
+    gewöhnlich: ["einfarbig", "ohrspitzen"]
     selten: ["funkenflecken"]
 
-persoenlichkeits_gewichte:
+persönlichkeits_gewichte:
   neugierig: 30
   treu: 20
   wild: 25

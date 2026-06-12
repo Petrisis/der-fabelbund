@@ -9,7 +9,7 @@ def profil_einbettung(spieler: SpielerProfil) -> discord.Embed:
     embed = discord.Embed(title="Der Fabelbund", color=discord.Color.green())
     embed.add_field(name="Geld", value=f"{spieler.geld} Credits", inline=True)
     embed.add_field(name="Pflege-Ruf", value=str(spieler.ruf.get("pflege", 0)), inline=True)
-    embed.add_field(name="Zuverlaessigkeit", value=str(spieler.ruf.get("zuverlaessigkeit", 0)), inline=True)
+    embed.add_field(name="Zuverlässigkeit", value=str(spieler.ruf.get("zuverlässigkeit", 0)), inline=True)
     return embed
 
 

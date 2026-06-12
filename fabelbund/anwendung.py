@@ -32,7 +32,7 @@ class Anwendungskontext:
             inhalte=inhalte,
             spieler=spieler_speicher,
             fabelwesen=fabelwesen_speicher,
-            auftraege=auftrag_speicher,
+            aufträge=auftrag_speicher,
             fabrik=FabelwesenFabrik(),
             pflege=PflegeDienst(),
             auftrag_dienst=AuftragDienst(),

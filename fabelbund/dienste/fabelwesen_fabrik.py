@@ -19,10 +19,10 @@ class FabelwesenFabrik:
             element=art.element,
             lebensraum=art.lebensraum,
             herkunft={"methode": "starter", "generation": 1, "eltern": []},
-            gene=self._wuerfle_gene(art),
-            persoenlichkeit=self._wuerfle_persoenlichkeit(art),
-            wettbewerbswerte={schluessel: int(wert) for schluessel, wert in art.grundwerte.items() if schluessel in _WETTBEWERBSWERTE},
-            sportwerte={schluessel: int(wert) for schluessel, wert in art.grundwerte.items() if schluessel in _SPORTWERTE},
+            gene=self._würfle_gene(art),
+            persönlichkeit=self._würfle_persönlichkeit(art),
+            wettbewerbswerte={schlüssel: int(wert) for schlüssel, wert in art.grundwerte.items() if schlüssel in _WETTBEWERBSWERTE},
+            sportwerte={schlüssel: int(wert) for schlüssel, wert in art.grundwerte.items() if schlüssel in _SPORTWERTE},
             zustand={
                 "gesundheit": 100,
                 "stimmung": 68,
@@ -34,28 +34,28 @@ class FabelwesenFabrik:
                 "verletzungsrisiko": 4,
             },
             zucht={"fruchtbarkeit": 2, "abklingzeit_bis": None, "zucht_gesperrt": False},
-            status={"aktiver_vertrag_id": None, "nicht_verfuegbar_bis": None},
+            status={"aktiver_vertrag_id": None, "nicht_verfügbar_bis": None},
         )
 
-    def _wuerfle_gene(self, art: ArtDefinition) -> dict[str, str]:
+    def _würfle_gene(self, art: ArtDefinition) -> dict[str, str]:
         gene: dict[str, str] = {}
         for gen_name, seltenheits_map in art.genpools.items():
-            gewoehnliche_werte = seltenheits_map.get("gewoehnlich") or next(iter(seltenheits_map.values()), [])
-            if gewoehnliche_werte:
-                gene[gen_name] = random.choice(gewoehnliche_werte)
+            gewöhnliche_werte = seltenheits_map.get("gewöhnlich") or next(iter(seltenheits_map.values()), [])
+            if gewöhnliche_werte:
+                gene[gen_name] = random.choice(gewöhnliche_werte)
         return gene
 
-    def _wuerfle_persoenlichkeit(self, art: ArtDefinition) -> dict[str, object]:
-        gewichte = art.persoenlichkeits_gewichte or {"neugierig": 1}
+    def _würfle_persönlichkeit(self, art: ArtDefinition) -> dict[str, object]:
+        gewichte = art.persönlichkeits_gewichte or {"neugierig": 1}
         temperament = random.choices(list(gewichte), weights=list(gewichte.values()), k=1)[0]
         return {
             "temperament": temperament,
             "mag": ["ruhige_pflege"],
-            "mag_nicht": ["uebertraining"],
-            "staerken": ["harmonie"],
-            "schwaechen": ["stress"],
+            "mag_nicht": ["übertraining"],
+            "stärken": ["harmonie"],
+            "schwächen": ["stress"],
         }
 
 
-_WETTBEWERBSWERTE = {"schoenheit", "eleganz", "charme", "intelligenz", "ausdruck", "disziplin", "harmonie"}
-_SPORTWERTE = {"staerke", "beweglichkeit", "ausdauer", "technik", "deckung", "kontrolle", "kampfgeist"}
+_WETTBEWERBSWERTE = {"schönheit", "eleganz", "charme", "intelligenz", "ausdruck", "disziplin", "harmonie"}
+_SPORTWERTE = {"stärke", "beweglichkeit", "ausdauer", "technik", "deckung", "kontrolle", "kampfgeist"}

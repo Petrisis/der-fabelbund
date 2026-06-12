@@ -20,18 +20,18 @@ def inhalts_katalog() -> InhaltsKatalog:
         {
             "art_id": "gluthase",
             "name": "Gluthase",
-            "grundseltenheit": "gewoehnlich",
+            "grundseltenheit": "gewöhnlich",
             "element": "glut",
             "lebensraum": "warmfeld",
             "grundwerte": {
-                "schoenheit": 34,
+                "schönheit": 34,
                 "eleganz": 38,
                 "charme": 52,
                 "intelligenz": 36,
                 "ausdruck": 45,
                 "disziplin": 28,
                 "harmonie": 42,
-                "staerke": 32,
+                "stärke": 32,
                 "beweglichkeit": 56,
                 "ausdauer": 40,
                 "technik": 35,
@@ -39,8 +39,8 @@ def inhalts_katalog() -> InhaltsKatalog:
                 "kontrolle": 30,
                 "kampfgeist": 48,
             },
-            "genpools": {"farben": {"gewoehnlich": ["kohle"]}, "muster": {"gewoehnlich": ["einfarbig"]}},
-            "persoenlichkeits_gewichte": {"neugierig": 1},
+            "genpools": {"farben": {"gewöhnlich": ["kohle"]}, "muster": {"gewöhnlich": ["einfarbig"]}},
+            "persönlichkeits_gewichte": {"neugierig": 1},
         }
     )
     aktion = PflegeaktionDefinition.model_validate(
@@ -59,16 +59,16 @@ def inhalts_katalog() -> InhaltsKatalog:
             "ziele": {
                 "gesundheit_mindestens": 80,
                 "stimmung_mindestens": 55,
-                "stress_hoechstens": 25,
+                "stress_höchstens": 25,
                 "fellpflege_mindestens": 55,
             },
-            "belohnungen": {"geld": 300, "ruf": {"pflege": 12, "zuverlaessigkeit": 5}},
+            "belohnungen": {"geld": 300, "ruf": {"pflege": 12, "zuverlässigkeit": 5}},
         }
     )
     return InhaltsKatalog(
         arten={"gluthase": art},
         pflegeaktionen={"sanfte_fellpflege": aktion},
-        auftraege={"pflege_einfach_001": auftrag},
+        aufträge={"pflege_einfach_001": auftrag},
     )
 
 
@@ -80,7 +80,7 @@ class SpielDienstTests(unittest.TestCase):
             inhalte=inhalts_katalog(),
             spieler=SpielerSpeicher(datenbank),
             fabelwesen=FabelwesenSpeicher(datenbank),
-            auftraege=AuftragSpeicher(datenbank),
+            aufträge=AuftragSpeicher(datenbank),
             fabrik=FabelwesenFabrik(),
             pflege=PflegeDienst(),
             auftrag_dienst=AuftragDienst(),
@@ -96,7 +96,7 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(len(sammlung), 1)
         self.assertEqual(sammlung[0].art_id, "gluthase")
 
-    def test_pflegeaktion_kann_einfachen_auftrag_abschliessen(self) -> None:
+    def test_pflegeaktion_kann_einfachen_auftrag_abschließen(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             spiel.pflegeauftrag_starten("123")
@@ -109,7 +109,7 @@ class SpielDienstTests(unittest.TestCase):
         assert spieler is not None
         self.assertEqual(spieler.geld, 800)
         self.assertEqual(spieler.ruf["pflege"], 12)
-        self.assertEqual(spieler.ruf["zuverlaessigkeit"], 5)
+        self.assertEqual(spieler.ruf["zuverlässigkeit"], 5)
 
 
 if __name__ == "__main__":

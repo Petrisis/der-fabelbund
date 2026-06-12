@@ -1,4 +1,4 @@
-auftraege:
+aufträge:
   - auftrag_id: "pflege_einfach_001"
     name: "Grundpflegeauftrag"
     art: "pflege"
@@ -10,15 +10,15 @@ auftraege:
     ziele:
       gesundheit_mindestens: 80
       stimmung_mindestens: 55
-      stress_hoechstens: 25
+      stress_höchstens: 25
       fellpflege_mindestens: 55
     belohnungen:
       geld: 300
       ruf:
         pflege: 12
-        zuverlaessigkeit: 5
+        zuverlässigkeit: 5
     fehlschlag:
       geld_multiplikator: 0.3
       ruf_verlust:
-        zuverlaessigkeit: 3
+        zuverlässigkeit: 3
 

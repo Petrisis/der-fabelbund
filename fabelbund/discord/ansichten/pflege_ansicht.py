@@ -15,7 +15,7 @@ class PflegeAnsicht(discord.ui.View):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if str(interaction.user.id) == self.nutzer_id:
             return True
-        await interaction.response.send_message("Diese Pflegeansicht gehoert einem anderen Spieler.", ephemeral=True)
+        await interaction.response.send_message("Diese Pflegeansicht gehört einem anderen Spieler.", ephemeral=True)
         return False
 
     @discord.ui.button(label="Sanfte Fellpflege", style=discord.ButtonStyle.primary, custom_id="pflege:sanfte_fellpflege")
@@ -23,10 +23,10 @@ class PflegeAnsicht(discord.ui.View):
         ergebnis = self.spiel.pflege_anwenden(self.nutzer_id, "sanfte_fellpflege")
         embed = fabelwesen_einbettung(ergebnis.fabelwesen, titel="Pflege abgeschlossen")
         if ergebnis.auftrag_abgeschlossen:
-            ruf = ", ".join(f"{schluessel} +{wert}" for schluessel, wert in ergebnis.ruf_erhalten.items())
+            ruf = ", ".join(f"{schlüssel} +{wert}" for schlüssel, wert in ergebnis.ruf_erhalten.items())
             embed.add_field(
                 name="Auftrag abgeschlossen",
-                value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unveraendert'}",
+                value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}",
                 inline=False,
             )
             button.disabled = True
@@ -37,10 +37,10 @@ class PflegeAnsicht(discord.ui.View):
         ergebnis = self.spiel.pflege_anwenden(self.nutzer_id, "kontrollierte_ruhe")
         embed = fabelwesen_einbettung(ergebnis.fabelwesen, titel="Ruhe abgeschlossen")
         if ergebnis.auftrag_abgeschlossen:
-            ruf = ", ".join(f"{schluessel} +{wert}" for schluessel, wert in ergebnis.ruf_erhalten.items())
+            ruf = ", ".join(f"{schlüssel} +{wert}" for schlüssel, wert in ergebnis.ruf_erhalten.items())
             embed.add_field(
                 name="Auftrag abgeschlossen",
-                value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unveraendert'}",
+                value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}",
                 inline=False,
             )
             for element in self.children:

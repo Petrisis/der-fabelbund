@@ -14,7 +14,7 @@ class AuftragSpeicher:
         with self.datenbank.verbinden() as verbindung:
             zeile = verbindung.execute(
                 """
-                SELECT * FROM aktive_auftraege
+                SELECT * FROM aktive_aufträge
                 WHERE spieler_id = ? AND status = 'aktiv'
                 ORDER BY gestartet_am DESC
                 LIMIT 1
@@ -39,7 +39,7 @@ class AuftragSpeicher:
         with self.datenbank.verbinden() as verbindung:
             verbindung.execute(
                 """
-                INSERT INTO aktive_auftraege (
+                INSERT INTO aktive_aufträge (
                     id, spieler_id, auftrag_id, fabelwesen_id, status, fortschritt_json, gestartet_am, abgeschlossen_am
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)

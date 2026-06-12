@@ -17,22 +17,22 @@ class AuftragDienst:
             fortschritt={},
         )
 
-    def ziele_erfuellt(self, auftrag: AuftragDefinition, fabelwesen: Fabelwesen) -> bool:
+    def ziele_erfüllt(self, auftrag: AuftragDefinition, fabelwesen: Fabelwesen) -> bool:
         ziele = auftrag.ziele
         return (
             self._mindestens(fabelwesen, "gesundheit", ziele.get("gesundheit_mindestens"))
             and self._mindestens(fabelwesen, "stimmung", ziele.get("stimmung_mindestens"))
-            and self._hoechstens(fabelwesen, "stress", ziele.get("stress_hoechstens"))
+            and self._höchstens(fabelwesen, "stress", ziele.get("stress_höchstens"))
             and self._mindestens(fabelwesen, "fellpflege", ziele.get("fellpflege_mindestens"))
         )
 
-    def abschliessen(self, spieler: SpielerProfil, aktiv: AktiverAuftrag, auftrag: AuftragDefinition) -> tuple[SpielerProfil, AktiverAuftrag]:
+    def abschließen(self, spieler: SpielerProfil, aktiv: AktiverAuftrag, auftrag: AuftragDefinition) -> tuple[SpielerProfil, AktiverAuftrag]:
         aktualisierter_spieler = spieler.model_copy(deep=True)
         aktualisierter_spieler.geld += int(auftrag.belohnungen.get("geld", 0))
         ruf = auftrag.belohnungen.get("ruf", {})
         if isinstance(ruf, dict):
-            for schluessel, wert in ruf.items():
-                aktualisierter_spieler.ruf[schluessel] = int(aktualisierter_spieler.ruf.get(schluessel, 0)) + int(wert)
+            for schlüssel, wert in ruf.items():
+                aktualisierter_spieler.ruf[schlüssel] = int(aktualisierter_spieler.ruf.get(schlüssel, 0)) + int(wert)
 
         abgeschlossener_auftrag = aktiv.model_copy(deep=True)
         abgeschlossener_auftrag.status = "abgeschlossen"
@@ -40,13 +40,13 @@ class AuftragDienst:
         return aktualisierter_spieler, abgeschlossener_auftrag
 
     @staticmethod
-    def _mindestens(fabelwesen: Fabelwesen, schluessel: str, minimum: object) -> bool:
+    def _mindestens(fabelwesen: Fabelwesen, schlüssel: str, minimum: object) -> bool:
         if minimum is None:
             return True
-        return int(fabelwesen.zustand.get(schluessel, 0)) >= int(minimum)
+        return int(fabelwesen.zustand.get(schlüssel, 0)) >= int(minimum)
 
     @staticmethod
-    def _hoechstens(fabelwesen: Fabelwesen, schluessel: str, maximum: object) -> bool:
+    def _höchstens(fabelwesen: Fabelwesen, schlüssel: str, maximum: object) -> bool:
         if maximum is None:
             return True
-        return int(fabelwesen.zustand.get(schluessel, 0)) <= int(maximum)
+        return int(fabelwesen.zustand.get(schlüssel, 0)) <= int(maximum)

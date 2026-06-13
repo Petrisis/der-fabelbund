@@ -6,7 +6,7 @@ from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.auftragswand import chronik_senden, auftragswand_aktualisieren
-from fabelbund.discord.darstellung import auftrag_abgabe_einbettung, auftrag_einbettung
+from fabelbund.discord.darstellung import auftrag_abgabe_einbettung, auftrag_einbettung, tutorial_hinweis_text
 from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 
 
@@ -35,7 +35,11 @@ class AuftragBefehle(commands.Cog):
         try:
             aktiver_auftrag = aktiver_auftrag or self.kontext.spiel.pflegeauftrag_starten(nutzer_id)
         except ValueError as fehler:
-            await interaction.response.send_message(str(fehler), ephemeral=True)
+            hinweis = tutorial_hinweis_text(spieler)
+            text = str(fehler)
+            if hinweis:
+                text = f"{text}\n{hinweis}"
+            await interaction.response.send_message(text, ephemeral=True)
             return
         auftrag = self.kontext.spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
         fabelwesen = self.kontext.spiel.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
@@ -72,7 +76,7 @@ class AuftragAnsicht(discord.ui.View):
         view = None
         if ergebnis.erfolgreich:
             spieler = self.kontext.spiel.spieler.holen(self.nutzer_id)
-            if spieler is not None and not spieler.offizielles_mitglied:
+            if spieler is not None and not spieler.offizielles_mitglied and spieler.tutorialschritt in {"ruhe_starten", "pflege_und_ausrüstung"}:
                 view = NächsterAuftragAnsicht(self.kontext, self.nutzer_id)
         else:
             view = AuftragAnsicht(self.kontext, self.nutzer_id)

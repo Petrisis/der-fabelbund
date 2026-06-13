@@ -16,13 +16,4 @@ class ProfilBefehle(commands.Cog):
     async def profil(self, interaction: discord.Interaction) -> None:
         spieler = self.kontext.spiel.stelle_spieler_sicher(str(interaction.user.id))
         embed = profil_einbettung(spieler)
-        if spieler.tutorialstatus == "aktiv" and spieler.tutorialschritt == "ruhe_starten":
-            embed.add_field(
-                name="Einführung",
-                value=(
-                    "Mira vom Fabelbund begrüßt dich zur Probezeit. Die ersten Fablinge werden dir auftragsweise anvertraut; "
-                    "beginne mit `/auftrag` und lass den zugeteilten Fabling eine kontrollierte Ruhe abschließen."
-                ),
-                inline=False,
-            )
         await interaction.response.send_message(embed=embed, ephemeral=True)

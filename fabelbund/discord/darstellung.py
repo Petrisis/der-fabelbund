@@ -19,7 +19,24 @@ def profil_einbettung(spieler: SpielerProfil) -> discord.Embed:
     embed.add_field(name="Zuverlässigkeit", value=str(spieler.ruf.get("zuverlässigkeit", 0)), inline=True)
     embed.add_field(name="Mitgliedschaft", value="offiziell" if spieler.offizielles_mitglied else "Einführung", inline=True)
     embed.add_field(name="Tutorial", value=spieler.tutorialschritt.replace("_", " "), inline=True)
+    hinweis = tutorial_hinweis_text(spieler)
+    if hinweis:
+        embed.add_field(name="Einführung", value=hinweis, inline=False)
     return embed
+
+
+def tutorial_hinweis_text(spieler: SpielerProfil) -> str:
+    if spieler.tutorialstatus != "aktiv":
+        return ""
+    return {
+        "ruhe_starten": "Beginne mit `/auftrag`: Kontrollierte Ruhe.",
+        "pflege_und_ausrüstung": "Nimm den nächsten Probeauftrag an: Pflege: Sanfte Fellpflege.",
+        "futter_kaufen": "Du hast jetzt einen eigenen Starter. Kaufe im `/laden` ein Futter.",
+        "futter_geben": "Gib das Futter über `/inventar` deinem Starter.",
+        "aktive_betreuung": "Öffne `/fablinge` und starte Spiel: Gemeinsames Spiel.",
+        "training": "Öffne `/fablinge` und starte Training: Ausdruck üben.",
+        "check": "Öffne `/fablinge` und starte Check: Kurzer Blick.",
+    }.get(spieler.tutorialschritt, "")
 
 
 def fabelwesen_einbettung(fabelwesen: Fabelwesen, titel: str | None = None) -> discord.Embed:

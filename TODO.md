@@ -74,21 +74,24 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 - [x] Tutorialstatus als Spielerwert einführen
 - [x] Neuer Spieler startet ins Pflicht-Tutorial
 - [x] Tutorial vergibt erste Probe-Fablinge
-- [ ] Tutorial erklärt Schritt für Schritt
+- [x] Tutorial erklärt Schritt für Schritt
   - [x] Profil
-  - [ ] Fablinge und Ställe über `/fablinge`
+  - [x] Fablinge und Ställe über `/fablinge`
   - [x] ersten Fabling ansehen
   - [x] erste Pflege/Ruhe über Fabling-Detailansicht starten
   - [x] Aktivität abholen
   - [x] ersten Auftrag verstehen
 - [x] Erster Tutorialauftrag: kontrollierte Ruhe abschließen und Auftrag abgeben
-- [ ] Weitere Tutorialschritte ergänzen
-  - [ ] Pflege und Ausrüstung
-  - [ ] Futter
-  - [ ] Fablinge/Ställe
-  - [ ] aktive Betreuung
-  - [ ] Training
-  - [ ] Check
+- [x] Weitere Tutorialschritte ergänzen
+  - [x] Pflege und Ausrüstung
+  - [x] Starter-Fabling nach Probeaufträgen vergeben
+  - [x] Futter kaufen
+  - [x] Futter geben
+  - [x] Fablinge/Ställe
+  - [x] aktive Betreuung
+  - [x] Training
+  - [x] Check
+  - [x] Abschluss als offizielles Mitglied
 - [ ] Danach erste spielbare Version mit echtem Einstieg testen
 
 ## 5. Danach: Aufträge und Spielfluss

@@ -20,7 +20,7 @@ class Anwendungskontext:
     spiel: SpielDienst
 
     @classmethod
-    def aus_pfaden(cls, daten_ordner: Path, datenbank_pfad: Path) -> "Anwendungskontext":
+    def aus_pfaden(cls, daten_ordner: Path, datenbank_pfad: Path, zeitfaktor: float = 1.0) -> "Anwendungskontext":
         inhalte = YamlLader(daten_ordner).lade_alle()
         datenbank = Datenbank(datenbank_pfad)
         datenbank.migrieren()
@@ -39,5 +39,6 @@ class Anwendungskontext:
             fabrik=FabelwesenFabrik(),
             pflege=PflegeDienst(),
             auftrag_dienst=AuftragDienst(),
+            zeitfaktor=zeitfaktor,
         )
         return cls(spiel=spiel)

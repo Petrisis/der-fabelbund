@@ -49,6 +49,7 @@ def inhalts_katalog() -> InhaltsKatalog:
         {
             "aktion_id": "sanfte_fellpflege",
             "name": "Sanfte Fellpflege",
+            "dauer_sekunden": 600,
             "effekte": {"fellpflege": 12, "stimmung": 4, "stress": -3, "energie": -2},
         }
     )
@@ -75,7 +76,7 @@ def inhalts_katalog() -> InhaltsKatalog:
 
 
 class SpielDienstTests(unittest.TestCase):
-    def baue_spiel(self, datenbank_pfad: Path) -> SpielDienst:
+    def baue_spiel(self, datenbank_pfad: Path, zeitfaktor: float = 1.0) -> SpielDienst:
         datenbank = Datenbank(datenbank_pfad)
         datenbank.migrieren()
         return SpielDienst(
@@ -87,6 +88,7 @@ class SpielDienstTests(unittest.TestCase):
             fabrik=FabelwesenFabrik(),
             pflege=PflegeDienst(),
             auftrag_dienst=AuftragDienst(),
+            zeitfaktor=zeitfaktor,
         )
 
     def erzeuge_starter(self, spiel: SpielDienst, nutzer_id: str = "123") -> None:
@@ -176,6 +178,16 @@ class SpielDienstTests(unittest.TestCase):
             ergebnis = spiel.aktivität_abholen("123")
 
         self.assertLess(ergebnis.fabelwesen.zustand["vertrauen"], vertrauen_vorher)
+
+    def test_zeitfaktor_verkürzt_aktivitätsdauer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3", zeitfaktor=100)
+            self.erzeuge_starter(spiel)
+
+            aktivität = spiel.pflegeaktivität_starten("123", "sanfte_fellpflege")
+            dauer = (aktivität.endet_am - aktivität.gestartet_am).total_seconds()
+
+        self.assertAlmostEqual(dauer, 6, delta=1)
 
     def test_pflegeaktivität_wird_nach_ablauf_abgeholt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -52,7 +52,11 @@ def main() -> None:
     if not konfiguration.token:
         raise RuntimeError("DISCORD_TOKEN wird benötigt.")
 
-    kontext = Anwendungskontext.aus_pfaden(konfiguration.daten_ordner, konfiguration.datenbank_pfad)
+    kontext = Anwendungskontext.aus_pfaden(
+        konfiguration.daten_ordner,
+        konfiguration.datenbank_pfad,
+        zeitfaktor=konfiguration.zeitfaktor,
+    )
     bot = FabelbundBot(
         kontext,
         befehle_synchronisieren=konfiguration.befehle_synchronisieren,

@@ -63,6 +63,7 @@ class SpielDienst:
         fabrik: FabelwesenFabrik,
         pflege: PflegeDienst,
         auftrag_dienst: AuftragDienst,
+        zeitfaktor: float = 1.0,
     ) -> None:
         self.inhalte = inhalte
         self.spieler = spieler
@@ -72,6 +73,7 @@ class SpielDienst:
         self.fabrik = fabrik
         self.pflege = pflege
         self.auftrag_dienst = auftrag_dienst
+        self.zeitfaktor = max(0.001, zeitfaktor)
 
     def stelle_spieler_sicher(self, nutzer_id: str) -> SpielerProfil:
         spieler = self.spieler.holen(nutzer_id)
@@ -229,7 +231,7 @@ class SpielDienst:
             abbrechbar=aktion.abbrechbar,
             effekte=aktion.effekte,
             gestartet_am=jetzt,
-            endet_am=jetzt + timedelta(seconds=aktion.dauer_sekunden),
+            endet_am=jetzt + timedelta(seconds=self._skalierte_dauer(aktion.dauer_sekunden)),
         )
         self.aktivitäten.speichern(aktivität)
         return aktivität
@@ -344,7 +346,7 @@ class SpielDienst:
             return aktualisiert
 
         letzter_zeitpunkt = datetime.fromisoformat(str(letzter_wert))
-        vergangen = max(0.0, (jetzt - letzter_zeitpunkt).total_seconds())
+        vergangen = max(0.0, (jetzt - letzter_zeitpunkt).total_seconds()) * self.zeitfaktor
         if vergangen < INAKTIVITÄT_START_SEKUNDEN:
             return fabelwesen
 
@@ -354,8 +356,8 @@ class SpielDienst:
 
         anteil = wirkdauer / INAKTIVITÄT_MAX_WIRKUNG_SEKUNDEN
         effekte = self._selbstbeschäftigung_effekte(anteil, vergangen)
-        gestartet_am = letzter_zeitpunkt + timedelta(seconds=INAKTIVITÄT_START_SEKUNDEN)
-        endet_am = gestartet_am + timedelta(seconds=wirkdauer)
+        gestartet_am = jetzt - timedelta(seconds=self._skalierte_dauer(wirkdauer))
+        endet_am = jetzt
         aktivität = Aktivität(
             id=f"aktivität_{uuid4().hex[:12]}",
             spieler_id=fabelwesen.besitzer_id,
@@ -383,3 +385,6 @@ class SpielDienst:
             stunden_nach_start = (vergangen - VERWAHRLOSUNG_START_SEKUNDEN) / 3600
             effekte["vertrauen"] = -min(12, max(1, int(stunden_nach_start // 12) + 1))
         return {schlüssel: wert for schlüssel, wert in effekte.items() if wert != 0}
+
+    def _skalierte_dauer(self, sekunden: float) -> float:
+        return max(1.0, sekunden / self.zeitfaktor)

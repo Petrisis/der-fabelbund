@@ -78,6 +78,8 @@ python -m fabelbund_bot.bot
 
 Wenn `FABELBUND_TESTSERVER_ID` gesetzt ist, werden Slash-Befehle nur für diesen Testserver synchronisiert. Das ist für MVP-Tests schneller als eine globale Registrierung.
 
+Für schnelle Tests kann `FABELBUND_ZEITFAKTOR` gesetzt werden. Der Faktor wirkt linear: Bei `100` dauert eine Aktion mit 10 Minuten Spielzeit real etwa 6 Sekunden.
+
 ## Tests
 
 ```powershell

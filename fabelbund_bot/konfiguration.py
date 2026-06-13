@@ -12,6 +12,7 @@ class BotKonfiguration:
     datenbank_pfad: Path
     befehle_synchronisieren: bool = False
     testserver_id: int | None = None
+    zeitfaktor: float = 1.0
 
 
 def lade_konfiguration() -> BotKonfiguration:
@@ -22,6 +23,7 @@ def lade_konfiguration() -> BotKonfiguration:
         datenbank_pfad=Path(os.environ.get("FABELBUND_DATENBANK_PFAD", "fabelbund.sqlite3")),
         befehle_synchronisieren=os.environ.get("FABELBUND_BEFEHLE_SYNCHRONISIEREN", "0") == "1",
         testserver_id=_optionale_int_umgebung("FABELBUND_TESTSERVER_ID"),
+        zeitfaktor=_float_umgebung("FABELBUND_ZEITFAKTOR", 1.0),
     )
 
 
@@ -44,3 +46,13 @@ def _optionale_int_umgebung(name: str) -> int | None:
     if not wert:
         return None
     return int(wert)
+
+
+def _float_umgebung(name: str, standard: float) -> float:
+    wert = os.environ.get(name, "").strip()
+    if not wert:
+        return standard
+    zahl = float(wert.replace(",", "."))
+    if zahl <= 0:
+        raise ValueError(f"{name} muss größer als 0 sein.")
+    return zahl

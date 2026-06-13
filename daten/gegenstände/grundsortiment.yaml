@@ -1,0 +1,55 @@
+gegenstände:
+  apfelstücke:
+    name: "Apfelstücke"
+    kategorie: "futter"
+    preis: 8
+    beschreibung: "Ein einfaches, frisches Futter für fast jeden Fabling."
+    effekte:
+      stimmung: 3
+      energie: 2
+    markierungen: ["futter", "normal"]
+
+  honigbeeren:
+    name: "Honigbeeren"
+    kategorie: "futter"
+    preis: 9
+    beschreibung: "Süße Beeren, die viele Fablinge neugierig machen."
+    effekte:
+      stimmung: 4
+      energie: 1
+    markierungen: ["futter", "normal"]
+
+  kräuterheu:
+    name: "Kräuterheu"
+    kategorie: "futter"
+    preis: 7
+    beschreibung: "Ruhiges Grundfutter, das leicht bekömmlich ist."
+    effekte:
+      gesundheit: 1
+      energie: 2
+      stress: -1
+    markierungen: ["futter", "normal"]
+
+  einfache_bürste:
+    name: "Einfache Bürste"
+    kategorie: "pflegeequipment"
+    preis: 35
+    beschreibung: "Solide Grundausstattung für Fellpflege."
+    effekte: {}
+    markierungen: ["pflege", "ausrüstung"]
+
+  weiches_tuch:
+    name: "Weiches Tuch"
+    kategorie: "pflegeequipment"
+    preis: 18
+    beschreibung: "Hilft bei vorsichtiger Pflege empfindlicher Fablinge."
+    effekte: {}
+    markierungen: ["pflege", "ausrüstung"]
+
+  spielband:
+    name: "Spielband"
+    kategorie: "spielzeug"
+    preis: 22
+    beschreibung: "Ein schlichtes Band für gemeinsame Spiel- und Bindungsübungen."
+    effekte: {}
+    markierungen: ["spiel", "bindung"]

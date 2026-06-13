@@ -15,4 +15,14 @@ class ProfilBefehle(commands.Cog):
     @app_commands.command(name="profil", description="Registriert dich bei Der Fabelbund und zeigt dein Profil.")
     async def profil(self, interaction: discord.Interaction) -> None:
         spieler = self.kontext.spiel.stelle_spieler_sicher(str(interaction.user.id))
-        await interaction.response.send_message(embed=profil_einbettung(spieler), ephemeral=True)
+        embed = profil_einbettung(spieler)
+        if spieler.tutorialstatus == "aktiv" and spieler.tutorialschritt == "ruhe_starten":
+            embed.add_field(
+                name="Einführung",
+                value=(
+                    "Mira vom Fabelbund begrüßt dich zur Probezeit. Drei Fablinge wurden dir anvertraut; "
+                    "beginne mit `/auftrag` und lass den ersten Fabling eine kontrollierte Ruhe abschließen."
+                ),
+                inline=False,
+            )
+        await interaction.response.send_message(embed=embed, ephemeral=True)

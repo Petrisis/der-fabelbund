@@ -31,8 +31,13 @@ class Datenbank:
                     geld INTEGER NOT NULL,
                     freigeschaltete_ställe INTEGER NOT NULL DEFAULT 1,
                     stalltypen_json TEXT NOT NULL DEFAULT '{"neutral": 1}',
+                    inventar_json TEXT NOT NULL DEFAULT '{}',
                     ruf_json TEXT NOT NULL,
                     lizenzen_json TEXT NOT NULL,
+                    tutorialstatus TEXT NOT NULL DEFAULT 'neu',
+                    tutorialschritt TEXT NOT NULL DEFAULT 'registrierung',
+                    tutorialpfad TEXT,
+                    offizielles_mitglied INTEGER NOT NULL DEFAULT 0,
                     erstellt_am TEXT NOT NULL
                 );
 
@@ -86,6 +91,16 @@ class Datenbank:
                 verbindung.execute("ALTER TABLE spieler ADD COLUMN freigeschaltete_ställe INTEGER NOT NULL DEFAULT 1")
             if "stalltypen_json" not in spalten:
                 verbindung.execute("ALTER TABLE spieler ADD COLUMN stalltypen_json TEXT NOT NULL DEFAULT '{\"neutral\": 1}'")
+            if "inventar_json" not in spalten:
+                verbindung.execute("ALTER TABLE spieler ADD COLUMN inventar_json TEXT NOT NULL DEFAULT '{}'")
+            if "tutorialstatus" not in spalten:
+                verbindung.execute("ALTER TABLE spieler ADD COLUMN tutorialstatus TEXT NOT NULL DEFAULT 'neu'")
+            if "tutorialschritt" not in spalten:
+                verbindung.execute("ALTER TABLE spieler ADD COLUMN tutorialschritt TEXT NOT NULL DEFAULT 'registrierung'")
+            if "tutorialpfad" not in spalten:
+                verbindung.execute("ALTER TABLE spieler ADD COLUMN tutorialpfad TEXT")
+            if "offizielles_mitglied" not in spalten:
+                verbindung.execute("ALTER TABLE spieler ADD COLUMN offizielles_mitglied INTEGER NOT NULL DEFAULT 0")
             aktivität_spalten = {
                 zeile["name"]
                 for zeile in verbindung.execute("PRAGMA table_info(aktivitäten)").fetchall()

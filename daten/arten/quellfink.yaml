@@ -1,0 +1,46 @@
+art_id: "quellfink"
+name: "Quellfink"
+grundseltenheit: "gewöhnlich"
+element: "wasser"
+lebensraum: "bachufer"
+
+grundwerte:
+  schönheit: 45
+  eleganz: 48
+  charme: 46
+  intelligenz: 42
+  ausdruck: 38
+  disziplin: 34
+  harmonie: 50
+  stärke: 20
+  beweglichkeit: 58
+  ausdauer: 36
+  technik: 42
+  deckung: 24
+  kontrolle: 40
+  kampfgeist: 28
+
+genpools:
+  farben:
+    gewöhnlich: ["bachblau", "kieselgrau"]
+    selten: ["quellglanz"]
+  muster:
+    gewöhnlich: ["einfarbig", "wellenkante"]
+    selten: ["tropfenmale"]
+
+persönlichkeits_gewichte:
+  scheu: 25
+  neugierig: 25
+  treu: 20
+  stolz: 10
+  wild: 20
+
+wettbewerbs_neigungen:
+  eleganz: 1.2
+  harmonie: 1.2
+  charme: 1.0
+
+sport_neigungen:
+  beweglichkeit: 1.2
+  kontrolle: 1.1
+  technik: 1.0

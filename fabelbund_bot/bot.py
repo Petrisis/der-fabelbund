@@ -7,6 +7,8 @@ from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.befehle.auftrag import AuftragBefehle
+from fabelbund.discord.befehle.inventar import InventarBefehle
+from fabelbund.discord.befehle.laden import LadenBefehle
 from fabelbund.discord.befehle.pflege import PflegeBefehle
 from fabelbund.discord.befehle.profil import ProfilBefehle
 from fabelbund.discord.befehle.sammlung import SammlungBefehle
@@ -31,6 +33,8 @@ class FabelbundBot(commands.Bot):
         await self.add_cog(StallBefehle(self.kontext))
         await self.add_cog(AuftragBefehle(self.kontext))
         await self.add_cog(PflegeBefehle(self.kontext))
+        await self.add_cog(LadenBefehle(self.kontext))
+        await self.add_cog(InventarBefehle(self.kontext))
         if self.befehle_synchronisieren:
             if self.testserver_id is not None:
                 testserver = discord.Object(id=self.testserver_id)

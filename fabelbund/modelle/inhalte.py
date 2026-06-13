@@ -86,7 +86,26 @@ class AuftragDefinition(BaseModel):
     fehlschlag: dict[str, object] = Field(default_factory=dict)
 
 
+class GegenstandDefinition(BaseModel):
+    gegenstand_id: str
+    name: str
+    kategorie: str
+    preis: int = Field(ge=0)
+    beschreibung: str = ""
+    effekte: dict[str, int] = Field(default_factory=dict)
+    markierungen: list[str] = Field(default_factory=list)
+
+    @field_validator("effekte")
+    @classmethod
+    def prüfe_effekte(cls, effekte: dict[str, int]) -> dict[str, int]:
+        unbekannt = set(effekte) - ZUSTAND_SCHLÜSSEL
+        if unbekannt:
+            raise ValueError(f"Unbekannte Gegenstandseffekt-Schlüssel: {sorted(unbekannt)}")
+        return effekte
+
+
 class InhaltsKatalog(BaseModel):
     arten: dict[str, ArtDefinition]
     pflegeaktionen: dict[str, PflegeaktionDefinition]
     aufträge: dict[str, AuftragDefinition]
+    gegenstände: dict[str, GegenstandDefinition]

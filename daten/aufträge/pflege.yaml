@@ -1,4 +1,19 @@
 aufträge:
+  - auftrag_id: "tutorial_ruhe_001"
+    name: "Einführung: Ruhe einhalten"
+    art: "tutorial"
+    dauer_tage: 1
+    voraussetzungen:
+      tutorialschritt: "ruhe_starten"
+    ziele:
+      abgeschlossene_aktion: "kontrollierte_ruhe"
+    belohnungen:
+      geld: 80
+      ruf:
+        pflege: 2
+        zuverlässigkeit: 2
+    fehlschlag: {}
+
   - auftrag_id: "pflege_einfach_001"
     name: "Grundpflegeauftrag"
     art: "pflege"

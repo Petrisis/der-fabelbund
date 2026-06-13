@@ -6,7 +6,7 @@ import hashlib
 
 import discord
 
-from fabelbund.dienste.spiel_dienst import AktivitätErgebnis
+from fabelbund.dienste.spiel_dienst import AktivitätErgebnis, AuftragAbgabeErgebnis, FütterungErgebnis, KaufErgebnis
 from fabelbund.modelle.laufzeit import AktiverAuftrag, Aktivität, Fabelwesen, SpielerProfil
 
 
@@ -16,6 +16,8 @@ def profil_einbettung(spieler: SpielerProfil) -> discord.Embed:
     embed.add_field(name="Ställe", value=str(spieler.freigeschaltete_ställe), inline=True)
     embed.add_field(name="Pflege-Ruf", value=str(spieler.ruf.get("pflege", 0)), inline=True)
     embed.add_field(name="Zuverlässigkeit", value=str(spieler.ruf.get("zuverlässigkeit", 0)), inline=True)
+    embed.add_field(name="Mitgliedschaft", value="offiziell" if spieler.offizielles_mitglied else "Einführung", inline=True)
+    embed.add_field(name="Tutorial", value=spieler.tutorialschritt.replace("_", " "), inline=True)
     return embed
 
 
@@ -32,6 +34,36 @@ def auftrag_einbettung(aktiver_auftrag: AktiverAuftrag, auftrag_name: str) -> di
     embed = discord.Embed(title=auftrag_name, color=discord.Color.gold())
     embed.add_field(name="Status", value=aktiver_auftrag.status, inline=True)
     embed.add_field(name="Fabelwesen", value=aktiver_auftrag.fabelwesen_id, inline=True)
+    return embed
+
+
+def auftrag_abgabe_einbettung(ergebnis: AuftragAbgabeErgebnis) -> discord.Embed:
+    titel = "Auftrag abgegeben" if ergebnis.erfolgreich else "Auftrag noch offen"
+    embed = discord.Embed(title=titel, color=discord.Color.gold())
+    embed.add_field(name="Fabling", value=ergebnis.fabelwesen.spitzname, inline=True)
+    if ergebnis.erfolgreich:
+        ruf = ", ".join(f"{schlüssel} +{wert}" for schlüssel, wert in ergebnis.ruf_erhalten.items())
+        embed.add_field(name="Belohnung", value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}", inline=False)
+    embed.add_field(name="Einschätzung", value=ergebnis.hinweis, inline=False)
+    return embed
+
+
+def kauf_einbettung(ergebnis: KaufErgebnis) -> discord.Embed:
+    embed = discord.Embed(title="Einkauf abgeschlossen", color=discord.Color.green())
+    embed.add_field(name="Gegenstand", value=f"{ergebnis.anzahl}x {ergebnis.name}", inline=True)
+    embed.add_field(name="Kosten", value=f"{ergebnis.kosten} Credits", inline=True)
+    embed.add_field(name="Geld", value=f"{ergebnis.spieler.geld} Credits übrig", inline=False)
+    return embed
+
+
+def fütterung_einbettung(ergebnis: FütterungErgebnis) -> discord.Embed:
+    embed = discord.Embed(title="Futter gegeben", color=discord.Color.green())
+    embed.add_field(name="Fabling", value=ergebnis.fabelwesen.spitzname, inline=True)
+    embed.add_field(name="Futter", value=ergebnis.name, inline=True)
+    if ergebnis.lieblingsfutter:
+        embed.add_field(name="Reaktion", value=f"{ergebnis.fabelwesen.spitzname} erkennt sein Lieblingsfutter sofort.", inline=False)
+    else:
+        embed.add_field(name="Reaktion", value=f"{ergebnis.fabelwesen.spitzname} nimmt das Futter ruhig an.", inline=False)
     return embed
 
 

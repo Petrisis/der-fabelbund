@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from fabelbund.modelle.inhalte import ArtDefinition, AuftragDefinition, InhaltsKatalog, PflegeaktionDefinition
+from fabelbund.modelle.inhalte import ArtDefinition, AuftragDefinition, GegenstandDefinition, InhaltsKatalog, PflegeaktionDefinition
 
 
 class YamlLader:
@@ -15,6 +15,7 @@ class YamlLader:
             arten=self.lade_arten(),
             pflegeaktionen=self.lade_pflegeaktionen(),
             aufträge=self.lade_aufträge(),
+            gegenstände=self.lade_gegenstände(),
         )
 
     def lade_arten(self) -> dict[str, ArtDefinition]:
@@ -52,6 +53,20 @@ class YamlLader:
         if not aufträge:
             raise ValueError(f"Keine Aufträge gefunden in {pfad}")
         return aufträge
+
+    def lade_gegenstände(self) -> dict[str, GegenstandDefinition]:
+        ordner = self.daten_ordner / "gegenstände"
+        gegenstände: dict[str, GegenstandDefinition] = {}
+        for pfad in sorted(ordner.glob("*.yaml")):
+            roh = self._lies_yaml(pfad)
+            for gegenstand_id, nutzlast in roh.get("gegenstände", {}).items():
+                definition = GegenstandDefinition.model_validate({"gegenstand_id": gegenstand_id, **nutzlast})
+                if definition.gegenstand_id in gegenstände:
+                    raise ValueError(f"Doppelter gegenstand_id: {definition.gegenstand_id}")
+                gegenstände[definition.gegenstand_id] = definition
+        if not gegenstände:
+            raise ValueError(f"Keine Gegenstände gefunden in {ordner}")
+        return gegenstände
 
     @staticmethod
     def _lies_yaml(pfad: Path) -> dict[str, Any]:

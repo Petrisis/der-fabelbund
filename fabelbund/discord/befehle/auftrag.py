@@ -5,32 +5,69 @@ from discord import app_commands
 from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import auftrag_einbettung
+from fabelbund.discord.darstellung import auftrag_abgabe_einbettung, auftrag_einbettung
 
 
 class AuftragBefehle(commands.Cog):
     def __init__(self, kontext: Anwendungskontext) -> None:
         self.kontext = kontext
 
-    @app_commands.command(name="auftrag", description="Startet oder zeigt deinen aktuellen Pflegeauftrag.")
+    @app_commands.command(name="auftrag", description="Startet oder zeigt deinen aktuellen Auftrag.")
     async def auftrag(self, interaction: discord.Interaction) -> None:
+        nutzer_id = str(interaction.user.id)
         try:
-            aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(str(interaction.user.id))
+            aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(nutzer_id)
         except ValueError as fehler:
             await interaction.response.send_message(str(fehler), ephemeral=True)
             return
         auftrag = self.kontext.spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
         embed = auftrag_einbettung(aktiver_auftrag, auftrag.name)
-        embed.add_field(
-            name="Ziele",
-            value="\n".join(
-                [
-                    f"Gesundheit >= {auftrag.ziele.get('gesundheit_mindestens')}",
-                    f"Stimmung >= {auftrag.ziele.get('stimmung_mindestens')}",
-                    f"Stress <= {auftrag.ziele.get('stress_höchstens')}",
-                    f"Fellpflege >= {auftrag.ziele.get('fellpflege_mindestens')}",
-                ]
-            ),
-            inline=False,
+        embed.add_field(name="Aufgabe", value=auftragsziel_text(auftrag.ziele), inline=False)
+        await interaction.response.send_message(
+            embed=embed,
+            view=AuftragAnsicht(self.kontext, nutzer_id),
+            ephemeral=True,
         )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+class AuftragAnsicht(discord.ui.View):
+    def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
+        super().__init__(timeout=180)
+        self.kontext = kontext
+        self.nutzer_id = nutzer_id
+        button = discord.ui.Button(label="Abgeben", style=discord.ButtonStyle.success, custom_id="auftrag:abgeben")
+        button.callback = self._abgeben
+        self.add_item(button)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if str(interaction.user.id) == self.nutzer_id:
+            return True
+        await interaction.response.send_message("Dieser Auftrag gehört einem anderen Spieler.", ephemeral=True)
+        return False
+
+    async def _abgeben(self, interaction: discord.Interaction) -> None:
+        try:
+            ergebnis = self.kontext.spiel.auftrag_abgeben(self.nutzer_id)
+        except ValueError as fehler:
+            await interaction.response.send_message(str(fehler), ephemeral=True)
+            return
+        view = None if ergebnis.erfolgreich else AuftragAnsicht(self.kontext, self.nutzer_id)
+        await interaction.response.edit_message(embed=auftrag_abgabe_einbettung(ergebnis), view=view)
+
+
+def auftragsziel_text(ziele: dict[str, object]) -> str:
+    if ziele.get("abgeschlossene_aktion") == "kontrollierte_ruhe":
+        return "Lass den zugeteilten Fabling eine vollständige kontrollierte Ruhe abschließen und gib den Auftrag danach ab."
+    if ziele.get("gefüttert"):
+        return "Gib dem zugeteilten Fabling passendes Futter und gib den Auftrag danach ab."
+
+    teile: list[str] = []
+    if ziele.get("gesundheit_mindestens") is not None:
+        teile.append("Der Fabling soll gesundheitlich stabil wirken.")
+    if ziele.get("stimmung_mindestens") is not None:
+        teile.append("Die Stimmung soll mindestens ausgeglichen sein.")
+    if ziele.get("stress_höchstens") is not None:
+        teile.append("Der Fabling soll nicht zu gestresst wirken.")
+    if ziele.get("fellpflege_mindestens") is not None:
+        teile.append("Das Fell soll ordentlich gepflegt sein.")
+    return "\n".join(teile) or "Erfülle die Auftragsbedingungen und gib den Auftrag danach ab."

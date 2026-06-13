@@ -14,7 +14,8 @@ from fabelbund.dienste.auftrag_dienst import AuftragDienst
 from fabelbund.dienste.fabelwesen_fabrik import FabelwesenFabrik
 from fabelbund.dienste.pflege_dienst import PflegeDienst
 from fabelbund.dienste.spiel_dienst import SpielDienst
-from fabelbund.modelle.inhalte import ArtDefinition, AuftragDefinition, InhaltsKatalog, PflegeaktionDefinition
+from fabelbund.modelle.inhalte import ArtDefinition, AuftragDefinition, GegenstandDefinition, InhaltsKatalog, PflegeaktionDefinition
+from fabelbund.modelle.laufzeit import SpielerProfil
 
 
 def inhalts_katalog() -> InhaltsKatalog:
@@ -99,6 +100,25 @@ def inhalts_katalog() -> InhaltsKatalog:
             "belohnungen": {"geld": 300, "ruf": {"pflege": 12, "zuverlässigkeit": 5}},
         }
     )
+    tutorial_auftrag = AuftragDefinition.model_validate(
+        {
+            "auftrag_id": "tutorial_ruhe_001",
+            "name": "Einführung: Ruhe einhalten",
+            "art": "tutorial",
+            "dauer_tage": 1,
+            "ziele": {"abgeschlossene_aktion": "kontrollierte_ruhe"},
+            "belohnungen": {"geld": 80, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
+        }
+    )
+    futter = GegenstandDefinition.model_validate(
+        {
+            "gegenstand_id": "apfelstücke",
+            "name": "Apfelstücke",
+            "kategorie": "futter",
+            "preis": 8,
+            "effekte": {"stimmung": 3, "energie": 2},
+        }
+    )
     return InhaltsKatalog(
         arten={"gluthase": art},
         pflegeaktionen={
@@ -107,7 +127,8 @@ def inhalts_katalog() -> InhaltsKatalog:
             "ausdruck_üben": training,
             "kurzer_blick": check,
         },
-        aufträge={"pflege_einfach_001": auftrag},
+        aufträge={"pflege_einfach_001": auftrag, "tutorial_ruhe_001": tutorial_auftrag},
+        gegenstände={"apfelstücke": futter},
     )
 
 
@@ -128,6 +149,7 @@ class SpielDienstTests(unittest.TestCase):
         )
 
     def erzeuge_starter(self, spiel: SpielDienst, nutzer_id: str = "123") -> None:
+        self.speichere_offiziellen_spieler(spiel, nutzer_id)
         art = spiel.inhalte.arten["gluthase"]
         starter = spiel.fabrik.erzeuge_starter(nutzer_id, art)
         spiel.fabelwesen.speichern(starter)
@@ -139,7 +161,16 @@ class SpielDienstTests(unittest.TestCase):
         )
         spiel.fabelwesen.speichern(fabling)
 
-    def test_profil_erzeugung_startet_ohne_fabling(self) -> None:
+    def speichere_offiziellen_spieler(self, spiel: SpielDienst, nutzer_id: str = "123") -> None:
+        spieler = SpielerProfil(
+            nutzer_id=nutzer_id,
+            tutorialstatus="abgeschlossen",
+            tutorialschritt="fertig",
+            offizielles_mitglied=True,
+        )
+        spiel.spieler.speichern(spieler)
+
+    def test_profil_erzeugung_startet_pflicht_tutorial(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             spieler = spiel.stelle_spieler_sicher("123")
@@ -148,10 +179,11 @@ class SpielDienstTests(unittest.TestCase):
             hat_freien_stall = spiel.hat_freien_stall("123")
 
         self.assertEqual(spieler.geld, 500)
-        self.assertEqual(spieler.freigeschaltete_ställe, 1)
-        self.assertEqual(spieler.stalltypen, {"neutral": 1})
-        self.assertEqual(len(sammlung), 0)
-        self.assertEqual(kapazität, 1)
+        self.assertEqual(spieler.tutorialstatus, "aktiv")
+        self.assertEqual(spieler.tutorialschritt, "ruhe_starten")
+        self.assertEqual(kapazität, 3)
+        self.assertEqual(len(sammlung), 1)
+        self.assertTrue(sammlung[0].status["tutorial_fabling"])
         self.assertTrue(hat_freien_stall)
 
     def test_pflegeaktion_kann_einfachen_auftrag_abschließen(self) -> None:
@@ -160,10 +192,12 @@ class SpielDienstTests(unittest.TestCase):
             self.erzeuge_starter(spiel)
             spiel.pflegeauftrag_starten("123")
             ergebnis = spiel.pflege_anwenden("123", "sanfte_fellpflege")
+            abgabe = spiel.auftrag_abgeben("123")
             spieler = spiel.spieler.holen("123")
 
-        self.assertTrue(ergebnis.auftrag_abgeschlossen)
-        self.assertEqual(ergebnis.geld_erhalten, 300)
+        self.assertFalse(ergebnis.auftrag_abgeschlossen)
+        self.assertTrue(abgabe.erfolgreich)
+        self.assertEqual(abgabe.geld_erhalten, 300)
         self.assertIsNotNone(spieler)
         assert spieler is not None
         self.assertEqual(spieler.geld, 800)
@@ -173,6 +207,7 @@ class SpielDienstTests(unittest.TestCase):
     def test_pflegeauftrag_braucht_fabling(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.speichere_offiziellen_spieler(spiel)
             with self.assertRaisesRegex(ValueError, "noch keinen Fabling"):
                 spiel.pflegeauftrag_starten("123")
 
@@ -242,11 +277,13 @@ class SpielDienstTests(unittest.TestCase):
             spiel.aktivitäten.speichern(mit_vergangenem_ende)
 
             ergebnis = spiel.aktivität_abholen("123")
+            abgabe = spiel.auftrag_abgeben("123")
             spieler = spiel.spieler.holen("123")
 
         self.assertEqual(ergebnis.aktivität.status, "abgeschlossen")
         self.assertEqual(ergebnis.änderungen["fellpflege"], 12)
-        self.assertTrue(ergebnis.auftrag_abgeschlossen)
+        self.assertFalse(ergebnis.auftrag_abgeschlossen)
+        self.assertTrue(abgabe.erfolgreich)
         self.assertIsNotNone(spieler)
         assert spieler is not None
         self.assertEqual(spieler.geld, 800)
@@ -310,6 +347,41 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertGreater(ergebnis.fabelwesen.wettbewerbswerte["ausdruck"], vorher)
         self.assertEqual(ergebnis.wettbewerb_änderungen["ausdruck"], 5)
+
+    def test_laden_und_futter_verändern_inventar_und_fabling(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+            stimmung_vorher = int(fabling.zustand["stimmung"])
+
+            kauf = spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=2)
+            fütterung = spiel.futter_geben("123", "apfelstücke", fabling.id)
+            inventar = spiel.inventar("123")
+
+        self.assertEqual(kauf.kosten, 16)
+        self.assertEqual(inventar["apfelstücke"], 1)
+        self.assertGreater(fütterung.fabelwesen.zustand["stimmung"], stimmung_vorher)
+
+    def test_tutorial_ruheauftrag_wird_per_abgabe_abgeschlossen(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            spieler = spiel.stelle_spieler_sicher("123")
+            auftrag = spiel.pflegeauftrag_starten("123")
+            aktivität = spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe")
+            spiel.aktivitäten.speichern(aktivität.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)}))
+
+            spiel.aktivität_abholen("123", aktivität.id)
+            abgabe = spiel.auftrag_abgeben("123")
+            aktualisierter_spieler = spiel.spieler.holen("123")
+
+        self.assertEqual(spieler.tutorialschritt, "ruhe_starten")
+        self.assertEqual(auftrag.auftrag_id, "tutorial_ruhe_001")
+        self.assertTrue(abgabe.erfolgreich)
+        self.assertEqual(abgabe.geld_erhalten, 80)
+        self.assertIsNotNone(aktualisierter_spieler)
+        assert aktualisierter_spieler is not None
+        self.assertEqual(aktualisierter_spieler.tutorialschritt, "pflege_und_ausrüstung")
 
 
 if __name__ == "__main__":

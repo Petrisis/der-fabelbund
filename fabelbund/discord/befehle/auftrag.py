@@ -117,6 +117,10 @@ class NächsterAuftragAnsicht(discord.ui.View):
 def auftragsziel_text(ziele: dict[str, object]) -> str:
     if ziele.get("abgeschlossene_aktion") == "kontrollierte_ruhe":
         return "Lass den zugeteilten Fabling eine vollständige kontrollierte Ruhe abschließen und gib den Auftrag danach ab."
+    if ziele.get("abgeschlossene_aktion") == "sanfte_fellpflege":
+        return "Pflege: Sanfte Fellpflege."
+    if ziele.get("abgeschlossene_aktion") == "ausdruck_üben":
+        return "Training: Ausdruck üben."
     if ziele.get("gefüttert"):
         return "Gib dem zugeteilten Fabling passendes Futter und gib den Auftrag danach ab."
 

@@ -24,7 +24,7 @@ class PflegeAnsicht(discord.ui.View):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if str(interaction.user.id) == self.nutzer_id:
             return True
-        await interaction.response.send_message("Diese Pflegeansicht gehört einem anderen Spieler.", ephemeral=True)
+        await interaction.response.send_message("Diese Betreuungsansicht gehört einem anderen Spieler.", ephemeral=True)
         return False
 
     def _start_buttons_anlegen(self) -> None:

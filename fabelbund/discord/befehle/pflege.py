@@ -13,7 +13,7 @@ class PflegeBefehle(commands.Cog):
     def __init__(self, kontext: Anwendungskontext) -> None:
         self.kontext = kontext
 
-    @app_commands.command(name="pflege", description="Öffnet Pflegeaktionen für deinen aktuellen Auftrag.")
+    @app_commands.command(name="pflege", description="Öffnet Betreuung und Aktivitäten für deinen aktuellen Auftrag.")
     async def pflege(self, interaction: discord.Interaction) -> None:
         nutzer_id = str(interaction.user.id)
         spieler = self.kontext.spiel.stelle_spieler_sicher(nutzer_id)
@@ -51,7 +51,7 @@ class PflegeBefehle(commands.Cog):
             )
             return
         await interaction.response.send_message(
-            embed=fabelwesen_einbettung(fabelwesen, titel="Pflege"),
+            embed=fabelwesen_einbettung(fabelwesen, titel="Betreuung"),
             view=PflegeAnsicht(self.kontext.spiel, nutzer_id),
             ephemeral=True,
         )

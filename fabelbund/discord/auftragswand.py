@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 import discord
 
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.darstellung import auftrag_einbettung, auftragswand_einbettung
+
+
+log = logging.getLogger(__name__)
 
 
 class AuftragswandAnsicht(discord.ui.View):
@@ -48,10 +53,12 @@ class AuftragswandAnsicht(discord.ui.View):
 
 async def auftragswand_erstellen_oder_aktualisieren(kontext: Anwendungskontext, guild: discord.Guild) -> discord.Message | None:
     konfiguration = kontext.server.holen(str(guild.id))
-    if konfiguration is None:
+    if konfiguration is None or not konfiguration.aufträge_kanal_id:
+        log.warning("Auftragswand ohne gespeicherten Auftragskanal angefordert: %s (%s)", guild.name, guild.id)
         return None
     kanal = guild.get_channel(int(konfiguration.aufträge_kanal_id))
     if not isinstance(kanal, discord.TextChannel):
+        log.warning("Gespeicherter Auftragskanal existiert nicht mehr: %s (%s)", guild.name, guild.id)
         return None
 
     embed = auftragswand_einbettung(kontext.spiel.öffentliche_aufträge())
@@ -61,7 +68,11 @@ async def auftragswand_erstellen_oder_aktualisieren(kontext: Anwendungskontext, 
         try:
             nachricht = await kanal.fetch_message(int(konfiguration.auftragswand_nachricht_id))
         except discord.NotFound:
+            log.warning("Gespeicherte Auftragswand-Nachricht existiert nicht mehr: %s (%s)", guild.name, guild.id)
             nachricht = None
+        except discord.Forbidden as fehler:
+            log.exception("Keine Leserechte für die Auftragswand in %s (%s): %s", guild.name, guild.id, fehler)
+            return None
     if nachricht is None:
         nachricht = await kanal.send(embed=embed, view=view)
     else:
@@ -81,7 +92,7 @@ async def chronik_senden(kontext: Anwendungskontext, guild: discord.Guild | None
     if guild is None:
         return
     konfiguration = kontext.server.holen(str(guild.id))
-    if konfiguration is None:
+    if konfiguration is None or not konfiguration.chronik_kanal_id:
         return
     kanal = guild.get_channel(int(konfiguration.chronik_kanal_id))
     if isinstance(kanal, discord.TextChannel):

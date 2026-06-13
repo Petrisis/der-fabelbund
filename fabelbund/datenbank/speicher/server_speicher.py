@@ -21,6 +21,7 @@ class ServerSpeicher:
         return ServerKonfiguration.model_validate(
             {
                 "guild_id": zeile["guild_id"],
+                "eingerichtet": bool(zeile["eingerichtet"]),
                 "kategorie_id": zeile["kategorie_id"],
                 "aufträge_kanal_id": zeile["aufträge_kanal_id"],
                 "chronik_kanal_id": zeile["chronik_kanal_id"],
@@ -38,6 +39,7 @@ class ServerSpeicher:
             ServerKonfiguration.model_validate(
                 {
                     "guild_id": zeile["guild_id"],
+                    "eingerichtet": bool(zeile["eingerichtet"]),
                     "kategorie_id": zeile["kategorie_id"],
                     "aufträge_kanal_id": zeile["aufträge_kanal_id"],
                     "chronik_kanal_id": zeile["chronik_kanal_id"],
@@ -54,6 +56,7 @@ class ServerSpeicher:
         aktualisiert = konfiguration.model_copy(update={"aktualisiert_am": datetime.now(timezone.utc)})
         nutzlast = (
             aktualisiert.guild_id,
+            int(aktualisiert.eingerichtet),
             aktualisiert.kategorie_id,
             aktualisiert.aufträge_kanal_id,
             aktualisiert.chronik_kanal_id,
@@ -66,11 +69,12 @@ class ServerSpeicher:
             verbindung.execute(
                 """
                 INSERT INTO server_konfigurationen (
-                    guild_id, kategorie_id, aufträge_kanal_id, chronik_kanal_id, events_kanal_id,
+                    guild_id, eingerichtet, kategorie_id, aufträge_kanal_id, chronik_kanal_id, events_kanal_id,
                     auftragswand_nachricht_id, eingerichtet_am, aktualisiert_am
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(guild_id) DO UPDATE SET
+                    eingerichtet = excluded.eingerichtet,
                     kategorie_id = excluded.kategorie_id,
                     aufträge_kanal_id = excluded.aufträge_kanal_id,
                     chronik_kanal_id = excluded.chronik_kanal_id,

@@ -85,10 +85,11 @@ class Datenbank:
 
                 CREATE TABLE IF NOT EXISTS server_konfigurationen (
                     guild_id TEXT PRIMARY KEY,
-                    kategorie_id TEXT NOT NULL,
-                    aufträge_kanal_id TEXT NOT NULL,
-                    chronik_kanal_id TEXT NOT NULL,
-                    events_kanal_id TEXT NOT NULL,
+                    eingerichtet INTEGER NOT NULL DEFAULT 0,
+                    kategorie_id TEXT,
+                    aufträge_kanal_id TEXT,
+                    chronik_kanal_id TEXT,
+                    events_kanal_id TEXT,
                     auftragswand_nachricht_id TEXT,
                     eingerichtet_am TEXT NOT NULL,
                     aktualisiert_am TEXT NOT NULL
@@ -131,3 +132,9 @@ class Datenbank:
                 verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN abbruch_effekte_json TEXT NOT NULL DEFAULT '{}'")
             if "folgeaktionen_json" not in aktivität_spalten:
                 verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN folgeaktionen_json TEXT NOT NULL DEFAULT '[]'")
+            server_spalten = {
+                zeile["name"]
+                for zeile in verbindung.execute("PRAGMA table_info(server_konfigurationen)").fetchall()
+            }
+            if "eingerichtet" not in server_spalten:
+                verbindung.execute("ALTER TABLE server_konfigurationen ADD COLUMN eingerichtet INTEGER NOT NULL DEFAULT 1")

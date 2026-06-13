@@ -75,10 +75,11 @@ class Aktivität(BaseModel):
 
 class ServerKonfiguration(BaseModel):
     guild_id: str
-    kategorie_id: str
-    aufträge_kanal_id: str
-    chronik_kanal_id: str
-    events_kanal_id: str
+    eingerichtet: bool = False
+    kategorie_id: str | None = None
+    aufträge_kanal_id: str | None = None
+    chronik_kanal_id: str | None = None
+    events_kanal_id: str | None = None
     auftragswand_nachricht_id: str | None = None
     eingerichtet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     aktualisiert_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 from fabelbund.datenbank.datenbank import Datenbank
 from fabelbund.datenbank.speicher.aktivität_speicher import AktivitätSpeicher
@@ -15,8 +16,11 @@ from fabelbund.dienste.auftrag_dienst import AuftragDienst
 from fabelbund.dienste.fabelwesen_fabrik import FabelwesenFabrik
 from fabelbund.dienste.pflege_dienst import PflegeDienst
 from fabelbund.dienste.spiel_dienst import SpielDienst
+from fabelbund.anwendung import Anwendungskontext
+from fabelbund.discord.server_einrichtung import guild_ids_für_nachholeinrichtung
 from fabelbund.modelle.inhalte import ArtDefinition, AuftragDefinition, GegenstandDefinition, InhaltsKatalog, PflegeaktionDefinition
 from fabelbund.modelle.laufzeit import ServerKonfiguration, SpielerProfil
+from fabelbund_bot.bot import FabelbundBot
 
 
 def inhalts_katalog() -> InhaltsKatalog:
@@ -564,6 +568,7 @@ class SpielDienstTests(unittest.TestCase):
             speicher.speichern(
                 ServerKonfiguration(
                     guild_id="1",
+                    eingerichtet=True,
                     kategorie_id="2",
                     aufträge_kanal_id="3",
                     chronik_kanal_id="4",
@@ -576,9 +581,62 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertIsNotNone(geladen)
         assert geladen is not None
+        self.assertTrue(geladen.eingerichtet)
         self.assertEqual(geladen.aufträge_kanal_id, "3")
         self.assertEqual(geladen.auftragswand_nachricht_id, "6")
         self.assertEqual(len(alle), 1)
+
+    def test_migration_legt_server_einrichtungsstatus_an(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank = Datenbank(Path(tmp) / "test.sqlite3")
+            datenbank.migrieren()
+            with datenbank.verbinden() as verbindung:
+                spalten = {
+                    zeile["name"]
+                    for zeile in verbindung.execute("PRAGMA table_info(server_konfigurationen)").fetchall()
+                }
+
+        self.assertIn("eingerichtet", spalten)
+
+    def test_nur_nicht_eingerichtete_guilds_werden_nachgeholt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank = Datenbank(Path(tmp) / "test.sqlite3")
+            datenbank.migrieren()
+            speicher = ServerSpeicher(datenbank)
+            speicher.speichern(
+                ServerKonfiguration(
+                    guild_id="1",
+                    eingerichtet=True,
+                    kategorie_id="2",
+                    aufträge_kanal_id="3",
+                    chronik_kanal_id="4",
+                    events_kanal_id="5",
+                )
+            )
+
+            nachzuholen = guild_ids_für_nachholeinrichtung(
+                speicher,
+                [SimpleNamespace(id=1), SimpleNamespace(id=2)],
+            )
+
+        self.assertEqual(nachzuholen, ["2"])
+
+
+class BotLifecycleTests(unittest.IsolatedAsyncioTestCase):
+    async def test_einrichtungscommand_wird_nicht_registriert(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank = Datenbank(Path(tmp) / "test.sqlite3")
+            datenbank.migrieren()
+            spiel = SpielDienstTests().baue_spiel(Path(tmp) / "spiel.sqlite3")
+            kontext = Anwendungskontext(spiel=spiel, server=ServerSpeicher(datenbank))
+            bot = FabelbundBot(kontext, befehle_synchronisieren=False, testserver_id=None)
+
+            await bot.setup_hook()
+            befehlsnamen = {befehl.name for befehl in bot.tree.get_commands()}
+            await bot.close()
+
+        self.assertNotIn("fabelbund_einrichten", befehlsnamen)
+        self.assertIn("profil", befehlsnamen)
 
 
 if __name__ == "__main__":

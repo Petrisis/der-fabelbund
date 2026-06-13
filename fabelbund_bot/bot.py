@@ -8,12 +8,12 @@ from discord.ext import commands
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.auftragswand import AuftragswandAnsicht
 from fabelbund.discord.befehle.auftrag import AuftragBefehle
-from fabelbund.discord.befehle.einrichtung import EinrichtungBefehle
 from fabelbund.discord.befehle.inventar import InventarBefehle
 from fabelbund.discord.befehle.laden import LadenBefehle
 from fabelbund.discord.befehle.profil import ProfilBefehle
 from fabelbund.discord.befehle.sammlung import SammlungBefehle
 from fabelbund.discord.befehle.stall import StallBefehle
+from fabelbund.discord.server_einrichtung import ServerEinrichtungDienst, guild_ids_für_nachholeinrichtung
 from fabelbund_bot.konfiguration import lade_konfiguration
 
 
@@ -27,11 +27,13 @@ class FabelbundBot(commands.Bot):
         self.kontext = kontext
         self.befehle_synchronisieren = befehle_synchronisieren
         self.testserver_id = testserver_id
+        self.server_einrichtung = ServerEinrichtungDienst(kontext, self)
+        self.server_einrichtung_geprüft = False
 
     async def setup_hook(self) -> None:
         for server in self.kontext.server.auflisten():
-            self.add_view(AuftragswandAnsicht(self.kontext, server.guild_id))
-        await self.add_cog(EinrichtungBefehle(self.kontext))
+            if server.eingerichtet:
+                self.add_view(AuftragswandAnsicht(self.kontext, server.guild_id))
         await self.add_cog(ProfilBefehle(self.kontext))
         await self.add_cog(SammlungBefehle(self.kontext))
         await self.add_cog(StallBefehle(self.kontext))
@@ -51,6 +53,16 @@ class FabelbundBot(commands.Bot):
     async def on_ready(self) -> None:
         assert self.user is not None
         log.info("Angemeldet als %s (%s).", self.user, self.user.id)
+        if self.server_einrichtung_geprüft:
+            return
+        self.server_einrichtung_geprüft = True
+        nachzuholen = guild_ids_für_nachholeinrichtung(self.kontext.server, list(self.guilds))
+        for guild in self.guilds:
+            if str(guild.id) in nachzuholen:
+                await self.server_einrichtung.guild_sicherstellen(guild)
+
+    async def on_guild_join(self, guild: discord.Guild) -> None:
+        await self.server_einrichtung.guild_sicherstellen(guild)
 
 
 def main() -> None:

@@ -59,7 +59,15 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [x] Schlaf abbrechen stärker
   - [x] Training abbrechen gibt Belastung, aber wenig Fortschritt
 - [ ] Doktorbesuch freischalten und Kostenmodell ergänzen
-- [ ] Aktionsauswahl pro Fabling direkt aus der Stallansicht starten
+- [x] Stall- und Betreuungsansicht zusammenführen
+  - [x] `/stall` und `/betreuung` durch `/fablinge` ersetzen
+  - [x] Fabling-Auswahl für bis zu 25 Fablinge
+  - [x] Futter- und Stallpriorität in der Fabling-Detailansicht behalten
+  - [x] Betreuungsaktivitäten pro ausgewähltem Fabling starten
+  - [x] Passive Aktivitäten erlauben Rücknavigation, aktive Betreuung bindet den Spieler
+  - [x] Redundante Folgeaktionslisten aus Aktivitätsergebnissen entfernen
+- [x] Aktionsauswahl pro Fabling direkt aus der Fabling-Ansicht starten
+- [x] Ephemere Bedienansichten für längere Aktivitäten auf lange Timeouts umstellen
 
 ## 4. Tutorial und Einstieg
 
@@ -68,16 +76,16 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 - [x] Tutorial vergibt erste Probe-Fablinge
 - [ ] Tutorial erklärt Schritt für Schritt
   - [x] Profil
-  - [ ] Stall
+  - [ ] Fablinge und Ställe über `/fablinge`
   - [x] ersten Fabling ansehen
-  - [x] erste Pflege/Ruhe starten
+  - [x] erste Pflege/Ruhe über Fabling-Detailansicht starten
   - [x] Aktivität abholen
   - [x] ersten Auftrag verstehen
 - [x] Erster Tutorialauftrag: kontrollierte Ruhe abschließen und Auftrag abgeben
 - [ ] Weitere Tutorialschritte ergänzen
   - [ ] Pflege und Ausrüstung
   - [ ] Futter
-  - [ ] Stall
+  - [ ] Fablinge/Ställe
   - [ ] aktive Betreuung
   - [ ] Training
   - [ ] Check
@@ -91,7 +99,7 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 - [x] Auftragsansicht zeigt Beschreibung, Fabling-Zuteilung und Belohnung
 - [x] Tutorialabgabe bietet direkten Button für den nächsten Auftrag
 - [x] Aktionen schlagen Folgeaktivitäten vor
-- [x] Aktivitätsmenü zeigt zuerst Kategorien und danach konkrete Aktionen
+- [x] Fabling-Detailansicht zeigt zuerst Aktivitätskategorien und danach konkrete Aktionen
 - [x] Fablinge haben Futterpräferenzen
 - [x] Grundinventar ergänzen
 - [x] Laden mit ersten Futter-, Pflege- und Spielgegenständen ergänzen

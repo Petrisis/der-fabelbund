@@ -5,6 +5,8 @@ __pycache__/
 *.db
 bot.log
 bot.err
+bot-neustart.log
+bot-neustart.err
 .env
 .pytest_cache/
 .mypy_cache/

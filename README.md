@@ -18,7 +18,7 @@ Aktuell umgesetzt:
 - SQLite-Persistenz
 - Spielerprofil mit Geld, Ruf und Lizenzen
 - Starter-Fabelwesen
-- `/profil`, `/sammlung`, `/auftrag`, `/pflege`
+- `/profil`, `/sammlung`, `/auftrag`, `/fablinge`
 - einfache Pflegeaktion per Button
 - einfacher Pflegeauftrag mit Geld- und Rufbelohnung
 - GitHub-Pages-Vorbereitung für Rechtstexte

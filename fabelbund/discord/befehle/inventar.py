@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.darstellung import fütterung_einbettung
+from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 
 
 class InventarBefehle(commands.Cog):
@@ -26,7 +27,7 @@ class InventarBefehle(commands.Cog):
 
 class InventarAnsicht(discord.ui.View):
     def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
-        super().__init__(timeout=180)
+        super().__init__(timeout=EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN)
         self.kontext = kontext
         self.nutzer_id = nutzer_id
         inventar = kontext.spiel.inventar(nutzer_id)

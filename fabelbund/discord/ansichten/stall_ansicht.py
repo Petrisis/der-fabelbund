@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import discord
 
 from fabelbund.dienste.spiel_dienst import MAXIMALE_FABLINGE_PRO_SPIELER, SpielDienst
-from fabelbund.discord.darstellung import aktivität_ergebnis_einbettung, fabelwesen_einbettung, unixzeit
+from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, unixzeit
+from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 from fabelbund.modelle.laufzeit import Fabelwesen
 
 
@@ -18,24 +21,38 @@ class StallAnsicht(discord.ui.View):
         fabelwesen: list[Fabelwesen],
         kapazität: int,
         ausgewählt_id: str | None = None,
+        kategorie: str | None = None,
     ) -> None:
-        super().__init__(timeout=180)
+        super().__init__(timeout=EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN)
         self.spiel = spiel
         self.nutzer_id = nutzer_id
         self.kapazität = kapazität
         self.ausgewählt_id = ausgewählt_id
+        self.kategorie = kategorie
         self.fabelwesen_nach_id = {fabling.id: fabling for fabling in fabelwesen[:MAXIMALE_STALL_BUTTONS]}
-        for index, fabling in enumerate(self.fabelwesen_nach_id.values()):
-            self.add_item(self._fabling_button(fabling, index))
-        if kapazität < MAXIMALE_STALL_BUTTONS:
-            self.add_item(self._erweitern_button(len(self.fabelwesen_nach_id)))
-        if ausgewählt_id is not None and ausgewählt_id in self.fabelwesen_nach_id:
-            aktivität = self.spiel.laufende_aktivität_für_fabelwesen(ausgewählt_id)
-            if aktivität is not None and not aktivität.abbrechbar:
+        if ausgewählt_id is None:
+            for index, fabling in enumerate(self.fabelwesen_nach_id.values()):
+                self.add_item(self._fabling_button(fabling, index))
+            if kapazität < MAXIMALE_STALL_BUTTONS:
+                self.add_item(self._erweitern_button(len(self.fabelwesen_nach_id)))
+            return
+
+        if ausgewählt_id in self.fabelwesen_nach_id:
+            self.add_item(FutterPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
+            self.add_item(StallPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
+            aktivität = self._angezeigte_aktivität(ausgewählt_id)
+            if aktivität is not None:
                 self.add_item(self._abholen_button(aktivität.id))
-            if len(self.children) <= 23:
-                self.add_item(StallPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
-                self.add_item(FutterPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
+                if aktivität.abbrechbar:
+                    self.add_item(self._abbrechen_button(aktivität.id))
+                if not aktivität.braucht_spieler:
+                    self.add_item(self._zurück_button())
+            elif kategorie is None:
+                self._kategorie_buttons_anlegen()
+                self.add_item(self._zurück_button())
+            else:
+                self._aktions_buttons_anlegen(kategorie, ausgewählt_id)
+                self.add_item(self._zurück_button())
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if str(interaction.user.id) == self.nutzer_id:
@@ -78,6 +95,25 @@ class StallAnsicht(discord.ui.View):
         button.callback = callback
         return button
 
+    def _abbrechen_button(self, aktivität_id: str) -> discord.ui.Button:
+        button = discord.ui.Button(label="Abbrechen", style=discord.ButtonStyle.danger, custom_id=f"stall:abbrechen:{aktivität_id}")
+
+        async def callback(interaction: discord.Interaction) -> None:
+            try:
+                ergebnis = self.spiel.aktivität_abbrechen(self.nutzer_id, aktivität_id)
+            except ValueError as fehler:
+                await interaction.response.send_message(str(fehler), ephemeral=True)
+                return
+            fabelwesen = self.spiel.sammlung(self.nutzer_id)
+            kapazität = self.spiel.stall_kapazität(self.nutzer_id)
+            await interaction.response.edit_message(
+                embed=aktivität_ergebnis_einbettung(ergebnis),
+                view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität, ergebnis.fabelwesen.id),
+            )
+
+        button.callback = callback
+        return button
+
     def _abholen_button(self, aktivität_id: str) -> discord.ui.Button:
         button = discord.ui.Button(label="Abholen", style=discord.ButtonStyle.success, custom_id=f"stall:abholen:{aktivität_id}")
 
@@ -113,6 +149,157 @@ class StallAnsicht(discord.ui.View):
 
         button.callback = callback
         return button
+
+    def _kategorie_buttons_anlegen(self) -> None:
+        vorhandene_kategorien = {
+            aktion.kategorie
+            for aktion in self.spiel.inhalte.pflegeaktionen.values()
+            if not aktion.gesperrt
+        }
+        for kategorie in ("pflege", "ruhe", "spiel", "training", "check"):
+            if kategorie not in vorhandene_kategorien:
+                continue
+            button = discord.ui.Button(
+                label=kategorie_label(kategorie),
+                style=discord.ButtonStyle.secondary,
+                custom_id=f"stall:kategorie:{kategorie}",
+            )
+            button.callback = self._kategorie_callback(kategorie)
+            self.add_item(button)
+
+    def _aktions_buttons_anlegen(self, kategorie: str, fabelwesen_id: str) -> None:
+        for aktion in self.spiel.inhalte.pflegeaktionen.values():
+            if aktion.gesperrt or aktion.kategorie != kategorie:
+                continue
+            button = discord.ui.Button(
+                label=f"{aktion.name} ({dauer_kurz(aktion.dauer_sekunden)})",
+                style=discord.ButtonStyle.secondary,
+                custom_id=f"stall:aktion:{aktion.aktion_id}",
+            )
+            button.callback = self._aktion_callback(aktion.aktion_id, fabelwesen_id)
+            self.add_item(button)
+
+    def _kategorie_callback(self, kategorie: str):
+        async def callback(interaction: discord.Interaction) -> None:
+            fabelwesen = self.spiel.sammlung(self.nutzer_id)
+            kapazität = self.spiel.stall_kapazität(self.nutzer_id)
+            ausgewählt = self.fabelwesen_nach_id.get(self.ausgewählt_id or "")
+            embed = fabelwesen_detail_einbettung(self.spiel, ausgewählt) if ausgewählt else discord.Embed(title="Fabling")
+            await interaction.response.edit_message(
+                embed=embed,
+                view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität, self.ausgewählt_id, kategorie),
+            )
+
+        return callback
+
+    def _aktion_callback(self, aktion_id: str, fabelwesen_id: str):
+        async def callback(interaction: discord.Interaction) -> None:
+            try:
+                aktivität = self.spiel.pflegeaktivität_starten(self.nutzer_id, aktion_id, fabelwesen_id)
+            except ValueError as fehler:
+                await interaction.response.send_message(str(fehler), ephemeral=True)
+                return
+            if aktivität.endet_am <= datetime.now(timezone.utc):
+                ergebnis = self.spiel.aktivität_abholen(self.nutzer_id, aktivität.id)
+                fabelwesen = self.spiel.sammlung(self.nutzer_id)
+                kapazität = self.spiel.stall_kapazität(self.nutzer_id)
+                await interaction.response.edit_message(
+                    embed=aktivität_ergebnis_einbettung(ergebnis),
+                    view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität, ergebnis.fabelwesen.id),
+                )
+                return
+            fabelwesen = self.spiel.sammlung(self.nutzer_id)
+            kapazität = self.spiel.stall_kapazität(self.nutzer_id)
+            await interaction.response.edit_message(
+                embed=aktivität_einbettung(aktivität),
+                view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität, fabelwesen_id),
+            )
+
+        return callback
+
+    def _zurück_button(self) -> discord.ui.Button:
+        button = discord.ui.Button(label="Zurück", style=discord.ButtonStyle.primary, custom_id="stall:zurück")
+
+        async def callback(interaction: discord.Interaction) -> None:
+            fabelwesen = self.spiel.sammlung(self.nutzer_id)
+            kapazität = self.spiel.stall_kapazität(self.nutzer_id)
+            if self.kategorie is not None:
+                ausgewählt = self.fabelwesen_nach_id.get(self.ausgewählt_id or "")
+                embed = fabelwesen_detail_einbettung(self.spiel, ausgewählt) if ausgewählt else discord.Embed(title="Fabling")
+                await interaction.response.edit_message(
+                    embed=embed,
+                    view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität, self.ausgewählt_id),
+                )
+                return
+            await interaction.response.edit_message(
+                embed=stallübersicht_einbettung(self.spiel, self.nutzer_id, fabelwesen, kapazität),
+                view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität),
+            )
+
+        button.callback = callback
+        return button
+
+    def _angezeigte_aktivität(self, fabelwesen_id: str):
+        aktive_spieleraktivität = self.spiel.laufende_aktive_spieleraktivität(self.nutzer_id)
+        if aktive_spieleraktivität is not None:
+            return aktive_spieleraktivität
+        return self.spiel.laufende_aktivität_für_fabelwesen(fabelwesen_id)
+
+
+def stallübersicht_einbettung(spiel: SpielDienst, nutzer_id: str, fabelwesen: list[Fabelwesen], kapazität: int) -> discord.Embed:
+    embed = discord.Embed(title="Fablinge", color=discord.Color.blurple())
+    embed.description = "Wähle einen Fabling aus."
+    if not fabelwesen:
+        embed.description = "Dein Stall ist noch leer. Das Tutorial wird dir den ersten Fabling anvertrauen."
+    embed.add_field(name="Fablinge", value=f"{len(fabelwesen)}/{kapazität}", inline=True)
+    embed.add_field(name="Maximal möglich", value=str(MAXIMALE_STALL_BUTTONS), inline=True)
+    belegung = spiel.stallbelegung(nutzer_id)
+    if belegung:
+        embed.add_field(
+            name="Ställe",
+            value="\n".join(f"{stalltyp_label(eintrag.stalltyp)}: {eintrag.belegt}/{eintrag.kapazität}" for eintrag in belegung),
+            inline=False,
+        )
+    return embed
+
+
+def fabelwesen_detail_einbettung(spiel: SpielDienst, fabelwesen: Fabelwesen | None) -> discord.Embed:
+    if fabelwesen is None:
+        return discord.Embed(title="Fabling", color=discord.Color.blurple())
+    embed = fabelwesen_einbettung(fabelwesen)
+    aktivität = spiel.laufende_aktivität_für_fabelwesen(fabelwesen.id)
+    if aktivität is not None:
+        embed.add_field(
+            name="Aktivität",
+            value=f"{aktivität.name}\nFertig <t:{unixzeit(aktivität.endet_am)}:R>",
+            inline=False,
+        )
+    futter = futterpriorität_text(spiel, fabelwesen)
+    if futter:
+        embed.add_field(name="Futterpräferenz", value=futter, inline=False)
+    return embed
+
+
+def dauer_kurz(sekunden: int) -> str:
+    if sekunden <= 0:
+        return "sofort"
+    minuten = max(1, round(sekunden / 60))
+    if minuten < 60:
+        return f"{minuten}m"
+    stunden, rest = divmod(minuten, 60)
+    if rest == 0:
+        return f"{stunden}h"
+    return f"{stunden}h {rest}m"
+
+
+def kategorie_label(kategorie: str) -> str:
+    return {
+        "pflege": "Pflege",
+        "ruhe": "Ruhe",
+        "spiel": "Spiel",
+        "training": "Training",
+        "check": "Check",
+    }.get(kategorie, kategorie[:1].upper() + kategorie[1:])
 
 
 def element_emoji(element: str) -> str:

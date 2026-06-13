@@ -7,6 +7,7 @@ from discord.ext import commands
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.auftragswand import chronik_senden, auftragswand_aktualisieren
 from fabelbund.discord.darstellung import auftrag_abgabe_einbettung, auftrag_einbettung
+from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 
 
 class AuftragBefehle(commands.Cog):
@@ -49,7 +50,7 @@ class AuftragBefehle(commands.Cog):
 
 class AuftragAnsicht(discord.ui.View):
     def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
-        super().__init__(timeout=180)
+        super().__init__(timeout=EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN)
         self.kontext = kontext
         self.nutzer_id = nutzer_id
         button = discord.ui.Button(label="Abgeben", style=discord.ButtonStyle.success, custom_id="auftrag:abgeben")
@@ -88,7 +89,7 @@ class AuftragAnsicht(discord.ui.View):
 
 class NächsterAuftragAnsicht(discord.ui.View):
     def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
-        super().__init__(timeout=180)
+        super().__init__(timeout=EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN)
         self.kontext = kontext
         self.nutzer_id = nutzer_id
         button = discord.ui.Button(label="Nächster Auftrag", style=discord.ButtonStyle.primary, custom_id="auftrag:nächster")

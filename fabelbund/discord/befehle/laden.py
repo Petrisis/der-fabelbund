@@ -6,6 +6,7 @@ from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.darstellung import kauf_einbettung
+from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 
 
 class LadenBefehle(commands.Cog):
@@ -24,7 +25,7 @@ class LadenBefehle(commands.Cog):
 
 class LadenAnsicht(discord.ui.View):
     def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
-        super().__init__(timeout=180)
+        super().__init__(timeout=EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN)
         self.kontext = kontext
         self.nutzer_id = nutzer_id
         for gegenstand in kontext.spiel.inhalte.gegenstände.values():

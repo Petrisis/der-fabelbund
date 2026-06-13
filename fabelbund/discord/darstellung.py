@@ -136,9 +136,9 @@ def aktivität_einbettung(aktivität: Aktivität) -> discord.Embed:
     embed.add_field(name="Status", value="läuft", inline=True)
     embed.add_field(name="Fertig", value=f"<t:{unixzeit(aktivität.endet_am)}:R>", inline=True)
     if aktivität.braucht_spieler:
-        embed.add_field(name="Betreuung", value="Du bist dabei gebunden.", inline=False)
+        embed.add_field(name="Betreuung", value="Du bleibst währenddessen bei dem Fabling.", inline=False)
     else:
-        embed.add_field(name="Betreuung", value="Läuft ohne deine ständige Anwesenheit.", inline=False)
+        embed.add_field(name="Betreuung", value="Du kannst dich anderem widmen.", inline=False)
     return embed
 
 
@@ -160,11 +160,6 @@ def aktivität_ergebnis_einbettung(ergebnis: AktivitätErgebnis) -> discord.Embe
             value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}",
             inline=False,
         )
-    embed.add_field(
-        name="Nächste Schritte",
-        value=folgeaktionen_text(ergebnis.aktivität),
-        inline=False,
-    )
     return embed
 
 
@@ -222,30 +217,6 @@ def trainingsfortschritt_text(ergebnis: AktivitätErgebnis) -> str:
         wert = int(ergebnis.fabelwesen.sportwerte.get(schlüssel, 0))
         zeilen.append(f"{schlüssel_label(schlüssel)} {fortschrittsbalken(wert)}")
     return "\n".join(zeilen)
-
-
-def folgeaktionen_text(aktivität: Aktivität) -> str:
-    if not aktivität.folgeaktionen:
-        return "Wähle in `/pflege` zuerst eine Kategorie: Pflege, Ruhe, Spiel, Training oder Check."
-    folgeaktionen = aktivität.folgeaktionen
-    zeilen = [f"- {aktionsname(aktion_id)}" for aktion_id in folgeaktionen[:5]]
-    return "\n".join(zeilen) + "\nÖffne `/pflege`, um weiterzumachen."
-
-
-def aktionsname(aktion_id: str) -> str:
-    return {
-        "kurzer_blick": "Kurzer Blick",
-        "genauer_check": "Genauer Check",
-        "sanfte_fellpflege": "Sanfte Fellpflege",
-        "gründliche_fellpflege": "Gründliche Fellpflege",
-        "kurze_pause": "Kurze Pause",
-        "kontrollierte_ruhe": "Kontrollierte Ruhe",
-        "langer_schlaf": "Langer Schlaf",
-        "ruhige_nähe": "Ruhige Nähe",
-        "gemeinsames_spiel": "Gemeinsames Spiel",
-        "ausdruck_üben": "Ausdruck üben",
-        "harmonie_üben": "Harmonie üben",
-    }.get(aktion_id, schlüssel_label(aktion_id))
 
 
 def fortschrittsbalken(wert: int) -> str:

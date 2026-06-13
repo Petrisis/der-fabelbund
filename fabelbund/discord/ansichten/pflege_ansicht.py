@@ -10,10 +10,11 @@ from fabelbund.modelle.laufzeit import Aktivität
 
 
 class PflegeAnsicht(discord.ui.View):
-    def __init__(self, spiel: SpielDienst, nutzer_id: str) -> None:
+    def __init__(self, spiel: SpielDienst, nutzer_id: str, kategorie: str | None = None) -> None:
         super().__init__(timeout=180)
         self.spiel = spiel
         self.nutzer_id = nutzer_id
+        self.kategorie = kategorie
         self.aktivität = self._angezeigte_aktivität()
         if self.aktivität is None:
             self._start_buttons_anlegen()
@@ -27,10 +28,34 @@ class PflegeAnsicht(discord.ui.View):
         return False
 
     def _start_buttons_anlegen(self) -> None:
+        if self.kategorie is None:
+            self._kategorie_buttons_anlegen()
+            return
+
         for aktion in self.spiel.inhalte.pflegeaktionen.values():
-            if aktion.gesperrt:
+            if aktion.gesperrt or aktion.kategorie != self.kategorie:
                 continue
             self.add_item(self._start_button(aktion.aktion_id, stil_für_kategorie(aktion.kategorie)))
+        zurück = discord.ui.Button(label="Zurück", style=discord.ButtonStyle.secondary, custom_id="pflege:zurück")
+        zurück.callback = self._zurück
+        self.add_item(zurück)
+
+    def _kategorie_buttons_anlegen(self) -> None:
+        vorhandene_kategorien = {
+            aktion.kategorie
+            for aktion in self.spiel.inhalte.pflegeaktionen.values()
+            if not aktion.gesperrt
+        }
+        for kategorie in ("pflege", "ruhe", "spiel", "training", "check"):
+            if kategorie not in vorhandene_kategorien:
+                continue
+            button = discord.ui.Button(
+                label=kategorie_label(kategorie),
+                style=stil_für_kategorie(kategorie),
+                custom_id=f"pflege:kategorie:{kategorie}",
+            )
+            button.callback = self._kategorie_callback(kategorie)
+            self.add_item(button)
 
     def _aktivitäts_buttons_anlegen(self) -> None:
         aktivität = self.aktivität
@@ -41,6 +66,12 @@ class PflegeAnsicht(discord.ui.View):
             abbrechen = discord.ui.Button(label="Abbrechen", style=discord.ButtonStyle.danger, custom_id=f"pflege:abbrechen:{aktivität.id}")
             abbrechen.callback = self._abbrechen
             self.add_item(abbrechen)
+
+    def _kategorie_callback(self, kategorie: str):
+        async def callback(interaction: discord.Interaction) -> None:
+            await interaction.response.edit_message(view=PflegeAnsicht(self.spiel, self.nutzer_id, kategorie=kategorie))
+
+        return callback
 
     def _start_button(self, aktion_id: str, stil: discord.ButtonStyle) -> discord.ui.Button:
         aktion = self.spiel.inhalte.pflegeaktionen[aktion_id]
@@ -63,6 +94,9 @@ class PflegeAnsicht(discord.ui.View):
 
         button.callback = callback
         return button
+
+    async def _zurück(self, interaction: discord.Interaction) -> None:
+        await interaction.response.edit_message(view=PflegeAnsicht(self.spiel, self.nutzer_id))
 
     async def _abholen(self, interaction: discord.Interaction) -> None:
         try:
@@ -113,3 +147,13 @@ def stil_für_kategorie(kategorie: str) -> discord.ButtonStyle:
     if kategorie == "training":
         return discord.ButtonStyle.primary
     return discord.ButtonStyle.primary
+
+
+def kategorie_label(kategorie: str) -> str:
+    return {
+        "pflege": "Pflege",
+        "ruhe": "Ruhe",
+        "spiel": "Spiel",
+        "training": "Training",
+        "check": "Check",
+    }.get(kategorie, kategorie[:1].upper() + kategorie[1:])

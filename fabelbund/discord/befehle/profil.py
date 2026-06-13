@@ -20,8 +20,8 @@ class ProfilBefehle(commands.Cog):
             embed.add_field(
                 name="Einführung",
                 value=(
-                    "Mira vom Fabelbund begrüßt dich zur Probezeit. Drei Fablinge wurden dir anvertraut; "
-                    "beginne mit `/auftrag` und lass den ersten Fabling eine kontrollierte Ruhe abschließen."
+                    "Mira vom Fabelbund begrüßt dich zur Probezeit. Die ersten Fablinge werden dir auftragsweise anvertraut; "
+                    "beginne mit `/auftrag` und lass den zugeteilten Fabling eine kontrollierte Ruhe abschließen."
                 ),
                 inline=False,
             )

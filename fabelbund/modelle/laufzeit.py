@@ -67,6 +67,7 @@ class Aktivität(BaseModel):
     wettbewerb_effekte: dict[str, int] = Field(default_factory=dict)
     sport_effekte: dict[str, int] = Field(default_factory=dict)
     abbruch_effekte: dict[str, int] = Field(default_factory=dict)
+    folgeaktionen: list[str] = Field(default_factory=list)
     gestartet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     endet_am: datetime
     beendet_am: datetime | None = None

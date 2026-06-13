@@ -77,6 +77,7 @@ class Datenbank:
                     wettbewerb_effekte_json TEXT NOT NULL DEFAULT '{}',
                     sport_effekte_json TEXT NOT NULL DEFAULT '{}',
                     abbruch_effekte_json TEXT NOT NULL DEFAULT '{}',
+                    folgeaktionen_json TEXT NOT NULL DEFAULT '[]',
                     gestartet_am TEXT NOT NULL,
                     endet_am TEXT NOT NULL,
                     beendet_am TEXT
@@ -117,3 +118,5 @@ class Datenbank:
                 verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN sport_effekte_json TEXT NOT NULL DEFAULT '{}'")
             if "abbruch_effekte_json" not in aktivität_spalten:
                 verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN abbruch_effekte_json TEXT NOT NULL DEFAULT '{}'")
+            if "folgeaktionen_json" not in aktivität_spalten:
+                verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN folgeaktionen_json TEXT NOT NULL DEFAULT '[]'")

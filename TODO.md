@@ -86,6 +86,13 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 ## 5. Danach: Aufträge und Spielfluss
 
 - [x] Manuelle Auftragsabgabe ergänzen
+- [x] Aufträge teilen Leih-Fablinge zu
+- [x] Leih-Fablinge gehen bei erfolgreicher Abgabe zurück zum Fabelbund
+- [x] Auftragsansicht zeigt Beschreibung, Fabling-Zuteilung und Belohnung
+- [x] Tutorialabgabe bietet direkten Button für den nächsten Auftrag
+- [x] Aktionen schlagen Folgeaktivitäten vor
+- [x] Aktivitätsmenü zeigt zuerst Kategorien und danach konkrete Aktionen
+- [x] Fablinge haben Futterpräferenzen
 - [x] Grundinventar ergänzen
 - [x] Laden mit ersten Futter-, Pflege- und Spielgegenständen ergänzen
 - [x] Futter anwenden

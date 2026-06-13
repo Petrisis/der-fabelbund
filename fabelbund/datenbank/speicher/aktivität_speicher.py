@@ -76,6 +76,7 @@ class AktivitätSpeicher:
             json.dumps(aktivität.wettbewerb_effekte, sort_keys=True),
             json.dumps(aktivität.sport_effekte, sort_keys=True),
             json.dumps(aktivität.abbruch_effekte, sort_keys=True),
+            json.dumps(aktivität.folgeaktionen),
             aktivität.gestartet_am.isoformat(),
             aktivität.endet_am.isoformat(),
             aktivität.beendet_am.isoformat() if aktivität.beendet_am else None,
@@ -86,9 +87,9 @@ class AktivitätSpeicher:
                 INSERT INTO aktivitäten (
                     id, spieler_id, fabelwesen_id, art, aktion_id, name, kategorie, intensität,
                     braucht_spieler, abbrechbar, status, effekte_json, wettbewerb_effekte_json,
-                    sport_effekte_json, abbruch_effekte_json, gestartet_am, endet_am, beendet_am
+                    sport_effekte_json, abbruch_effekte_json, folgeaktionen_json, gestartet_am, endet_am, beendet_am
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     kategorie = excluded.kategorie,
                     intensität = excluded.intensität,
@@ -97,6 +98,7 @@ class AktivitätSpeicher:
                     wettbewerb_effekte_json = excluded.wettbewerb_effekte_json,
                     sport_effekte_json = excluded.sport_effekte_json,
                     abbruch_effekte_json = excluded.abbruch_effekte_json,
+                    folgeaktionen_json = excluded.folgeaktionen_json,
                     endet_am = excluded.endet_am,
                     beendet_am = excluded.beendet_am
                 """,
@@ -122,6 +124,7 @@ class AktivitätSpeicher:
                 "wettbewerb_effekte": json.loads(zeile["wettbewerb_effekte_json"]),
                 "sport_effekte": json.loads(zeile["sport_effekte_json"]),
                 "abbruch_effekte": json.loads(zeile["abbruch_effekte_json"]),
+                "folgeaktionen": json.loads(zeile["folgeaktionen_json"]),
                 "gestartet_am": zeile["gestartet_am"],
                 "endet_am": zeile["endet_am"],
                 "beendet_am": zeile["beendet_am"],

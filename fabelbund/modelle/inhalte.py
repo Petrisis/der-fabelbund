@@ -40,6 +40,7 @@ class PflegeaktionDefinition(BaseModel):
     braucht_spieler: bool = True
     abbrechbar: bool = True
     gesperrt: bool = False
+    folgeaktionen: list[str] = Field(default_factory=list)
     markierungen: list[str] = Field(default_factory=list)
 
     @field_validator("effekte")
@@ -79,11 +80,22 @@ class AuftragDefinition(BaseModel):
     auftrag_id: str
     name: str
     art: str
+    beschreibung: str = ""
+    npc: str = ""
     dauer_tage: int = Field(gt=0)
+    fabelwesen: list["AuftragFablingDefinition"] = Field(default_factory=list)
     voraussetzungen: dict[str, object] = Field(default_factory=dict)
     ziele: dict[str, object]
     belohnungen: dict[str, object]
     fehlschlag: dict[str, object] = Field(default_factory=dict)
+
+
+class AuftragFablingDefinition(BaseModel):
+    art_id: str
+    spitzname: str
+    charakter: str = ""
+    lieblingsfutter: str | None = None
+    starter_kandidat: bool = False
 
 
 class GegenstandDefinition(BaseModel):

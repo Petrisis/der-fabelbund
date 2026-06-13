@@ -53,6 +53,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "dauer_sekunden": 600,
             "effekte": {"fellpflege": 12, "stimmung": 4, "stress": -3, "energie": -2},
             "abbruch_effekte": {"vertrauen": -1, "sicherheit": -1},
+            "folgeaktionen": ["kontrollierte_ruhe", "kurzer_blick"],
         }
     )
     ruhe = PflegeaktionDefinition.model_validate(
@@ -91,6 +92,14 @@ def inhalts_katalog() -> InhaltsKatalog:
             "name": "Grundpflegeauftrag",
             "art": "pflege",
             "dauer_tage": 3,
+            "fabelwesen": [
+                {
+                    "art_id": "gluthase",
+                    "spitzname": "Glutgast",
+                    "charakter": "stolz und pflegeempfindlich",
+                    "lieblingsfutter": "apfelstücke",
+                }
+            ],
             "ziele": {
                 "gesundheit_mindestens": 80,
                 "stimmung_mindestens": 55,
@@ -106,8 +115,36 @@ def inhalts_katalog() -> InhaltsKatalog:
             "name": "Einführung: Ruhe einhalten",
             "art": "tutorial",
             "dauer_tage": 1,
+            "fabelwesen": [
+                {
+                    "art_id": "gluthase",
+                    "spitzname": "Gluthase",
+                    "charakter": "aufgeweckt und ruhelos",
+                    "lieblingsfutter": "apfelstücke",
+                    "starter_kandidat": True,
+                }
+            ],
             "ziele": {"abgeschlossene_aktion": "kontrollierte_ruhe"},
             "belohnungen": {"geld": 80, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
+        }
+    )
+    tutorial_pflege = AuftragDefinition.model_validate(
+        {
+            "auftrag_id": "tutorial_pflege_002",
+            "name": "Einführung: Pflege und Ausrüstung",
+            "art": "tutorial",
+            "dauer_tage": 1,
+            "fabelwesen": [
+                {
+                    "art_id": "gluthase",
+                    "spitzname": "Glutgast",
+                    "charakter": "stolz und pflegeempfindlich",
+                    "lieblingsfutter": "apfelstücke",
+                    "starter_kandidat": True,
+                }
+            ],
+            "ziele": {"abgeschlossene_aktion": "sanfte_fellpflege"},
+            "belohnungen": {"geld": 90, "ruf": {"pflege": 3, "zuverlässigkeit": 1}},
         }
     )
     futter = GegenstandDefinition.model_validate(
@@ -127,7 +164,11 @@ def inhalts_katalog() -> InhaltsKatalog:
             "ausdruck_üben": training,
             "kurzer_blick": check,
         },
-        aufträge={"pflege_einfach_001": auftrag, "tutorial_ruhe_001": tutorial_auftrag},
+        aufträge={
+            "pflege_einfach_001": auftrag,
+            "tutorial_ruhe_001": tutorial_auftrag,
+            "tutorial_pflege_002": tutorial_pflege,
+        },
         gegenstände={"apfelstücke": futter},
     )
 
@@ -174,16 +215,15 @@ class SpielDienstTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             spieler = spiel.stelle_spieler_sicher("123")
-            sammlung = spiel.sammlung("123")
             kapazität = spiel.stall_kapazität("123")
             hat_freien_stall = spiel.hat_freien_stall("123")
+            sammlung = spiel.sammlung("123")
 
         self.assertEqual(spieler.geld, 500)
         self.assertEqual(spieler.tutorialstatus, "aktiv")
         self.assertEqual(spieler.tutorialschritt, "ruhe_starten")
         self.assertEqual(kapazität, 3)
-        self.assertEqual(len(sammlung), 1)
-        self.assertTrue(sammlung[0].status["tutorial_fabling"])
+        self.assertEqual(len(sammlung), 0)
         self.assertTrue(hat_freien_stall)
 
     def test_pflegeaktion_kann_einfachen_auftrag_abschließen(self) -> None:
@@ -204,12 +244,16 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(spieler.ruf["pflege"], 12)
         self.assertEqual(spieler.ruf["zuverlässigkeit"], 5)
 
-    def test_pflegeauftrag_braucht_fabling(self) -> None:
+    def test_auftrag_teilt_leih_fabling_zu(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             self.speichere_offiziellen_spieler(spiel)
-            with self.assertRaisesRegex(ValueError, "noch keinen Fabling"):
-                spiel.pflegeauftrag_starten("123")
+            auftrag = spiel.pflegeauftrag_starten("123")
+            sammlung = spiel.sammlung("123")
+
+        self.assertEqual(auftrag.auftrag_id, "pflege_einfach_001")
+        self.assertEqual(len(sammlung), 1)
+        self.assertTrue(sammlung[0].status["leih_fabling"])
 
     def test_stallpriorität_wird_am_fabling_gespeichert(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -282,6 +326,7 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertEqual(ergebnis.aktivität.status, "abgeschlossen")
         self.assertEqual(ergebnis.änderungen["fellpflege"], 12)
+        self.assertEqual(ergebnis.aktivität.folgeaktionen, ["kontrollierte_ruhe", "kurzer_blick"])
         self.assertFalse(ergebnis.auftrag_abgeschlossen)
         self.assertTrue(abgabe.erfolgreich)
         self.assertIsNotNone(spieler)
@@ -373,15 +418,32 @@ class SpielDienstTests(unittest.TestCase):
 
             spiel.aktivität_abholen("123", aktivität.id)
             abgabe = spiel.auftrag_abgeben("123")
+            nächster_auftrag = spiel.pflegeauftrag_starten("123")
             aktualisierter_spieler = spiel.spieler.holen("123")
+            sammlung_nach_abgabe = spiel.sammlung("123")
 
         self.assertEqual(spieler.tutorialschritt, "ruhe_starten")
         self.assertEqual(auftrag.auftrag_id, "tutorial_ruhe_001")
         self.assertTrue(abgabe.erfolgreich)
         self.assertEqual(abgabe.geld_erhalten, 80)
+        self.assertEqual(nächster_auftrag.auftrag_id, "tutorial_pflege_002")
+        self.assertEqual(len(sammlung_nach_abgabe), 1)
         self.assertIsNotNone(aktualisierter_spieler)
         assert aktualisierter_spieler is not None
         self.assertEqual(aktualisierter_spieler.tutorialschritt, "pflege_und_ausrüstung")
+
+    def test_futterpriorität_steuert_bevorzugtes_futter(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+            spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=1)
+
+            aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "apfelstücke")
+            fütterung = spiel.futter_geben("123", "apfelstücke", fabling.id)
+
+        self.assertEqual(aktualisiert.status["futter_priorität"], ["apfelstücke"])
+        self.assertTrue(fütterung.lieblingsfutter)
 
 
 if __name__ == "__main__":

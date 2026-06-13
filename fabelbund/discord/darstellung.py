@@ -7,6 +7,7 @@ import hashlib
 import discord
 
 from fabelbund.dienste.spiel_dienst import AktivitätErgebnis, AuftragAbgabeErgebnis, FütterungErgebnis, KaufErgebnis
+from fabelbund.modelle.inhalte import AuftragDefinition
 from fabelbund.modelle.laufzeit import AktiverAuftrag, Aktivität, Fabelwesen, SpielerProfil
 
 
@@ -30,10 +31,18 @@ def fabelwesen_einbettung(fabelwesen: Fabelwesen, titel: str | None = None) -> d
     return embed
 
 
-def auftrag_einbettung(aktiver_auftrag: AktiverAuftrag, auftrag_name: str) -> discord.Embed:
-    embed = discord.Embed(title=auftrag_name, color=discord.Color.gold())
+def auftrag_einbettung(aktiver_auftrag: AktiverAuftrag, auftrag: AuftragDefinition, fabelwesen: Fabelwesen | None = None) -> discord.Embed:
+    embed = discord.Embed(title=auftrag.name, description=auftrag.beschreibung or None, color=discord.Color.gold())
     embed.add_field(name="Status", value=aktiver_auftrag.status, inline=True)
-    embed.add_field(name="Fabelwesen", value=aktiver_auftrag.fabelwesen_id, inline=True)
+    if auftrag.npc:
+        embed.add_field(name="Ansprechpartner", value=auftrag.npc, inline=True)
+    if fabelwesen is not None:
+        charakter = fabelwesen.status.get("tutorial_charakter") or fabelwesen.status.get("auftrag_charakter")
+        wert = f"{fabelwesen.spitzname} ({lesbarer_artname(fabelwesen.art_id)})"
+        if charakter:
+            wert += f"\n{charakter}"
+        embed.add_field(name="Zugegeteilt", value=wert, inline=False)
+    embed.add_field(name="Belohnung", value=belohnung_text(auftrag), inline=False)
     return embed
 
 
@@ -44,8 +53,18 @@ def auftrag_abgabe_einbettung(ergebnis: AuftragAbgabeErgebnis) -> discord.Embed:
     if ergebnis.erfolgreich:
         ruf = ", ".join(f"{schlüssel} +{wert}" for schlüssel, wert in ergebnis.ruf_erhalten.items())
         embed.add_field(name="Belohnung", value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}", inline=False)
+        embed.add_field(name="Rückgabe", value=f"{ergebnis.fabelwesen.spitzname} geht nach der Abgabe zurück zum Fabelbund.", inline=False)
     embed.add_field(name="Einschätzung", value=ergebnis.hinweis, inline=False)
     return embed
+
+
+def belohnung_text(auftrag: AuftragDefinition) -> str:
+    geld = int(auftrag.belohnungen.get("geld", 0))
+    ruf = auftrag.belohnungen.get("ruf", {})
+    teile = [f"{geld} Credits"] if geld else []
+    if isinstance(ruf, dict):
+        teile.extend(f"{schlüssel} +{wert}" for schlüssel, wert in ruf.items())
+    return "\n".join(teile) or "Keine feste Belohnung"
 
 
 def kauf_einbettung(ergebnis: KaufErgebnis) -> discord.Embed:
@@ -98,7 +117,7 @@ def aktivität_ergebnis_einbettung(ergebnis: AktivitätErgebnis) -> discord.Embe
         )
     embed.add_field(
         name="Nächste Schritte",
-        value="Öffne `/pflege` für Pflege, Ruhe, Spiel, Training oder Checks. Für die Gesamtübersicht nutze `/stall`.",
+        value=folgeaktionen_text(ergebnis.aktivität),
         inline=False,
     )
     return embed
@@ -158,6 +177,30 @@ def trainingsfortschritt_text(ergebnis: AktivitätErgebnis) -> str:
         wert = int(ergebnis.fabelwesen.sportwerte.get(schlüssel, 0))
         zeilen.append(f"{schlüssel_label(schlüssel)} {fortschrittsbalken(wert)}")
     return "\n".join(zeilen)
+
+
+def folgeaktionen_text(aktivität: Aktivität) -> str:
+    if not aktivität.folgeaktionen:
+        return "Wähle in `/pflege` zuerst eine Kategorie: Pflege, Ruhe, Spiel, Training oder Check."
+    folgeaktionen = aktivität.folgeaktionen
+    zeilen = [f"- {aktionsname(aktion_id)}" for aktion_id in folgeaktionen[:5]]
+    return "\n".join(zeilen) + "\nÖffne `/pflege`, um weiterzumachen."
+
+
+def aktionsname(aktion_id: str) -> str:
+    return {
+        "kurzer_blick": "Kurzer Blick",
+        "genauer_check": "Genauer Check",
+        "sanfte_fellpflege": "Sanfte Fellpflege",
+        "gründliche_fellpflege": "Gründliche Fellpflege",
+        "kurze_pause": "Kurze Pause",
+        "kontrollierte_ruhe": "Kontrollierte Ruhe",
+        "langer_schlaf": "Langer Schlaf",
+        "ruhige_nähe": "Ruhige Nähe",
+        "gemeinsames_spiel": "Gemeinsames Spiel",
+        "ausdruck_üben": "Ausdruck üben",
+        "harmonie_üben": "Harmonie üben",
+    }.get(aktion_id, schlüssel_label(aktion_id))
 
 
 def fortschrittsbalken(wert: int) -> str:

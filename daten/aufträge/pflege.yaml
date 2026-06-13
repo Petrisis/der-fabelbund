@@ -2,7 +2,15 @@ aufträge:
   - auftrag_id: "tutorial_ruhe_001"
     name: "Einführung: Ruhe einhalten"
     art: "tutorial"
+    npc: "Mira"
+    beschreibung: "Mira übergibt dir Gluthase nur für diesen Auftrag. Er ist aufgeweckt und möchte lieber alles erkunden, aber heute sollst du lernen, dass verlässliche Ruhe zur Betreuung gehört."
     dauer_tage: 1
+    fabelwesen:
+      - art_id: "gluthase"
+        spitzname: "Gluthase"
+        charakter: "aufgeweckt und ruhelos"
+        lieblingsfutter: "honigbeeren"
+        starter_kandidat: true
     voraussetzungen:
       tutorialschritt: "ruhe_starten"
     ziele:
@@ -14,10 +22,41 @@ aufträge:
         zuverlässigkeit: 2
     fehlschlag: {}
 
+  - auftrag_id: "tutorial_pflege_002"
+    name: "Einführung: Pflege und Ausrüstung"
+    art: "tutorial"
+    npc: "Brann"
+    beschreibung: "Brann übergibt dir Moosluchs für diesen Auftrag. Er achtet streng darauf, dass Leih-Fablinge ordentlich versorgt und vollständig zurückgegeben werden."
+    dauer_tage: 1
+    fabelwesen:
+      - art_id: "moosluchs"
+        spitzname: "Moosluchs"
+        charakter: "stolz und pflegeempfindlich"
+        lieblingsfutter: "kräuterheu"
+        starter_kandidat: true
+    voraussetzungen:
+      tutorialschritt: "pflege_und_ausrüstung"
+    ziele:
+      abgeschlossene_aktion: "sanfte_fellpflege"
+    belohnungen:
+      geld: 90
+      ruf:
+        pflege: 3
+        zuverlässigkeit: 1
+    fehlschlag: {}
+
   - auftrag_id: "pflege_einfach_001"
     name: "Grundpflegeauftrag"
     art: "pflege"
+    npc: "Fabelbund-Auftragsstelle"
+    beschreibung: "Ein Fabling wird dir für eine einfache Pflegeeinschätzung übergeben. Sorge für einen stabilen Eindruck und gib ihn danach wieder beim Fabelbund ab."
     dauer_tage: 3
+    fabelwesen:
+      - art_id: "moosluchs"
+        spitzname: "Moosluchs"
+        charakter: "stolz und pflegeempfindlich"
+        lieblingsfutter: "kräuterheu"
+        starter_kandidat: false
     voraussetzungen:
       mindest_lizenz: null
       mindest_ruf:

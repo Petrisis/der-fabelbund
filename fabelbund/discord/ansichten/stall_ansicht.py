@@ -33,7 +33,9 @@ class StallAnsicht(discord.ui.View):
             aktivität = self.spiel.laufende_aktivität_für_fabelwesen(ausgewählt_id)
             if aktivität is not None and not aktivität.abbrechbar:
                 self.add_item(self._abholen_button(aktivität.id))
-            self.add_item(StallPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
+            if len(self.children) <= 23:
+                self.add_item(StallPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
+                self.add_item(FutterPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if str(interaction.user.id) == self.nutzer_id:
@@ -63,6 +65,9 @@ class StallAnsicht(discord.ui.View):
                     value=f"{aktivität.name}\nFertig <t:{unixzeit(aktivität.endet_am)}:R>",
                     inline=False,
                 )
+            futter = futterpriorität_text(self.spiel, aktueller_fabling)
+            if futter:
+                embed.add_field(name="Futterpräferenz", value=futter, inline=False)
             fabelwesen = self.spiel.sammlung(self.nutzer_id)
             kapazität = self.spiel.stall_kapazität(self.nutzer_id)
             await interaction.response.edit_message(
@@ -167,9 +172,63 @@ class StallPrioritätAuswahl(discord.ui.Select):
         )
 
 
+class FutterPrioritätAuswahl(discord.ui.Select):
+    def __init__(self, spiel: SpielDienst, nutzer_id: str, fabelwesen_id: str) -> None:
+        self.spiel = spiel
+        self.nutzer_id = nutzer_id
+        self.fabelwesen_id = fabelwesen_id
+        optionen = [discord.SelectOption(label="Automatisch", value="automatisch", description="Persönliche Vorlieben beachten.")]
+        optionen.extend(
+            discord.SelectOption(label=gegenstand.name, value=gegenstand.gegenstand_id)
+            for gegenstand in spiel.inhalte.gegenstände.values()
+            if gegenstand.kategorie == "futter"
+        )
+        super().__init__(
+            placeholder="Futterpräferenz wählen",
+            min_values=1,
+            max_values=1,
+            options=optionen[:25],
+            row=3,
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        wert = self.values[0]
+        gegenstand_id = None if wert == "automatisch" else wert
+        try:
+            fabelwesen = self.spiel.futterpriorität_setzen(self.nutzer_id, self.fabelwesen_id, gegenstand_id)
+        except ValueError as fehler:
+            await interaction.response.send_message(str(fehler), ephemeral=True)
+            return
+
+        embed = fabelwesen_einbettung(fabelwesen)
+        futter = futterpriorität_text(self.spiel, fabelwesen) or "Automatisch"
+        embed.add_field(name="Futterpräferenz", value=futter, inline=False)
+        fabelwesen_liste = self.spiel.sammlung(self.nutzer_id)
+        kapazität = self.spiel.stall_kapazität(self.nutzer_id)
+        await interaction.response.edit_message(
+            embed=embed,
+            view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen_liste, kapazität, fabelwesen.id),
+        )
+
+
 def stalltyp_label(stalltyp: str | None) -> str:
     if stalltyp is None:
         return "Automatisch"
     if stalltyp == "neutral":
         return "Neutraler Stall"
     return f"{element_emoji(stalltyp)} {stalltyp[:1].upper() + stalltyp[1:]}stall"
+
+
+def futterpriorität_text(spiel: SpielDienst, fabelwesen: Fabelwesen) -> str:
+    priorität = fabelwesen.status.get("futter_priorität", [])
+    if not isinstance(priorität, list) or not priorität:
+        lieblingsfutter = fabelwesen.persönlichkeit.get("lieblingsfutter")
+        if isinstance(lieblingsfutter, str):
+            gegenstand = spiel.inhalte.gegenstände.get(lieblingsfutter)
+            return f"Automatisch: {gegenstand.name if gegenstand else lieblingsfutter}"
+        return ""
+    namen = []
+    for gegenstand_id in priorität:
+        gegenstand = spiel.inhalte.gegenstände.get(str(gegenstand_id))
+        namen.append(gegenstand.name if gegenstand else str(gegenstand_id))
+    return "\n".join(namen)

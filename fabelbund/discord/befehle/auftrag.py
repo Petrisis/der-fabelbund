@@ -21,7 +21,8 @@ class AuftragBefehle(commands.Cog):
             await interaction.response.send_message(str(fehler), ephemeral=True)
             return
         auftrag = self.kontext.spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
-        embed = auftrag_einbettung(aktiver_auftrag, auftrag.name)
+        fabelwesen = self.kontext.spiel.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
+        embed = auftrag_einbettung(aktiver_auftrag, auftrag, fabelwesen)
         embed.add_field(name="Aufgabe", value=auftragsziel_text(auftrag.ziele), inline=False)
         await interaction.response.send_message(
             embed=embed,
@@ -51,8 +52,42 @@ class AuftragAnsicht(discord.ui.View):
         except ValueError as fehler:
             await interaction.response.send_message(str(fehler), ephemeral=True)
             return
-        view = None if ergebnis.erfolgreich else AuftragAnsicht(self.kontext, self.nutzer_id)
+        view = None
+        if ergebnis.erfolgreich:
+            spieler = self.kontext.spiel.spieler.holen(self.nutzer_id)
+            if spieler is not None and not spieler.offizielles_mitglied:
+                view = NächsterAuftragAnsicht(self.kontext, self.nutzer_id)
+        else:
+            view = AuftragAnsicht(self.kontext, self.nutzer_id)
         await interaction.response.edit_message(embed=auftrag_abgabe_einbettung(ergebnis), view=view)
+
+
+class NächsterAuftragAnsicht(discord.ui.View):
+    def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
+        super().__init__(timeout=180)
+        self.kontext = kontext
+        self.nutzer_id = nutzer_id
+        button = discord.ui.Button(label="Nächster Auftrag", style=discord.ButtonStyle.primary, custom_id="auftrag:nächster")
+        button.callback = self._nächster_auftrag
+        self.add_item(button)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if str(interaction.user.id) == self.nutzer_id:
+            return True
+        await interaction.response.send_message("Diese Auftragsansicht gehört einem anderen Spieler.", ephemeral=True)
+        return False
+
+    async def _nächster_auftrag(self, interaction: discord.Interaction) -> None:
+        try:
+            aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(self.nutzer_id)
+        except ValueError as fehler:
+            await interaction.response.send_message(str(fehler), ephemeral=True)
+            return
+        auftrag = self.kontext.spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
+        fabelwesen = self.kontext.spiel.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
+        embed = auftrag_einbettung(aktiver_auftrag, auftrag, fabelwesen)
+        embed.add_field(name="Aufgabe", value=auftragsziel_text(auftrag.ziele), inline=False)
+        await interaction.response.edit_message(embed=embed, view=AuftragAnsicht(self.kontext, self.nutzer_id))
 
 
 def auftragsziel_text(ziele: dict[str, object]) -> str:

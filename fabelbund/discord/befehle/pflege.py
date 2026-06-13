@@ -25,7 +25,9 @@ class PflegeBefehle(commands.Cog):
         if fabelwesen is None:
             await interaction.response.send_message("Das Auftrags-Fabelwesen wurde nicht gefunden.", ephemeral=True)
             return
-        laufende_aktivität = self.kontext.spiel.laufende_aktivität(nutzer_id)
+        laufende_aktivität = self.kontext.spiel.laufende_aktive_spieleraktivität(nutzer_id)
+        if laufende_aktivität is None:
+            laufende_aktivität = self.kontext.spiel.laufende_aktivität_für_fabelwesen(fabelwesen.id)
         if laufende_aktivität is not None:
             await interaction.response.send_message(
                 embed=aktivität_einbettung(laufende_aktivität),

@@ -36,28 +36,30 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 
 ## 3. Erste Content-Erweiterung
 
-- [ ] Pflege- und Ruheaktionen erweitern
-  - [ ] mehrere Wege pro Zielwert
-  - [ ] unterschiedliche Dauer
-  - [ ] unterschiedliche Intensität
-  - [ ] unterschiedliche Konsequenzen
-  - [ ] aktiv/passiv unterscheiden
-- [ ] Erste Spiel-/Bindungsaktionen ergänzen
-  - [ ] Vertrauen nur durch aktive Betreuung oder eingehaltene Zusagen
-  - [ ] kein Vertrauensgewinn durch bloßes Nichtstun
-- [ ] Erste leichte Trainingsaktionen ergänzen
-  - [ ] Trainingsfortschritt
-  - [ ] Energieverbrauch
-  - [ ] Stress/Muskelkater/Risiko
-- [ ] Check-Aktionen ergänzen
-  - [ ] Statuscheck
-  - [ ] Gesundheitscheck
-  - [ ] Einschätzung
-  - [ ] eher Information sichtbar machen als Werte direkt erhöhen
-- [ ] Abbruchkonsequenzen systematisch modellieren
-  - [ ] Ruhe abbrechen senkt Vertrauen
-  - [ ] Schlaf abbrechen stärker
-  - [ ] Training abbrechen gibt Belastung, aber wenig Fortschritt
+- [x] Pflege- und Ruheaktionen erweitern
+  - [x] mehrere Wege pro Zielwert
+  - [x] unterschiedliche Dauer
+  - [x] unterschiedliche Intensität
+  - [x] unterschiedliche Konsequenzen
+  - [x] aktiv/passiv unterscheiden
+- [x] Erste Spiel-/Bindungsaktionen ergänzen
+  - [x] Vertrauen nur durch aktive Betreuung oder eingehaltene Zusagen
+  - [x] kein Vertrauensgewinn durch bloßes Nichtstun
+- [x] Erste leichte Trainingsaktionen ergänzen
+  - [x] Trainingsfortschritt
+  - [x] Energieverbrauch
+  - [x] Stress/Muskelkater/Risiko
+- [x] Check-Aktionen ergänzen
+  - [x] Statuscheck
+  - [x] Gesundheitscheck vorbereitet
+  - [x] Einschätzung
+  - [x] eher Information sichtbar machen als Werte direkt erhöhen
+- [x] Abbruchkonsequenzen systematisch modellieren
+  - [x] Ruhe abbrechen senkt Vertrauen und Sicherheit
+  - [x] Schlaf abbrechen stärker
+  - [x] Training abbrechen gibt Belastung, aber wenig Fortschritt
+- [ ] Doktorbesuch freischalten und Kostenmodell ergänzen
+- [ ] Aktionsauswahl pro Fabling direkt aus der Stallansicht starten
 
 ## 4. Tutorial und Einstieg
 

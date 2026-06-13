@@ -1,7 +1,44 @@
 pflegeaktionen:
+  kurzer_blick:
+    name: "Kurzer Blick"
+    beschreibung: "Ein schneller Eindruck, ohne den Fabling länger zu binden."
+    kategorie: "check"
+    intensität: "niedrig"
+    dauer_sekunden: 0
+    braucht_spieler: true
+    effekte: {}
+    markierungen: ["check", "sofort"]
+
+  genauer_check:
+    name: "Genauer Check"
+    beschreibung: "Du spielst mit dem Fabling, um dir Pfoten, Kopf und Zähne genauer anschauen zu können."
+    kategorie: "check"
+    intensität: "mittel"
+    dauer_sekunden: 60
+    braucht_spieler: true
+    effekte: {}
+    abbruch_effekte:
+      vertrauen: -1
+      sicherheit: -1
+    markierungen: ["check", "genau"]
+
+  doktorbesuch:
+    name: "Doktorbesuch"
+    beschreibung: "Eine fachliche Untersuchung. Wird später freigeschaltet und kostet dann Geld."
+    kategorie: "check"
+    intensität: "hoch"
+    dauer_sekunden: 900
+    braucht_spieler: false
+    abbrechbar: false
+    gesperrt: true
+    effekte: {}
+    markierungen: ["check", "doktor", "kosten"]
+
   sanfte_fellpflege:
     name: "Sanfte Fellpflege"
     beschreibung: "Eine ruhige Pflegeeinheit mit geringem Risiko."
+    kategorie: "pflege"
+    intensität: "mittel"
     dauer_sekunden: 600
     braucht_spieler: true
     effekte:
@@ -9,11 +46,49 @@ pflegeaktionen:
       stimmung: 4
       stress: -3
       energie: -2
+    abbruch_effekte:
+      vertrauen: -1
+      sicherheit: -1
     markierungen: ["schönheit", "geringes_risiko"]
+
+  gründliche_fellpflege:
+    name: "Gründliche Fellpflege"
+    beschreibung: "Mehr Aufwand, aber deutlich sichtbarer Pflegeeffekt."
+    kategorie: "pflege"
+    intensität: "hoch"
+    dauer_sekunden: 1200
+    braucht_spieler: true
+    effekte:
+      fellpflege: 22
+      stimmung: 6
+      stress: 2
+      energie: -6
+    abbruch_effekte:
+      vertrauen: -2
+      sicherheit: -1
+    markierungen: ["schönheit", "intensiv"]
+
+  kurze_pause:
+    name: "Kurze Pause"
+    beschreibung: "Ein kurzer ruhiger Moment, der wenig Planung braucht."
+    kategorie: "ruhe"
+    intensität: "niedrig"
+    dauer_sekunden: 300
+    braucht_spieler: false
+    effekte:
+      energie: 5
+      stress: -2
+      stimmung: 1
+    abbruch_effekte:
+      vertrauen: -1
+      sicherheit: -1
+    markierungen: ["erholung", "kurz"]
 
   kontrollierte_ruhe:
     name: "Kontrollierte Ruhe"
     beschreibung: "Reduziert Belastung, kostet aber Trainingszeit."
+    kategorie: "ruhe"
+    intensität: "mittel"
     dauer_sekunden: 1800
     braucht_spieler: false
     effekte:
@@ -21,5 +96,99 @@ pflegeaktionen:
       stress: -6
       muskelkater: -5
       stimmung: 2
+    abbruch_effekte:
+      vertrauen: -2
+      sicherheit: -2
     markierungen: ["erholung", "geringes_risiko"]
 
+  langer_schlaf:
+    name: "Langer Schlaf"
+    beschreibung: "Eine verlässliche Ruhezeit mit starker Erholung."
+    kategorie: "ruhe"
+    intensität: "hoch"
+    dauer_sekunden: 3600
+    braucht_spieler: false
+    effekte:
+      energie: 26
+      stress: -12
+      muskelkater: -10
+      stimmung: 4
+    abbruch_effekte:
+      vertrauen: -4
+      sicherheit: -3
+    markierungen: ["erholung", "schlaf"]
+
+  ruhige_nähe:
+    name: "Ruhige Nähe"
+    beschreibung: "Du bleibst bewusst in der Nähe und gibst dem Fabling Sicherheit."
+    kategorie: "spiel"
+    intensität: "niedrig"
+    dauer_sekunden: 600
+    braucht_spieler: true
+    effekte:
+      vertrauen: 5
+      sicherheit: 7
+      stress: -4
+      energie: -1
+    abbruch_effekte:
+      vertrauen: -2
+      sicherheit: -2
+    markierungen: ["bindung", "ruhig"]
+
+  gemeinsames_spiel:
+    name: "Gemeinsames Spiel"
+    beschreibung: "Aktive Beschäftigung, die Stimmung und Bindung stärkt."
+    kategorie: "spiel"
+    intensität: "mittel"
+    dauer_sekunden: 900
+    braucht_spieler: true
+    effekte:
+      vertrauen: 7
+      stimmung: 12
+      stress: -2
+      energie: -8
+    abbruch_effekte:
+      vertrauen: -2
+      sicherheit: -1
+    markierungen: ["bindung", "stimmung"]
+
+  ausdruck_üben:
+    name: "Ausdruck üben"
+    beschreibung: "Ein leichtes Wettbewerbstraining für Präsenz und Ausdruck."
+    kategorie: "training"
+    intensität: "mittel"
+    dauer_sekunden: 900
+    braucht_spieler: true
+    effekte:
+      energie: -9
+      stress: 4
+      muskelkater: 2
+    wettbewerb_effekte:
+      ausdruck: 5
+      charme: 2
+      disziplin: 1
+    abbruch_effekte:
+      vertrauen: -1
+      sicherheit: -1
+    markierungen: ["wettbewerb", "ausdruck"]
+
+  harmonie_üben:
+    name: "Harmonie üben"
+    beschreibung: "Ruhiges Wettbewerbstraining für Zusammenspiel und Kontrolle."
+    kategorie: "training"
+    intensität: "mittel"
+    dauer_sekunden: 1200
+    braucht_spieler: true
+    effekte:
+      energie: -10
+      stress: 3
+      muskelkater: 2
+      vertrauen: 2
+    wettbewerb_effekte:
+      harmonie: 5
+      disziplin: 2
+      eleganz: 1
+    abbruch_effekte:
+      vertrauen: -2
+      sicherheit: -1
+    markierungen: ["wettbewerb", "harmonie"]

@@ -53,10 +53,15 @@ class Aktivität(BaseModel):
     art: str
     aktion_id: str
     name: str
+    kategorie: str = "pflege"
+    intensität: str = "mittel"
     braucht_spieler: bool
     abbrechbar: bool = True
     status: str = "läuft"
     effekte: dict[str, int] = Field(default_factory=dict)
+    wettbewerb_effekte: dict[str, int] = Field(default_factory=dict)
+    sport_effekte: dict[str, int] = Field(default_factory=dict)
+    abbruch_effekte: dict[str, int] = Field(default_factory=dict)
     gestartet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     endet_am: datetime
     beendet_am: datetime | None = None

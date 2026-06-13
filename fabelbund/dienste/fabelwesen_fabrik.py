@@ -29,6 +29,7 @@ class FabelwesenFabrik:
                 "energie": 72,
                 "stress": 18,
                 "vertrauen": 35,
+                "sicherheit": 45,
                 "fellpflege": 48,
                 "muskelkater": 0,
                 "verletzungsrisiko": 4,

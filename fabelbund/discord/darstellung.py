@@ -54,6 +54,9 @@ def aktivität_ergebnis_einbettung(ergebnis: AktivitätErgebnis) -> discord.Embe
     beobachtung = veränderung_text(ergebnis)
     if beobachtung:
         embed.add_field(name="Beobachtung", value=beobachtung, inline=False)
+    training = trainingsfortschritt_text(ergebnis)
+    if training:
+        embed.add_field(name="Training", value=training, inline=False)
     if ergebnis.auftrag_abgeschlossen:
         ruf = ", ".join(f"{schlüssel} +{wert}" for schlüssel, wert in ergebnis.ruf_erhalten.items())
         embed.add_field(
@@ -61,6 +64,11 @@ def aktivität_ergebnis_einbettung(ergebnis: AktivitätErgebnis) -> discord.Embe
             value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}",
             inline=False,
         )
+    embed.add_field(
+        name="Nächste Schritte",
+        value="Öffne `/pflege` für Pflege, Ruhe, Spiel, Training oder Checks. Für die Gesamtübersicht nutze `/stall`.",
+        inline=False,
+    )
     return embed
 
 
@@ -81,6 +89,9 @@ def zustand_text(fabelwesen: Fabelwesen) -> str:
 
 
 def veränderung_text(ergebnis: AktivitätErgebnis) -> str:
+    if ergebnis.aktivität.kategorie == "check":
+        return check_text(ergebnis)
+
     einsetzungen = Änderungseinsetzungen.aus_ergebnis(ergebnis)
     if not einsetzungen.hat_inhalt:
         return f"{ergebnis.fabelwesen.spitzname} wirkt nach der Aktivität kaum verändert."
@@ -97,6 +108,33 @@ def veränderung_text(ergebnis: AktivitätErgebnis) -> str:
     )
     vorlage = wähle_variante(vorlagen, ergebnis.aktivität.id)
     return vorlage.formatieren(einsetzungen)
+
+
+def check_text(ergebnis: AktivitätErgebnis) -> str:
+    name = ergebnis.fabelwesen.spitzname
+    if ergebnis.aktivität.aktion_id == "genauer_check":
+        return f"Du hast mit {name} gespielt und dabei Pfoten, Kopf und Zähne genauer angeschaut. {zustand_text(ergebnis.fabelwesen)}"
+    return zustand_text(ergebnis.fabelwesen)
+
+
+def trainingsfortschritt_text(ergebnis: AktivitätErgebnis) -> str:
+    zeilen: list[str] = []
+    for schlüssel in ergebnis.wettbewerb_änderungen:
+        wert = int(ergebnis.fabelwesen.wettbewerbswerte.get(schlüssel, 0))
+        zeilen.append(f"{schlüssel_label(schlüssel)} {fortschrittsbalken(wert)}")
+    for schlüssel in ergebnis.sport_änderungen:
+        wert = int(ergebnis.fabelwesen.sportwerte.get(schlüssel, 0))
+        zeilen.append(f"{schlüssel_label(schlüssel)} {fortschrittsbalken(wert)}")
+    return "\n".join(zeilen)
+
+
+def fortschrittsbalken(wert: int) -> str:
+    gefüllt = max(0, min(5, round(wert / 20)))
+    return "■" * gefüllt + "□" * (5 - gefüllt)
+
+
+def schlüssel_label(schlüssel: str) -> str:
+    return schlüssel.replace("_", " ").capitalize()
 
 
 @dataclass(frozen=True)

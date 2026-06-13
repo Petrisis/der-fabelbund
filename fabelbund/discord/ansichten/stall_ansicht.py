@@ -32,7 +32,7 @@ class StallAnsicht(discord.ui.View):
         if ausgewählt_id is not None and ausgewählt_id in self.fabelwesen_nach_id:
             aktivität = self.spiel.laufende_aktivität_für_fabelwesen(ausgewählt_id)
             if aktivität is not None and not aktivität.abbrechbar:
-                self.add_item(self._abholen_button())
+                self.add_item(self._abholen_button(aktivität.id))
             self.add_item(StallPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -73,12 +73,12 @@ class StallAnsicht(discord.ui.View):
         button.callback = callback
         return button
 
-    def _abholen_button(self) -> discord.ui.Button:
-        button = discord.ui.Button(label="Abholen", style=discord.ButtonStyle.success, custom_id="stall:abholen")
+    def _abholen_button(self, aktivität_id: str) -> discord.ui.Button:
+        button = discord.ui.Button(label="Abholen", style=discord.ButtonStyle.success, custom_id=f"stall:abholen:{aktivität_id}")
 
         async def callback(interaction: discord.Interaction) -> None:
             try:
-                ergebnis = self.spiel.aktivität_abholen(self.nutzer_id)
+                ergebnis = self.spiel.aktivität_abholen(self.nutzer_id, aktivität_id)
             except ValueError as fehler:
                 await interaction.response.send_message(str(fehler), ephemeral=True)
                 return

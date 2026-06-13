@@ -26,6 +26,7 @@ ZUSTAND_SCHLÜSSEL = {
     "energie",
     "stress",
     "vertrauen",
+    "sicherheit",
     "fellpflege",
     "muskelkater",
     "verletzungsrisiko",

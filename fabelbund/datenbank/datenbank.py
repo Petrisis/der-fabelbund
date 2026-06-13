@@ -63,10 +63,15 @@ class Datenbank:
                     art TEXT NOT NULL,
                     aktion_id TEXT NOT NULL,
                     name TEXT NOT NULL,
+                    kategorie TEXT NOT NULL DEFAULT 'pflege',
+                    intensität TEXT NOT NULL DEFAULT 'mittel',
                     braucht_spieler INTEGER NOT NULL,
                     abbrechbar INTEGER NOT NULL DEFAULT 1,
                     status TEXT NOT NULL,
                     effekte_json TEXT NOT NULL,
+                    wettbewerb_effekte_json TEXT NOT NULL DEFAULT '{}',
+                    sport_effekte_json TEXT NOT NULL DEFAULT '{}',
+                    abbruch_effekte_json TEXT NOT NULL DEFAULT '{}',
                     gestartet_am TEXT NOT NULL,
                     endet_am TEXT NOT NULL,
                     beendet_am TEXT
@@ -87,3 +92,13 @@ class Datenbank:
             }
             if "abbrechbar" not in aktivität_spalten:
                 verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN abbrechbar INTEGER NOT NULL DEFAULT 1")
+            if "kategorie" not in aktivität_spalten:
+                verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN kategorie TEXT NOT NULL DEFAULT 'pflege'")
+            if "intensität" not in aktivität_spalten:
+                verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN intensität TEXT NOT NULL DEFAULT 'mittel'")
+            if "wettbewerb_effekte_json" not in aktivität_spalten:
+                verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN wettbewerb_effekte_json TEXT NOT NULL DEFAULT '{}'")
+            if "sport_effekte_json" not in aktivität_spalten:
+                verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN sport_effekte_json TEXT NOT NULL DEFAULT '{}'")
+            if "abbruch_effekte_json" not in aktivität_spalten:
+                verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN abbruch_effekte_json TEXT NOT NULL DEFAULT '{}'")

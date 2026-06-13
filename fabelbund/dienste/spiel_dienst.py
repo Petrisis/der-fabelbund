@@ -36,6 +36,8 @@ class AktivitätErgebnis:
     fabelwesen: Fabelwesen
     anteil: float
     änderungen: dict[str, int]
+    wettbewerb_änderungen: dict[str, int]
+    sport_änderungen: dict[str, int]
     auftrag_abgeschlossen: bool
     geld_erhalten: int
     ruf_erhalten: dict[str, int]
@@ -204,51 +206,69 @@ class SpielDienst:
             return None
         return aktivitäten[0]
 
+    def laufende_aktive_spieleraktivität(self, nutzer_id: str) -> Aktivität | None:
+        self.stelle_spieler_sicher(nutzer_id)
+        return self.aktivitäten.laufende_aktive_für_spieler_holen(nutzer_id)
+
+    def laufende_aktivitäten(self, nutzer_id: str) -> list[Aktivität]:
+        self.stelle_spieler_sicher(nutzer_id)
+        return self.aktivitäten.laufende_für_spieler_holen(nutzer_id)
+
     def laufende_aktivität_für_fabelwesen(self, fabelwesen_id: str) -> Aktivität | None:
         return self.aktivitäten.laufende_für_fabelwesen_holen(fabelwesen_id)
 
-    def pflegeaktivität_starten(self, nutzer_id: str, aktion_id: str) -> Aktivität:
+    def pflegeaktivität_starten(self, nutzer_id: str, aktion_id: str, fabelwesen_id: str | None = None) -> Aktivität:
         self.stelle_spieler_sicher(nutzer_id)
-        aktiver_auftrag = self.pflegeauftrag_starten(nutzer_id)
-        fabelwesen = self.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
-        if fabelwesen is None:
-            raise ValueError(f"Auftrags-Fabelwesen nicht gefunden: {aktiver_auftrag.fabelwesen_id}")
+        if fabelwesen_id is None:
+            aktiver_auftrag = self.pflegeauftrag_starten(nutzer_id)
+            fabelwesen_id = aktiver_auftrag.fabelwesen_id
+        fabelwesen = self.fabelwesen.holen(fabelwesen_id)
+        if fabelwesen is None or fabelwesen.besitzer_id != nutzer_id:
+            raise ValueError("Dieser Fabling wurde nicht gefunden.")
+
+        aktion = self.inhalte.pflegeaktionen[aktion_id]
+        if aktion.gesperrt:
+            raise ValueError("Diese Aktion ist noch nicht freigeschaltet.")
+        if aktion.braucht_spieler:
+            aktive_aktivität = self.laufende_aktive_spieleraktivität(nutzer_id)
+            if aktive_aktivität is not None:
+                raise ValueError("Du betreust gerade schon einen Fabling aktiv.")
 
         laufend = self.aktivitäten.laufende_für_fabelwesen_holen(fabelwesen.id)
         if laufend is not None:
             return laufend
 
-        aktion = self.inhalte.pflegeaktionen[aktion_id]
         jetzt = datetime.now(timezone.utc)
         aktivität = Aktivität(
             id=f"aktivität_{uuid4().hex[:12]}",
             spieler_id=nutzer_id,
             fabelwesen_id=fabelwesen.id,
-            art="pflege",
+            art=aktion.kategorie,
             aktion_id=aktion.aktion_id,
             name=aktion.name,
+            kategorie=aktion.kategorie,
+            intensität=aktion.intensität,
             braucht_spieler=aktion.braucht_spieler,
             abbrechbar=aktion.abbrechbar,
             effekte=aktion.effekte,
+            wettbewerb_effekte=aktion.wettbewerb_effekte,
+            sport_effekte=aktion.sport_effekte,
+            abbruch_effekte=aktion.abbruch_effekte,
             gestartet_am=jetzt,
             endet_am=jetzt + timedelta(seconds=self._skalierte_dauer(aktion.dauer_sekunden)),
         )
         self.aktivitäten.speichern(aktivität)
         return aktivität
 
-    def aktivität_abholen(self, nutzer_id: str) -> AktivitätErgebnis:
-        aktivität = self.laufende_aktivität(nutzer_id)
-        if aktivität is None:
-            raise ValueError("Es läuft keine Aktivität.")
+    def aktivität_abholen(self, nutzer_id: str, aktivität_id: str | None = None) -> AktivitätErgebnis:
+        aktivität = self._laufende_aktivität_finden(nutzer_id, aktivität_id)
         jetzt = datetime.now(timezone.utc)
         if jetzt < aktivität.endet_am:
             raise ValueError("Diese Aktivität ist noch nicht fertig.")
         return self._aktivität_beenden(nutzer_id, aktivität, jetzt, anteil=1.0, status="abgeschlossen")
 
-    def aktivität_abbrechen(self, nutzer_id: str) -> AktivitätErgebnis:
-        aktivität = self.laufende_aktivität(nutzer_id)
-        if aktivität is None:
-            raise ValueError("Es läuft keine Aktivität.")
+    def aktivität_abbrechen(self, nutzer_id: str, aktivität_id: str | None = None) -> AktivitätErgebnis:
+        aktivität = self._laufende_aktivität_finden(nutzer_id, aktivität_id)
         if not aktivität.abbrechbar:
             raise ValueError("Diese Aktivität kann nicht abgebrochen werden.")
         jetzt = datetime.now(timezone.utc)
@@ -256,6 +276,17 @@ class SpielDienst:
         vergangen = max(0.0, (jetzt - aktivität.gestartet_am).total_seconds())
         anteil = max(0.0, min(1.0, vergangen / gesamtdauer))
         return self._aktivität_beenden(nutzer_id, aktivität, jetzt, anteil=anteil, status="abgebrochen")
+
+    def _laufende_aktivität_finden(self, nutzer_id: str, aktivität_id: str | None) -> Aktivität:
+        if aktivität_id is None:
+            aktivität = self.laufende_aktivität(nutzer_id)
+        else:
+            aktivität = self.aktivitäten.holen(aktivität_id)
+            if aktivität is not None and (aktivität.spieler_id != nutzer_id or aktivität.status != "läuft"):
+                aktivität = None
+        if aktivität is None:
+            raise ValueError("Es läuft keine Aktivität.")
+        return aktivität
 
     def _aktivität_beenden(
         self,
@@ -270,7 +301,22 @@ class SpielDienst:
         if fabelwesen is None:
             raise ValueError(f"Fabelwesen nicht gefunden: {aktivität.fabelwesen_id}")
 
-        aktualisiert, änderungen = self._effekte_anteilig_anwenden(fabelwesen, aktivität.effekte, anteil)
+        aktualisiert, änderungen, wettbewerb_änderungen, sport_änderungen = self._effekte_anteilig_anwenden(
+            fabelwesen,
+            aktivität.effekte,
+            aktivität.wettbewerb_effekte,
+            aktivität.sport_effekte,
+            anteil,
+        )
+        if status == "abgebrochen":
+            abbruch_änderungen = self._werte_anteilig_anwenden(
+                aktualisiert.zustand,
+                self._abbruch_effekte_berechnen(fabelwesen, aktivität),
+                1.0,
+                standardwert=50,
+            )
+            änderungen.update(abbruch_änderungen)
+            aktualisiert.zustand["verletzungsrisiko"] = self.pflege._risiko_aus_zustand(aktualisiert)
         self.fabelwesen.speichern(aktualisiert)
 
         beendete_aktivität = aktivität.model_copy(deep=True)
@@ -278,6 +324,14 @@ class SpielDienst:
         beendete_aktivität.beendet_am = jetzt
         self.aktivitäten.speichern(beendete_aktivität)
         aktualisiert.status["zuletzt_versorgt_am"] = jetzt.isoformat()
+        aktualisiert = self._aktivitätslog_schreiben(
+            aktualisiert,
+            beendete_aktivität,
+            anteil,
+            änderungen,
+            wettbewerb_änderungen,
+            sport_änderungen,
+        )
         self.fabelwesen.speichern(aktualisiert)
 
         aktiver_auftrag = self.aufträge.aktiven_holen(nutzer_id)
@@ -294,6 +348,8 @@ class SpielDienst:
                     fabelwesen=aktualisiert,
                     anteil=anteil,
                     änderungen=änderungen,
+                    wettbewerb_änderungen=wettbewerb_änderungen,
+                    sport_änderungen=sport_änderungen,
                     auftrag_abgeschlossen=True,
                     geld_erhalten=spieler.geld - geld_vorher,
                     ruf_erhalten={
@@ -308,6 +364,8 @@ class SpielDienst:
             fabelwesen=aktualisiert,
             anteil=anteil,
             änderungen=änderungen,
+            wettbewerb_änderungen=wettbewerb_änderungen,
+            sport_änderungen=sport_änderungen,
             auftrag_abgeschlossen=False,
             geld_erhalten=0,
             ruf_erhalten={},
@@ -317,22 +375,104 @@ class SpielDienst:
         self,
         fabelwesen: Fabelwesen,
         effekte: dict[str, int],
+        wettbewerb_effekte: dict[str, int],
+        sport_effekte: dict[str, int],
         anteil: float,
-    ) -> tuple[Fabelwesen, dict[str, int]]:
+    ) -> tuple[Fabelwesen, dict[str, int], dict[str, int], dict[str, int]]:
         daten = fabelwesen.model_copy(deep=True)
+        änderungen = self._werte_anteilig_anwenden(daten.zustand, effekte, anteil, standardwert=0)
+        wettbewerb_änderungen = self._werte_anteilig_anwenden(daten.wettbewerbswerte, wettbewerb_effekte, anteil, standardwert=0)
+        sport_änderungen = self._werte_anteilig_anwenden(daten.sportwerte, sport_effekte, anteil, standardwert=0)
+        daten.zustand["verletzungsrisiko"] = self.pflege._risiko_aus_zustand(daten)
+        return daten, änderungen, wettbewerb_änderungen, sport_änderungen
+
+    def _werte_anteilig_anwenden(
+        self,
+        werte: dict[str, int],
+        effekte: dict[str, int],
+        anteil: float,
+        standardwert: int,
+    ) -> dict[str, int]:
         änderungen: dict[str, int] = {}
         for schlüssel, wirkung in effekte.items():
             veränderung = int(round(wirkung * anteil))
             if veränderung == 0 and anteil > 0 and wirkung != 0:
                 veränderung = 1 if wirkung > 0 else -1
-            aktueller_wert = int(daten.zustand.get(schlüssel, 0))
+            aktueller_wert = int(werte.get(schlüssel, standardwert))
             neuer_wert = begrenze_prozent(aktueller_wert + veränderung)
             tatsächliche_änderung = neuer_wert - aktueller_wert
-            daten.zustand[schlüssel] = neuer_wert
+            werte[schlüssel] = neuer_wert
             if tatsächliche_änderung:
                 änderungen[schlüssel] = tatsächliche_änderung
-        daten.zustand["verletzungsrisiko"] = self.pflege._risiko_aus_zustand(daten)
-        return daten, änderungen
+        return änderungen
+
+    def _abbruch_effekte_berechnen(self, fabelwesen: Fabelwesen, aktivität: Aktivität) -> dict[str, int]:
+        effekte = dict(aktivität.abbruch_effekte)
+        if not effekte and aktivität.kategorie in {"ruhe", "training", "spiel"}:
+            effekte = {"vertrauen": -1, "sicherheit": -1}
+
+        bindung = (int(fabelwesen.zustand.get("vertrauen", 50)) + int(fabelwesen.zustand.get("sicherheit", 50))) / 2
+        faktor = 0.75 if bindung >= 70 else 1.25 if bindung < 35 else 1.0
+
+        wiederholungen = self._jüngste_abbrüche_zählen(fabelwesen, aktivität.kategorie)
+        faktor += min(1.0, wiederholungen * 0.25)
+
+        skaliert: dict[str, int] = {}
+        for schlüssel, wert in effekte.items():
+            if wert < 0:
+                skaliert[schlüssel] = min(-1, int(round(wert * faktor)))
+            else:
+                skaliert[schlüssel] = int(round(wert * faktor))
+        return skaliert
+
+    def _jüngste_abbrüche_zählen(self, fabelwesen: Fabelwesen, kategorie: str) -> int:
+        log = fabelwesen.status.get("aktivitätslog", [])
+        if not isinstance(log, list):
+            return 0
+        anzahl = 0
+        for eintrag in reversed(log[-10:]):
+            if not isinstance(eintrag, dict):
+                continue
+            if eintrag.get("kategorie") != kategorie:
+                continue
+            if eintrag.get("status") == "abgebrochen":
+                anzahl += 1
+                continue
+            break
+        return anzahl
+
+    def _aktivitätslog_schreiben(
+        self,
+        fabelwesen: Fabelwesen,
+        aktivität: Aktivität,
+        anteil: float,
+        änderungen: dict[str, int],
+        wettbewerb_änderungen: dict[str, int],
+        sport_änderungen: dict[str, int],
+    ) -> Fabelwesen:
+        daten = fabelwesen.model_copy(deep=True)
+        log = daten.status.get("aktivitätslog", [])
+        if not isinstance(log, list):
+            log = []
+        log.append(
+            {
+                "aktivität_id": aktivität.id,
+                "aktion_id": aktivität.aktion_id,
+                "name": aktivität.name,
+                "kategorie": aktivität.kategorie,
+                "intensität": aktivität.intensität,
+                "status": aktivität.status,
+                "anteil": round(anteil, 3),
+                "gestartet_am": aktivität.gestartet_am.isoformat(),
+                "endet_am": aktivität.endet_am.isoformat(),
+                "beendet_am": aktivität.beendet_am.isoformat() if aktivität.beendet_am else None,
+                "änderungen": änderungen,
+                "wettbewerb_änderungen": wettbewerb_änderungen,
+                "sport_änderungen": sport_änderungen,
+            }
+        )
+        daten.status["aktivitätslog"] = log
+        return daten
 
     def _inaktivität_aktualisieren(self, fabelwesen: Fabelwesen, jetzt: datetime) -> Fabelwesen:
         if self.aktivitäten.laufende_für_fabelwesen_holen(fabelwesen.id) is not None:
@@ -365,6 +505,8 @@ class SpielDienst:
             art="selbstbeschäftigung",
             aktion_id="selbstbeschäftigung",
             name="Selbstbeschäftigung",
+            kategorie="selbstbeschäftigung",
+            intensität="passiv",
             braucht_spieler=False,
             abbrechbar=False,
             effekte=effekte,
@@ -387,4 +529,6 @@ class SpielDienst:
         return {schlüssel: wert for schlüssel, wert in effekte.items() if wert != 0}
 
     def _skalierte_dauer(self, sekunden: float) -> float:
+        if sekunden <= 0:
+            return 0.0
         return max(1.0, sekunden / self.zeitfaktor)

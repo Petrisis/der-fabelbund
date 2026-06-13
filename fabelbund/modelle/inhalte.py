@@ -30,10 +30,16 @@ class PflegeaktionDefinition(BaseModel):
     aktion_id: str
     name: str
     beschreibung: str = ""
-    effekte: dict[str, int]
-    dauer_sekunden: int = Field(default=180, gt=0)
+    kategorie: str = "pflege"
+    intensität: str = "mittel"
+    effekte: dict[str, int] = Field(default_factory=dict)
+    wettbewerb_effekte: dict[str, int] = Field(default_factory=dict)
+    sport_effekte: dict[str, int] = Field(default_factory=dict)
+    abbruch_effekte: dict[str, int] = Field(default_factory=dict)
+    dauer_sekunden: int = Field(default=180, ge=0)
     braucht_spieler: bool = True
     abbrechbar: bool = True
+    gesperrt: bool = False
     markierungen: list[str] = Field(default_factory=list)
 
     @field_validator("effekte")
@@ -42,6 +48,30 @@ class PflegeaktionDefinition(BaseModel):
         unbekannt = set(effekte) - ZUSTAND_SCHLÜSSEL
         if unbekannt:
             raise ValueError(f"Unbekannte Pflegeeffekt-Schlüssel: {sorted(unbekannt)}")
+        return effekte
+
+    @field_validator("wettbewerb_effekte")
+    @classmethod
+    def prüfe_wettbewerb_effekte(cls, effekte: dict[str, int]) -> dict[str, int]:
+        unbekannt = set(effekte) - WETTBEWERBSWERT_SCHLÜSSEL
+        if unbekannt:
+            raise ValueError(f"Unbekannte Wettbewerbseffekt-Schlüssel: {sorted(unbekannt)}")
+        return effekte
+
+    @field_validator("sport_effekte")
+    @classmethod
+    def prüfe_sport_effekte(cls, effekte: dict[str, int]) -> dict[str, int]:
+        unbekannt = set(effekte) - SPORTWERT_SCHLÜSSEL
+        if unbekannt:
+            raise ValueError(f"Unbekannte Sporteffekt-Schlüssel: {sorted(unbekannt)}")
+        return effekte
+
+    @field_validator("abbruch_effekte")
+    @classmethod
+    def prüfe_abbruch_effekte(cls, effekte: dict[str, int]) -> dict[str, int]:
+        unbekannt = set(effekte) - ZUSTAND_SCHLÜSSEL
+        if unbekannt:
+            raise ValueError(f"Unbekannte Abbrucheffekt-Schlüssel: {sorted(unbekannt)}")
         return effekte
 
 

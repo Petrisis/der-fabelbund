@@ -51,6 +51,37 @@ def inhalts_katalog() -> InhaltsKatalog:
             "name": "Sanfte Fellpflege",
             "dauer_sekunden": 600,
             "effekte": {"fellpflege": 12, "stimmung": 4, "stress": -3, "energie": -2},
+            "abbruch_effekte": {"vertrauen": -1, "sicherheit": -1},
+        }
+    )
+    ruhe = PflegeaktionDefinition.model_validate(
+        {
+            "aktion_id": "kontrollierte_ruhe",
+            "name": "Kontrollierte Ruhe",
+            "kategorie": "ruhe",
+            "dauer_sekunden": 1800,
+            "braucht_spieler": False,
+            "effekte": {"energie": 14, "stress": -6, "muskelkater": -5},
+            "abbruch_effekte": {"vertrauen": -2, "sicherheit": -2},
+        }
+    )
+    training = PflegeaktionDefinition.model_validate(
+        {
+            "aktion_id": "ausdruck_üben",
+            "name": "Ausdruck üben",
+            "kategorie": "training",
+            "dauer_sekunden": 900,
+            "effekte": {"energie": -5, "stress": 2},
+            "wettbewerb_effekte": {"ausdruck": 5},
+        }
+    )
+    check = PflegeaktionDefinition.model_validate(
+        {
+            "aktion_id": "kurzer_blick",
+            "name": "Kurzer Blick",
+            "kategorie": "check",
+            "dauer_sekunden": 0,
+            "effekte": {},
         }
     )
     auftrag = AuftragDefinition.model_validate(
@@ -70,7 +101,12 @@ def inhalts_katalog() -> InhaltsKatalog:
     )
     return InhaltsKatalog(
         arten={"gluthase": art},
-        pflegeaktionen={"sanfte_fellpflege": aktion},
+        pflegeaktionen={
+            "sanfte_fellpflege": aktion,
+            "kontrollierte_ruhe": ruhe,
+            "ausdruck_üben": training,
+            "kurzer_blick": check,
+        },
         aufträge={"pflege_einfach_001": auftrag},
     )
 
@@ -95,6 +131,13 @@ class SpielDienstTests(unittest.TestCase):
         art = spiel.inhalte.arten["gluthase"]
         starter = spiel.fabrik.erzeuge_starter(nutzer_id, art)
         spiel.fabelwesen.speichern(starter)
+
+    def erzeuge_zweiten_fabling(self, spiel: SpielDienst, nutzer_id: str = "123") -> None:
+        art = spiel.inhalte.arten["gluthase"]
+        fabling = spiel.fabrik.erzeuge_starter(nutzer_id, art).model_copy(
+            update={"id": "fw_zweit", "spitzname": "Glutfreund"}
+        )
+        spiel.fabelwesen.speichern(fabling)
 
     def test_profil_erzeugung_startet_ohne_fabling(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -207,6 +250,66 @@ class SpielDienstTests(unittest.TestCase):
         self.assertIsNotNone(spieler)
         assert spieler is not None
         self.assertEqual(spieler.geld, 800)
+
+    def test_passive_aktivitäten_dürfen_parallel_laufen(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            self.erzeuge_zweiten_fabling(spiel)
+            erster = spiel.sammlung("123")[0]
+            zweiter = spiel.sammlung("123")[1]
+            erste_ruhe = spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe", erster.id)
+            zweite_ruhe = spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe", zweiter.id)
+            laufende = spiel.laufende_aktivitäten("123")
+
+        self.assertEqual(len(laufende), 2)
+        self.assertFalse(erste_ruhe.braucht_spieler)
+        self.assertFalse(zweite_ruhe.braucht_spieler)
+
+    def test_aktive_aktivität_blockiert_weitere_aktive_betreuung(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+
+            spiel.pflegeaktivität_starten("123", "sanfte_fellpflege")
+            mit_fehler = None
+            try:
+                spiel.pflegeaktivität_starten("123", "ausdruck_üben")
+            except ValueError as fehler:
+                mit_fehler = str(fehler)
+
+        self.assertEqual(mit_fehler, "Du betreust gerade schon einen Fabling aktiv.")
+
+    def test_abbruch_schreibt_log_und_senkt_bindungswerte(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+            vertrauen_vorher = int(fabling.zustand["vertrauen"])
+            sicherheit_vorher = int(fabling.zustand["sicherheit"])
+            aktivität = spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe")
+
+            ergebnis = spiel.aktivität_abbrechen("123", aktivität.id)
+            log = ergebnis.fabelwesen.status["aktivitätslog"]
+
+        self.assertLess(ergebnis.fabelwesen.zustand["vertrauen"], vertrauen_vorher)
+        self.assertLess(ergebnis.fabelwesen.zustand["sicherheit"], sicherheit_vorher)
+        self.assertEqual(log[-1]["status"], "abgebrochen")
+        self.assertEqual(log[-1]["kategorie"], "ruhe")
+
+    def test_training_erhöht_wettbewerbswert(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+            vorher = int(fabling.wettbewerbswerte["ausdruck"])
+            aktivität = spiel.pflegeaktivität_starten("123", "ausdruck_üben")
+            spiel.aktivitäten.speichern(aktivität.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)}))
+
+            ergebnis = spiel.aktivität_abholen("123", aktivität.id)
+
+        self.assertGreater(ergebnis.fabelwesen.wettbewerbswerte["ausdruck"], vorher)
+        self.assertEqual(ergebnis.wettbewerb_änderungen["ausdruck"], 5)
 
 
 if __name__ == "__main__":

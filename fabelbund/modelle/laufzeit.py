@@ -54,6 +54,7 @@ class Aktivität(BaseModel):
     aktion_id: str
     name: str
     braucht_spieler: bool
+    abbrechbar: bool = True
     status: str = "läuft"
     effekte: dict[str, int] = Field(default_factory=dict)
     gestartet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

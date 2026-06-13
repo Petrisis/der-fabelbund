@@ -64,6 +64,7 @@ class Datenbank:
                     aktion_id TEXT NOT NULL,
                     name TEXT NOT NULL,
                     braucht_spieler INTEGER NOT NULL,
+                    abbrechbar INTEGER NOT NULL DEFAULT 1,
                     status TEXT NOT NULL,
                     effekte_json TEXT NOT NULL,
                     gestartet_am TEXT NOT NULL,
@@ -80,3 +81,9 @@ class Datenbank:
                 verbindung.execute("ALTER TABLE spieler ADD COLUMN freigeschaltete_ställe INTEGER NOT NULL DEFAULT 1")
             if "stalltypen_json" not in spalten:
                 verbindung.execute("ALTER TABLE spieler ADD COLUMN stalltypen_json TEXT NOT NULL DEFAULT '{\"neutral\": 1}'")
+            aktivität_spalten = {
+                zeile["name"]
+                for zeile in verbindung.execute("PRAGMA table_info(aktivitäten)").fetchall()
+            }
+            if "abbrechbar" not in aktivität_spalten:
+                verbindung.execute("ALTER TABLE aktivitäten ADD COLUMN abbrechbar INTEGER NOT NULL DEFAULT 1")

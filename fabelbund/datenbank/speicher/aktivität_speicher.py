@@ -53,6 +53,7 @@ class AktivitätSpeicher:
             aktivität.aktion_id,
             aktivität.name,
             1 if aktivität.braucht_spieler else 0,
+            1 if aktivität.abbrechbar else 0,
             aktivität.status,
             json.dumps(aktivität.effekte, sort_keys=True),
             aktivität.gestartet_am.isoformat(),
@@ -63,10 +64,10 @@ class AktivitätSpeicher:
             verbindung.execute(
                 """
                 INSERT INTO aktivitäten (
-                    id, spieler_id, fabelwesen_id, art, aktion_id, name, braucht_spieler, status,
+                    id, spieler_id, fabelwesen_id, art, aktion_id, name, braucht_spieler, abbrechbar, status,
                     effekte_json, gestartet_am, endet_am, beendet_am
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     status = excluded.status,
                     effekte_json = excluded.effekte_json,
@@ -87,6 +88,7 @@ class AktivitätSpeicher:
                 "aktion_id": zeile["aktion_id"],
                 "name": zeile["name"],
                 "braucht_spieler": bool(zeile["braucht_spieler"]),
+                "abbrechbar": bool(zeile["abbrechbar"]),
                 "status": zeile["status"],
                 "effekte": json.loads(zeile["effekte_json"]),
                 "gestartet_am": zeile["gestartet_am"],

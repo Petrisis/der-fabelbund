@@ -34,7 +34,11 @@ class FabelwesenFabrik:
                 "verletzungsrisiko": 4,
             },
             zucht={"fruchtbarkeit": 2, "abklingzeit_bis": None, "zucht_gesperrt": False},
-            status={"aktiver_vertrag_id": None, "nicht_verfügbar_bis": None},
+            status={
+                "aktiver_vertrag_id": None,
+                "nicht_verfügbar_bis": None,
+                "zuletzt_versorgt_am": None,
+            },
         )
 
     def _würfle_gene(self, art: ArtDefinition) -> dict[str, str]:

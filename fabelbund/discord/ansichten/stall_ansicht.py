@@ -3,7 +3,7 @@ from __future__ import annotations
 import discord
 
 from fabelbund.dienste.spiel_dienst import MAXIMALE_FABLINGE_PRO_SPIELER, SpielDienst
-from fabelbund.discord.darstellung import fabelwesen_einbettung, unixzeit
+from fabelbund.discord.darstellung import aktivität_ergebnis_einbettung, fabelwesen_einbettung, unixzeit
 from fabelbund.modelle.laufzeit import Fabelwesen
 
 
@@ -30,6 +30,9 @@ class StallAnsicht(discord.ui.View):
         if kapazität < MAXIMALE_STALL_BUTTONS:
             self.add_item(self._erweitern_button(len(self.fabelwesen_nach_id)))
         if ausgewählt_id is not None and ausgewählt_id in self.fabelwesen_nach_id:
+            aktivität = self.spiel.laufende_aktivität_für_fabelwesen(ausgewählt_id)
+            if aktivität is not None and not aktivität.abbrechbar:
+                self.add_item(self._abholen_button())
             self.add_item(StallPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -65,6 +68,25 @@ class StallAnsicht(discord.ui.View):
             await interaction.response.edit_message(
                 embed=embed,
                 view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität, aktueller_fabling.id),
+            )
+
+        button.callback = callback
+        return button
+
+    def _abholen_button(self) -> discord.ui.Button:
+        button = discord.ui.Button(label="Abholen", style=discord.ButtonStyle.success, custom_id="stall:abholen")
+
+        async def callback(interaction: discord.Interaction) -> None:
+            try:
+                ergebnis = self.spiel.aktivität_abholen(self.nutzer_id)
+            except ValueError as fehler:
+                await interaction.response.send_message(str(fehler), ephemeral=True)
+                return
+            fabelwesen = self.spiel.sammlung(self.nutzer_id)
+            kapazität = self.spiel.stall_kapazität(self.nutzer_id)
+            await interaction.response.edit_message(
+                embed=aktivität_ergebnis_einbettung(ergebnis),
+                view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität, ergebnis.fabelwesen.id),
             )
 
         button.callback = callback

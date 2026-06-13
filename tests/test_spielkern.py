@@ -144,6 +144,39 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(belegung[0].stalltyp, "neutral")
         self.assertEqual(belegung[0].belegt, 1)
 
+    def test_inaktivität_erzeugt_abholbare_selbstbeschäftigung(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0].model_copy(deep=True)
+            fabling.status["zuletzt_versorgt_am"] = (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat()
+            spiel.fabelwesen.speichern(fabling)
+
+            spiel.sammlung("123")
+            aktivität = spiel.laufende_aktivität("123")
+            ergebnis = spiel.aktivität_abholen("123")
+
+        self.assertIsNotNone(aktivität)
+        assert aktivität is not None
+        self.assertFalse(aktivität.abbrechbar)
+        self.assertEqual(aktivität.aktion_id, "selbstbeschäftigung")
+        self.assertGreater(ergebnis.änderungen.get("energie", 0), 0)
+        self.assertNotIn("vertrauen", ergebnis.änderungen)
+
+    def test_verwahrlosung_senkt_vertrauen_nach_einem_tag(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0].model_copy(deep=True)
+            vertrauen_vorher = int(fabling.zustand["vertrauen"])
+            fabling.status["zuletzt_versorgt_am"] = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat()
+            spiel.fabelwesen.speichern(fabling)
+
+            spiel.sammlung("123")
+            ergebnis = spiel.aktivität_abholen("123")
+
+        self.assertLess(ergebnis.fabelwesen.zustand["vertrauen"], vertrauen_vorher)
+
     def test_pflegeaktivität_wird_nach_ablauf_abgeholt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")

@@ -17,6 +17,9 @@ from fabelbund.modelle.laufzeit import AktiverAuftrag, Aktivität, Fabelwesen, S
 
 
 MAXIMALE_FABLINGE_PRO_SPIELER = 25
+INAKTIVITÄT_START_SEKUNDEN = 60 * 60
+INAKTIVITÄT_MAX_WIRKUNG_SEKUNDEN = 8 * 60 * 60
+VERWAHRLOSUNG_START_SEKUNDEN = 24 * 60 * 60
 
 
 @dataclass
@@ -79,7 +82,9 @@ class SpielDienst:
 
     def sammlung(self, nutzer_id: str) -> list[Fabelwesen]:
         self.stelle_spieler_sicher(nutzer_id)
-        return self.fabelwesen.für_besitzer_auflisten(nutzer_id)
+        fabelwesen = self.fabelwesen.für_besitzer_auflisten(nutzer_id)
+        jetzt = datetime.now(timezone.utc)
+        return [self._inaktivität_aktualisieren(fabling, jetzt) for fabling in fabelwesen]
 
     def stall_kapazität(self, nutzer_id: str) -> int:
         spieler = self.stelle_spieler_sicher(nutzer_id)
@@ -221,6 +226,7 @@ class SpielDienst:
             aktion_id=aktion.aktion_id,
             name=aktion.name,
             braucht_spieler=aktion.braucht_spieler,
+            abbrechbar=aktion.abbrechbar,
             effekte=aktion.effekte,
             gestartet_am=jetzt,
             endet_am=jetzt + timedelta(seconds=aktion.dauer_sekunden),
@@ -241,6 +247,8 @@ class SpielDienst:
         aktivität = self.laufende_aktivität(nutzer_id)
         if aktivität is None:
             raise ValueError("Es läuft keine Aktivität.")
+        if not aktivität.abbrechbar:
+            raise ValueError("Diese Aktivität kann nicht abgebrochen werden.")
         jetzt = datetime.now(timezone.utc)
         gesamtdauer = max(1.0, (aktivität.endet_am - aktivität.gestartet_am).total_seconds())
         vergangen = max(0.0, (jetzt - aktivität.gestartet_am).total_seconds())
@@ -267,6 +275,8 @@ class SpielDienst:
         beendete_aktivität.status = status
         beendete_aktivität.beendet_am = jetzt
         self.aktivitäten.speichern(beendete_aktivität)
+        aktualisiert.status["zuletzt_versorgt_am"] = jetzt.isoformat()
+        self.fabelwesen.speichern(aktualisiert)
 
         aktiver_auftrag = self.aufträge.aktiven_holen(nutzer_id)
         if aktiver_auftrag is not None:
@@ -321,3 +331,55 @@ class SpielDienst:
                 änderungen[schlüssel] = tatsächliche_änderung
         daten.zustand["verletzungsrisiko"] = self.pflege._risiko_aus_zustand(daten)
         return daten, änderungen
+
+    def _inaktivität_aktualisieren(self, fabelwesen: Fabelwesen, jetzt: datetime) -> Fabelwesen:
+        if self.aktivitäten.laufende_für_fabelwesen_holen(fabelwesen.id) is not None:
+            return fabelwesen
+
+        letzter_wert = fabelwesen.status.get("zuletzt_versorgt_am")
+        if letzter_wert is None:
+            aktualisiert = fabelwesen.model_copy(deep=True)
+            aktualisiert.status["zuletzt_versorgt_am"] = jetzt.isoformat()
+            self.fabelwesen.speichern(aktualisiert)
+            return aktualisiert
+
+        letzter_zeitpunkt = datetime.fromisoformat(str(letzter_wert))
+        vergangen = max(0.0, (jetzt - letzter_zeitpunkt).total_seconds())
+        if vergangen < INAKTIVITÄT_START_SEKUNDEN:
+            return fabelwesen
+
+        wirkdauer = min(vergangen - INAKTIVITÄT_START_SEKUNDEN, INAKTIVITÄT_MAX_WIRKUNG_SEKUNDEN)
+        if wirkdauer <= 0:
+            return fabelwesen
+
+        anteil = wirkdauer / INAKTIVITÄT_MAX_WIRKUNG_SEKUNDEN
+        effekte = self._selbstbeschäftigung_effekte(anteil, vergangen)
+        gestartet_am = letzter_zeitpunkt + timedelta(seconds=INAKTIVITÄT_START_SEKUNDEN)
+        endet_am = gestartet_am + timedelta(seconds=wirkdauer)
+        aktivität = Aktivität(
+            id=f"aktivität_{uuid4().hex[:12]}",
+            spieler_id=fabelwesen.besitzer_id,
+            fabelwesen_id=fabelwesen.id,
+            art="selbstbeschäftigung",
+            aktion_id="selbstbeschäftigung",
+            name="Selbstbeschäftigung",
+            braucht_spieler=False,
+            abbrechbar=False,
+            effekte=effekte,
+            gestartet_am=gestartet_am,
+            endet_am=endet_am,
+        )
+        self.aktivitäten.speichern(aktivität)
+        return fabelwesen
+
+    def _selbstbeschäftigung_effekte(self, anteil: float, vergangen: float) -> dict[str, int]:
+        effekte = {
+            "energie": int(round(8 * anteil)),
+            "stress": int(round(-4 * anteil)),
+            "stimmung": int(round(3 * anteil)),
+            "fellpflege": int(round(2 * anteil)),
+        }
+        if vergangen >= VERWAHRLOSUNG_START_SEKUNDEN:
+            stunden_nach_start = (vergangen - VERWAHRLOSUNG_START_SEKUNDEN) / 3600
+            effekte["vertrauen"] = -min(12, max(1, int(stunden_nach_start // 12) + 1))
+        return {schlüssel: wert for schlüssel, wert in effekte.items() if wert != 0}

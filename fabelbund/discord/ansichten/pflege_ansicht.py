@@ -27,12 +27,14 @@ class PflegeAnsicht(discord.ui.View):
         self.add_item(self._start_button("kontrollierte_ruhe", discord.ButtonStyle.secondary))
 
     def _aktivitäts_buttons_anlegen(self) -> None:
+        aktivität = self.spiel.laufende_aktivität(self.nutzer_id)
         abholen = discord.ui.Button(label="Abholen", style=discord.ButtonStyle.success, custom_id="pflege:abholen")
-        abbrechen = discord.ui.Button(label="Abbrechen", style=discord.ButtonStyle.danger, custom_id="pflege:abbrechen")
         abholen.callback = self._abholen
-        abbrechen.callback = self._abbrechen
         self.add_item(abholen)
-        self.add_item(abbrechen)
+        if aktivität is not None and aktivität.abbrechbar:
+            abbrechen = discord.ui.Button(label="Abbrechen", style=discord.ButtonStyle.danger, custom_id="pflege:abbrechen")
+            abbrechen.callback = self._abbrechen
+            self.add_item(abbrechen)
 
     def _start_button(self, aktion_id: str, stil: discord.ButtonStyle) -> discord.ui.Button:
         aktion = self.spiel.inhalte.pflegeaktionen[aktion_id]

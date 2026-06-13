@@ -29,13 +29,15 @@ def tutorial_hinweis_text(spieler: SpielerProfil) -> str:
     if spieler.tutorialstatus != "aktiv":
         return ""
     return {
-        "ruhe_starten": "Beginne mit `/auftrag`: Kontrollierte Ruhe.",
-        "pflege_und_ausrüstung": "Nimm den nächsten Probeauftrag an: Pflege: Sanfte Fellpflege.",
-        "futter_kaufen": "Du hast jetzt einen eigenen Starter. Kaufe im `/laden` ein Futter.",
-        "futter_geben": "Gib das Futter über `/inventar` deinem Starter.",
-        "aktive_betreuung": "Öffne `/fablinge` und starte Spiel: Gemeinsames Spiel.",
-        "training": "Öffne `/fablinge` und starte Training: Ausdruck üben.",
-        "check": "Öffne `/fablinge` und starte Check: Kurzer Blick.",
+        "registrierung": "Starte über die Auftragswand mit `Los geht's!`.",
+        "ruhe_starten": "Nimm Miras erste Probe an.",
+        "pflege_und_ausrüstung": "Nimm den nächsten Probeauftrag an, kaufe eine Moosbürste und nutze Sanfte Fellpflege.",
+        "stall_ausbauen": "Gehe zu deinen Fablingen und erweitere deinen Stall.",
+        "aktiv_passiv": "Nimm den nächsten Auftrag an und kombiniere passive Ruhe mit aktiver Betreuung.",
+        "futterauftrag": "Nimm den nächsten Auftrag an und setze die passende Futterpräferenz.",
+        "betreuungszeit": "Nimm den nächsten Auftrag an und betreue den Fabling über längere Zeit.",
+        "wettbewerb_vorbereitung": "Nimm den nächsten Auftrag an und bereite einen Fabling auf einen Wettbewerb vor.",
+        "starter_wählen": "Wähle deinen ersten eigenen Fabling.",
     }.get(spieler.tutorialschritt, "")
 
 
@@ -48,17 +50,26 @@ def fabelwesen_einbettung(fabelwesen: Fabelwesen, titel: str | None = None) -> d
     return embed
 
 
-def auftrag_einbettung(aktiver_auftrag: AktiverAuftrag, auftrag: AuftragDefinition, fabelwesen: Fabelwesen | None = None) -> discord.Embed:
+def auftrag_einbettung(
+    aktiver_auftrag: AktiverAuftrag,
+    auftrag: AuftragDefinition,
+    fabelwesen: Fabelwesen | None = None,
+    fabelwesen_liste: Sequence[Fabelwesen] | None = None,
+) -> discord.Embed:
     embed = discord.Embed(title=auftrag.name, description=auftrag.beschreibung or None, color=discord.Color.gold())
     embed.add_field(name="Status", value=aktiver_auftrag.status, inline=True)
     if auftrag.npc:
         embed.add_field(name="Ansprechpartner", value=auftrag.npc, inline=True)
-    if fabelwesen is not None:
-        charakter = fabelwesen.status.get("tutorial_charakter") or fabelwesen.status.get("auftrag_charakter")
-        wert = f"{fabelwesen.spitzname} ({lesbarer_artname(fabelwesen.art_id)})"
-        if charakter:
-            wert += f"\n{charakter}"
-        embed.add_field(name="Zugegeteilt", value=wert, inline=False)
+    zugeteilte = list(fabelwesen_liste or ([fabelwesen] if fabelwesen is not None else []))
+    if zugeteilte:
+        zeilen = []
+        for eintrag in zugeteilte[:3]:
+            charakter = eintrag.status.get("tutorial_charakter") or eintrag.status.get("auftrag_charakter")
+            wert = f"**{eintrag.spitzname}** ({lesbarer_artname(eintrag.art_id)})"
+            if charakter:
+                wert += f"\n{charakter}"
+            zeilen.append(wert)
+        embed.add_field(name="Zugegeteilt", value="\n\n".join(zeilen), inline=False)
     embed.add_field(name="Belohnung", value=belohnung_text(auftrag), inline=False)
     return embed
 
@@ -66,7 +77,7 @@ def auftrag_einbettung(aktiver_auftrag: AktiverAuftrag, auftrag: AuftragDefiniti
 def auftragswand_einbettung(aufträge: Sequence[AuftragDefinition]) -> discord.Embed:
     embed = discord.Embed(
         title="Auftragswand",
-        description="Öffentliche Aufträge des Fabelbunds. Wähle einen Aushang, wenn du einen freien Stallplatz hast.",
+        description="*Neu hier? Willst du mitmachen?*\nÜber `Los geht's!` beginnt die Einführung. Öffentliche Aufträge stehen offiziellen Mitgliedern offen.",
         color=discord.Color.gold(),
     )
     if not aufträge:
@@ -102,7 +113,8 @@ def auftrag_abgabe_einbettung(ergebnis: AuftragAbgabeErgebnis) -> discord.Embed:
     if ergebnis.erfolgreich:
         ruf = ", ".join(f"{schlüssel} +{wert}" for schlüssel, wert in ergebnis.ruf_erhalten.items())
         embed.add_field(name="Belohnung", value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}", inline=False)
-        embed.add_field(name="Rückgabe", value=f"{ergebnis.fabelwesen.spitzname} geht nach der Abgabe zurück zum Fabelbund.", inline=False)
+        if ergebnis.rückgabe_text:
+            embed.add_field(name="Rückgabe", value=ergebnis.rückgabe_text, inline=False)
     embed.add_field(name="Einschätzung", value=ergebnis.hinweis, inline=False)
     return embed
 
@@ -453,7 +465,7 @@ def hauptsatz_pflege(stufe: str) -> str:
     return {
         "leicht": "Das Fell sieht etwas ordentlicher aus.",
         "gut": "Das Fell wirkt gut gepflegt und er wirkt zufriedener.",
-        "deutlich": "Die Pflege ist deutlich zu sehen.",
+        "deutlich": "Die Pflege ist klar zu sehen.",
         "auffallend": "Die Pflege hat einen starken Eindruck hinterlassen.",
     }[stufe]
 

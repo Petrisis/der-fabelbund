@@ -38,6 +38,14 @@ gegenstände:
     effekte: {}
     markierungen: ["pflege", "ausrüstung"]
 
+  moosbürste:
+    name: "Moosbürste"
+    kategorie: "pflegeequipment"
+    preis: 35
+    beschreibung: "Eine einfache Bürste für Pflanzen-Fablinge mit Fell."
+    effekte: {}
+    markierungen: ["pflege", "ausrüstung", "pflanzenfell", "haltbarkeit_20"]
+
   weiches_tuch:
     name: "Weiches Tuch"
     kategorie: "pflegeequipment"

@@ -4,7 +4,7 @@ aufträge:
     art: "tutorial"
     öffentlich: false
     npc: "Mira"
-    beschreibung: "Mira übergibt dir Gluthase nur für diesen Auftrag. Er ist aufgeweckt und möchte lieber alles erkunden, aber heute sollst du lernen, dass verlässliche Ruhe zur Betreuung gehört."
+    beschreibung: "Mira sagt: „Betreuer verdienen ihr Geld zunächst mit fremden Fablingen. Mein Gluthase ist völlig erschöpft. Nutze angeleitete Ruhe.“"
     dauer_tage: 1
     fabelwesen:
       - art_id: "gluthase"
@@ -12,10 +12,15 @@ aufträge:
         charakter: "aufgeweckt und ruhelos"
         lieblingsfutter: "honigbeeren"
         starter_kandidat: true
+        start_zustand:
+          energie: 35
+          stress: 38
+          stimmung: 45
     voraussetzungen:
       tutorialschritt: "ruhe_starten"
     ziele:
-      abgeschlossene_aktion: "kontrollierte_ruhe"
+      energie_mindestens: 49
+      stress_höchstens: 32
     belohnungen:
       geld: 80
       ruf:
@@ -28,7 +33,7 @@ aufträge:
     art: "tutorial"
     öffentlich: false
     npc: "Brann"
-    beschreibung: "Brann übergibt dir Moosluchs für diesen Auftrag. Er achtet streng darauf, dass Leih-Fablinge ordentlich versorgt und vollständig zurückgegeben werden."
+    beschreibung: "Brann sagt: „Manche Pflege funktioniert nur mit passendem Werkzeug. Kauf mit Miras Belohnung eine Moosbürste und pflege danach meinen Moosluchs. Während du aktiv bürstest, bleibst du beim Fabling und kannst nicht parallel etwas anderes betreuen.“"
     dauer_tage: 1
     fabelwesen:
       - art_id: "moosluchs"
@@ -36,15 +41,140 @@ aufträge:
         charakter: "stolz und pflegeempfindlich"
         lieblingsfutter: "kräuterheu"
         starter_kandidat: true
+        start_zustand:
+          fellpflege: 38
+          stimmung: 48
+          stress: 32
     voraussetzungen:
       tutorialschritt: "pflege_und_ausrüstung"
     ziele:
       abgeschlossene_aktion: "sanfte_fellpflege"
+      fellpflege_mindestens: 50
     belohnungen:
-      geld: 90
+      geld: 180
       ruf:
         pflege: 3
         zuverlässigkeit: 1
+    fehlschlag: {}
+
+  - auftrag_id: "tutorial_aktiv_passiv_003"
+    name: "Einführung: Aktive und passive Betreuung"
+    art: "tutorial"
+    öffentlich: false
+    npc: "Mira"
+    beschreibung: "Mira gibt dir zwei Fablinge: Lege zuerst Quellfink zur Kontrollierten Ruhe, damit er ohne deine ständige Anwesenheit Energie sammelt. Danach spielst du aktiv mit Gluthase."
+    dauer_tage: 1
+    fabelwesen:
+      - art_id: "quellfink"
+        spitzname: "Quellfink"
+        charakter: "wachsam, aber erschöpft"
+        lieblingsfutter: "apfelstücke"
+        starter_kandidat: true
+        start_zustand:
+          energie: 36
+          stress: 34
+      - art_id: "gluthase"
+        spitzname: "Gluthase"
+        charakter: "neugierig, aber unsicher"
+        lieblingsfutter: "honigbeeren"
+        starter_kandidat: true
+        start_zustand:
+          vertrauen: 38
+          stimmung: 42
+    voraussetzungen:
+      tutorialschritt: "aktiv_passiv"
+    ziele:
+      abgeschlossene_aktionen: ["kontrollierte_ruhe", "gemeinsames_spiel"]
+    belohnungen:
+      geld: 120
+      ruf:
+        pflege: 3
+        zuverlässigkeit: 3
+    fehlschlag: {}
+
+  - auftrag_id: "tutorial_futter_004"
+    name: "Einführung: Futtervorlieben"
+    art: "tutorial"
+    öffentlich: false
+    npc: "Jonna"
+    beschreibung: "Jonna sagt: „Fablinge nehmen Futter unterschiedlich an. Beobachte Moosluchs genau und setze die Futterpräferenz, die zu ihm passt, bevor du ihn zurückgibst.“"
+    dauer_tage: 1
+    fabelwesen:
+      - art_id: "moosluchs"
+        spitzname: "Moosluchs"
+        charakter: "vorsichtig und wählerisch"
+        lieblingsfutter: "kräuterheu"
+        starter_kandidat: true
+        start_zustand:
+          stimmung: 44
+    voraussetzungen:
+      tutorialschritt: "futterauftrag"
+    ziele:
+      futter_priorität: "kräuterheu"
+    belohnungen:
+      geld: 110
+      ruf:
+        pflege: 2
+        zuverlässigkeit: 2
+    fehlschlag: {}
+
+  - auftrag_id: "tutorial_betreuung_005"
+    name: "Einführung: Betreuungszeit"
+    art: "tutorial"
+    öffentlich: false
+    npc: "Jonna"
+    beschreibung: "Manche Aufträge verlangen nicht nur einen Zustand, sondern verlässliche Zeit. Freunde dich mit Quellfink an, aber gönne ihm zwischendurch eine kurze Pause."
+    dauer_tage: 1
+    fabelwesen:
+      - art_id: "quellfink"
+        spitzname: "Quellfink"
+        charakter: "scheu und aufmerksam"
+        lieblingsfutter: "apfelstücke"
+        starter_kandidat: true
+        start_zustand:
+          vertrauen: 34
+          sicherheit: 40
+          stimmung: 42
+    voraussetzungen:
+      tutorialschritt: "betreuungszeit"
+    ziele:
+      abgeschlossene_aktionen: ["gemeinsames_spiel", "kurze_pause"]
+      betreuungsdauer_sekunden: 1800
+      vertrauen_mindestens: 41
+    belohnungen:
+      geld: 160
+      ruf:
+        pflege: 3
+        zuverlässigkeit: 4
+    fehlschlag: {}
+
+  - auftrag_id: "tutorial_wettbewerb_006"
+    name: "Einführung: Wettbewerbsvorbereitung"
+    art: "tutorial"
+    öffentlich: false
+    npc: "Brann"
+    beschreibung: "Brann erklärt dir, dass gute Wettbewerbe über Lizenzen und seltenere Fablinge entscheiden. Trainiere einen Gluthasen gezielt für Ausdruck."
+    dauer_tage: 1
+    fabelwesen:
+      - art_id: "gluthase"
+        spitzname: "Gluthase"
+        charakter: "lebhaft und präsent"
+        lieblingsfutter: "honigbeeren"
+        starter_kandidat: true
+        start_zustand:
+          energie: 58
+          stress: 28
+    voraussetzungen:
+      tutorialschritt: "wettbewerb_vorbereitung"
+    ziele:
+      abgeschlossene_aktion: "ausdruck_üben"
+      wettbewerb_mindestens:
+        ausdruck: 50
+    belohnungen:
+      geld: 200
+      ruf:
+        pflege: 4
+        zuverlässigkeit: 5
     fehlschlag: {}
 
   - auftrag_id: "pflege_einfach_001"

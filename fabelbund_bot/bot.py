@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.auftragswand import AuftragswandAnsicht
+from fabelbund.discord.auftragswand import AuftragswandAnsicht, TutorialEinstiegAnsicht, auftragswand_aktualisieren
 from fabelbund.discord.befehle.auftrag import AuftragBefehle
 from fabelbund.discord.befehle.inventar import InventarBefehle
 from fabelbund.discord.befehle.laden import LadenBefehle
@@ -33,6 +33,7 @@ class FabelbundBot(commands.Bot):
     async def setup_hook(self) -> None:
         for server in self.kontext.server.auflisten():
             if server.eingerichtet:
+                self.add_view(TutorialEinstiegAnsicht(self.kontext))
                 self.add_view(AuftragswandAnsicht(self.kontext, server.guild_id))
         await self.add_cog(ProfilBefehle(self.kontext))
         await self.add_cog(SammlungBefehle(self.kontext))
@@ -60,6 +61,8 @@ class FabelbundBot(commands.Bot):
         for guild in self.guilds:
             if str(guild.id) in nachzuholen:
                 await self.server_einrichtung.guild_sicherstellen(guild)
+            else:
+                await auftragswand_aktualisieren(self.kontext, guild)
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.server_einrichtung.guild_sicherstellen(guild)

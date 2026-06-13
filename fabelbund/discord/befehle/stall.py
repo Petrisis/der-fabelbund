@@ -19,6 +19,6 @@ class StallBefehle(commands.Cog):
         kapazität = self.kontext.spiel.stall_kapazität(nutzer_id)
         await interaction.response.send_message(
             embed=stallübersicht_einbettung(self.kontext.spiel, nutzer_id, fabelwesen, kapazität),
-            view=StallAnsicht(self.kontext.spiel, nutzer_id, fabelwesen, kapazität),
+            view=StallAnsicht(self.kontext.spiel, nutzer_id, fabelwesen, kapazität, kontext=self.kontext),
             ephemeral=True,
         )

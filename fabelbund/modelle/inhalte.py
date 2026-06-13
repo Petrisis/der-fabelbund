@@ -40,6 +40,7 @@ class PflegeaktionDefinition(BaseModel):
     braucht_spieler: bool = True
     abbrechbar: bool = True
     gesperrt: bool = False
+    benötigter_gegenstand: str | None = None
     folgeaktionen: list[str] = Field(default_factory=list)
     markierungen: list[str] = Field(default_factory=list)
 
@@ -99,6 +100,7 @@ class AuftragFablingDefinition(BaseModel):
     charakter: str = ""
     lieblingsfutter: str | None = None
     starter_kandidat: bool = False
+    start_zustand: dict[str, int] = Field(default_factory=dict)
 
 
 class GegenstandDefinition(BaseModel):

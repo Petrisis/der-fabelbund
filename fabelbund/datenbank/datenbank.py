@@ -90,6 +90,7 @@ class Datenbank:
                     aufträge_kanal_id TEXT,
                     chronik_kanal_id TEXT,
                     events_kanal_id TEXT,
+                    einstieg_nachricht_id TEXT,
                     auftragswand_nachricht_id TEXT,
                     eingerichtet_am TEXT NOT NULL,
                     aktualisiert_am TEXT NOT NULL
@@ -138,3 +139,5 @@ class Datenbank:
             }
             if "eingerichtet" not in server_spalten:
                 verbindung.execute("ALTER TABLE server_konfigurationen ADD COLUMN eingerichtet INTEGER NOT NULL DEFAULT 1")
+            if "einstieg_nachricht_id" not in server_spalten:
+                verbindung.execute("ALTER TABLE server_konfigurationen ADD COLUMN einstieg_nachricht_id TEXT")

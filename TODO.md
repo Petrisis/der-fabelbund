@@ -114,4 +114,14 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [ ] Zustand des Fablings
 - [ ] Erste Auswahl zwischen Aufträgen ermöglichen
 - [ ] Belohnungen und Ruf sauberer staffeln
+- [ ] Dauerhafte Grundbedürfnisse modellieren
+  - [ ] Pflegezustand der Fablinge lässt graduell nach, damit regelmäßig Pflegebedarf entsteht
+  - [ ] Futter wird über Zeit verdaut/verbraucht
+  - [ ] Fablinge speichern einen internen Magen-/Sättigungszustand aus aufgenommenem Futter
+  - [ ] Sättigung leert sich über Zeit
+  - [ ] Hunger wird in Zustandstexten sichtbar, sobald der Magen-/Sättigungszustand niedrig ist
+- [ ] Lieblingsfutter-Mechanik für MVP umsetzen
+  - [ ] Solange Lieblingsfutter im Magen ist, werden positive Effekte wirksamer
+  - [ ] Solange Lieblingsfutter im Magen ist, fallen negative Effekte schwächer aus
+  - [ ] Stärke und Dauer des Lieblingsfutter-Bonus balancen
 - [ ] Prüfen, ob der Spieler nach dem Tutorial sinnvoll weiß, was er als Nächstes tun kann

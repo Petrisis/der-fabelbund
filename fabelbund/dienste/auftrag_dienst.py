@@ -17,16 +17,23 @@ class AuftragDienst:
             fortschritt={},
         )
 
-    def ziele_erfüllt(self, auftrag: AuftragDefinition, fabelwesen: Fabelwesen) -> bool:
+    def ziele_erfüllt(self, auftrag: AuftragDefinition, fabelwesen: Fabelwesen, fabelwesen_liste: list[Fabelwesen] | None = None) -> bool:
         ziele = auftrag.ziele
+        alle_fabelwesen = fabelwesen_liste or [fabelwesen]
         return (
             self._mindestens(fabelwesen, "gesundheit", ziele.get("gesundheit_mindestens"))
             and self._mindestens(fabelwesen, "stimmung", ziele.get("stimmung_mindestens"))
+            and self._mindestens(fabelwesen, "energie", ziele.get("energie_mindestens"))
+            and self._mindestens(fabelwesen, "vertrauen", ziele.get("vertrauen_mindestens"))
             and self._höchstens(fabelwesen, "stress", ziele.get("stress_höchstens"))
             and self._mindestens(fabelwesen, "fellpflege", ziele.get("fellpflege_mindestens"))
             and self._aktion_abgeschlossen(fabelwesen, ziele.get("abgeschlossene_aktion"))
+            and self._aktionen_abgeschlossen(alle_fabelwesen, ziele.get("abgeschlossene_aktionen"))
             and self._kategorie_abgeschlossen(fabelwesen, ziele.get("abgeschlossene_kategorie"))
             and self._gefüttert(fabelwesen, ziele.get("gefüttert"))
+            and self._futter_priorität(fabelwesen, ziele.get("futter_priorität"))
+            and self._betreuungsdauer(alle_fabelwesen, ziele.get("betreuungsdauer_sekunden"))
+            and self._wettbewerb_mindestens(fabelwesen, ziele.get("wettbewerb_mindestens"))
         )
 
     def abschließen(self, spieler: SpielerProfil, aktiv: AktiverAuftrag, auftrag: AuftragDefinition) -> tuple[SpielerProfil, AktiverAuftrag]:
@@ -68,6 +75,17 @@ class AuftragDienst:
             for eintrag in log
         )
 
+    @classmethod
+    def _aktionen_abgeschlossen(cls, fabelwesen_liste: list[Fabelwesen], aktion_ids: object) -> bool:
+        if aktion_ids is None:
+            return True
+        if not isinstance(aktion_ids, list):
+            aktion_ids = [aktion_ids]
+        return all(
+            any(cls._aktion_abgeschlossen(fabelwesen, aktion_id) for fabelwesen in fabelwesen_liste)
+            for aktion_id in aktion_ids
+        )
+
     @staticmethod
     def _kategorie_abgeschlossen(fabelwesen: Fabelwesen, kategorie: object) -> bool:
         if kategorie is None:
@@ -87,3 +105,41 @@ class AuftragDienst:
         if erwartet is None:
             return True
         return bool(fabelwesen.status.get("zuletzt_gefüttert_am"))
+
+    @staticmethod
+    def _futter_priorität(fabelwesen: Fabelwesen, erwartet: object) -> bool:
+        if erwartet is None:
+            return True
+        priorität = fabelwesen.status.get("futter_priorität", [])
+        return isinstance(priorität, list) and bool(priorität) and str(priorität[0]) == str(erwartet)
+
+    @staticmethod
+    def _betreuungsdauer(fabelwesen_liste: list[Fabelwesen], minimum: object) -> bool:
+        if minimum is None:
+            return True
+        gesamt = 0.0
+        for fabelwesen in fabelwesen_liste:
+            log = fabelwesen.status.get("aktivitätslog", [])
+            if not isinstance(log, list):
+                continue
+            for eintrag in log:
+                if not isinstance(eintrag, dict) or eintrag.get("status") != "abgeschlossen":
+                    continue
+                if eintrag.get("spieldauer_sekunden") is not None:
+                    gesamt += float(eintrag["spieldauer_sekunden"])
+                    continue
+                try:
+                    start = datetime.fromisoformat(str(eintrag["gestartet_am"]))
+                    ende = datetime.fromisoformat(str(eintrag["beendet_am"]))
+                except (KeyError, TypeError, ValueError):
+                    continue
+                gesamt += max(0.0, (ende - start).total_seconds())
+        return gesamt >= int(minimum)
+
+    @staticmethod
+    def _wettbewerb_mindestens(fabelwesen: Fabelwesen, werte: object) -> bool:
+        if werte is None:
+            return True
+        if not isinstance(werte, dict):
+            return True
+        return all(int(fabelwesen.wettbewerbswerte.get(str(schlüssel), 0)) >= int(wert) for schlüssel, wert in werte.items())

@@ -11,7 +11,7 @@ class SpielerProfil(BaseModel):
     geld: int = 500
     freigeschaltete_ställe: int = Field(default=1, ge=1)
     stalltypen: dict[str, int] = Field(default_factory=lambda: {"neutral": 1})
-    inventar: dict[str, int] = Field(default_factory=dict)
+    inventar: dict[str, object] = Field(default_factory=dict)
     ruf: dict[str, int] = Field(default_factory=standard_ruf)
     lizenzen: list[str] = Field(default_factory=list)
     tutorialstatus: str = "neu"
@@ -80,6 +80,7 @@ class ServerKonfiguration(BaseModel):
     aufträge_kanal_id: str | None = None
     chronik_kanal_id: str | None = None
     events_kanal_id: str | None = None
+    einstieg_nachricht_id: str | None = None
     auftragswand_nachricht_id: str | None = None
     eingerichtet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     aktualisiert_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

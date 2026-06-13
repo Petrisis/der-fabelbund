@@ -26,6 +26,7 @@ class ServerSpeicher:
                 "aufträge_kanal_id": zeile["aufträge_kanal_id"],
                 "chronik_kanal_id": zeile["chronik_kanal_id"],
                 "events_kanal_id": zeile["events_kanal_id"],
+                "einstieg_nachricht_id": zeile["einstieg_nachricht_id"],
                 "auftragswand_nachricht_id": zeile["auftragswand_nachricht_id"],
                 "eingerichtet_am": zeile["eingerichtet_am"],
                 "aktualisiert_am": zeile["aktualisiert_am"],
@@ -44,6 +45,7 @@ class ServerSpeicher:
                     "aufträge_kanal_id": zeile["aufträge_kanal_id"],
                     "chronik_kanal_id": zeile["chronik_kanal_id"],
                     "events_kanal_id": zeile["events_kanal_id"],
+                    "einstieg_nachricht_id": zeile["einstieg_nachricht_id"],
                     "auftragswand_nachricht_id": zeile["auftragswand_nachricht_id"],
                     "eingerichtet_am": zeile["eingerichtet_am"],
                     "aktualisiert_am": zeile["aktualisiert_am"],
@@ -61,6 +63,7 @@ class ServerSpeicher:
             aktualisiert.aufträge_kanal_id,
             aktualisiert.chronik_kanal_id,
             aktualisiert.events_kanal_id,
+            aktualisiert.einstieg_nachricht_id,
             aktualisiert.auftragswand_nachricht_id,
             aktualisiert.eingerichtet_am.isoformat(),
             aktualisiert.aktualisiert_am.isoformat(),
@@ -70,15 +73,16 @@ class ServerSpeicher:
                 """
                 INSERT INTO server_konfigurationen (
                     guild_id, eingerichtet, kategorie_id, aufträge_kanal_id, chronik_kanal_id, events_kanal_id,
-                    auftragswand_nachricht_id, eingerichtet_am, aktualisiert_am
+                    einstieg_nachricht_id, auftragswand_nachricht_id, eingerichtet_am, aktualisiert_am
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(guild_id) DO UPDATE SET
                     eingerichtet = excluded.eingerichtet,
                     kategorie_id = excluded.kategorie_id,
                     aufträge_kanal_id = excluded.aufträge_kanal_id,
                     chronik_kanal_id = excluded.chronik_kanal_id,
                     events_kanal_id = excluded.events_kanal_id,
+                    einstieg_nachricht_id = excluded.einstieg_nachricht_id,
                     auftragswand_nachricht_id = excluded.auftragswand_nachricht_id,
                     aktualisiert_am = excluded.aktualisiert_am
                 """,

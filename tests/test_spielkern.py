@@ -61,6 +61,8 @@ def inhalts_katalog() -> InhaltsKatalog:
             "folgeaktionen": ["kontrollierte_ruhe", "kurzer_blick"],
         }
     )
+    moosluchs = art.model_copy(update={"art_id": "moosluchs", "name": "Moosluchs", "element": "wald"})
+    quellfink = art.model_copy(update={"art_id": "quellfink", "name": "Quellfink", "element": "wasser"})
     ruhe = PflegeaktionDefinition.model_validate(
         {
             "aktion_id": "kontrollierte_ruhe",
@@ -89,6 +91,16 @@ def inhalts_katalog() -> InhaltsKatalog:
             "kategorie": "spiel",
             "dauer_sekunden": 900,
             "effekte": {"vertrauen": 7, "stimmung": 12, "stress": -2, "energie": -8},
+        }
+    )
+    pause = PflegeaktionDefinition.model_validate(
+        {
+            "aktion_id": "kurze_pause",
+            "name": "Kurze Pause",
+            "kategorie": "ruhe",
+            "dauer_sekunden": 900,
+            "braucht_spieler": False,
+            "effekte": {"energie": 5, "stress": -2, "stimmung": 1},
         }
     )
     check = PflegeaktionDefinition.model_validate(
@@ -164,6 +176,68 @@ def inhalts_katalog() -> InhaltsKatalog:
             "belohnungen": {"geld": 90, "ruf": {"pflege": 3, "zuverlässigkeit": 1}},
         }
     )
+    tutorial_aktiv_passiv = AuftragDefinition.model_validate(
+        {
+            "auftrag_id": "tutorial_aktiv_passiv_003",
+            "name": "Einführung: Aktive und passive Betreuung",
+            "art": "tutorial",
+            "dauer_tage": 1,
+            "fabelwesen": [
+                {"art_id": "quellfink", "spitzname": "Quellfink", "starter_kandidat": True},
+                {"art_id": "gluthase", "spitzname": "Gluthase", "starter_kandidat": True},
+            ],
+            "ziele": {"abgeschlossene_aktionen": ["kontrollierte_ruhe", "gemeinsames_spiel"]},
+            "belohnungen": {"geld": 120, "ruf": {"pflege": 3, "zuverlässigkeit": 3}},
+        }
+    )
+    tutorial_futter = AuftragDefinition.model_validate(
+        {
+            "auftrag_id": "tutorial_futter_004",
+            "name": "Einführung: Futtervorlieben",
+            "art": "tutorial",
+            "dauer_tage": 1,
+            "fabelwesen": [
+                {"art_id": "moosluchs", "spitzname": "Moosluchs", "lieblingsfutter": "kräuterheu", "starter_kandidat": True},
+            ],
+            "ziele": {"futter_priorität": "kräuterheu"},
+            "belohnungen": {"geld": 110, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
+        }
+    )
+    tutorial_betreuung = AuftragDefinition.model_validate(
+        {
+            "auftrag_id": "tutorial_betreuung_005",
+            "name": "Einführung: Betreuungszeit",
+            "art": "tutorial",
+            "dauer_tage": 1,
+            "fabelwesen": [
+                {
+                    "art_id": "quellfink",
+                    "spitzname": "Quellfink",
+                    "starter_kandidat": True,
+                    "start_zustand": {"vertrauen": 34},
+                },
+            ],
+            "ziele": {
+                "abgeschlossene_aktionen": ["gemeinsames_spiel", "kurze_pause"],
+                "betreuungsdauer_sekunden": 1800,
+                "vertrauen_mindestens": 41,
+            },
+            "belohnungen": {"geld": 160, "ruf": {"pflege": 3, "zuverlässigkeit": 4}},
+        }
+    )
+    tutorial_wettbewerb = AuftragDefinition.model_validate(
+        {
+            "auftrag_id": "tutorial_wettbewerb_006",
+            "name": "Einführung: Wettbewerbsvorbereitung",
+            "art": "tutorial",
+            "dauer_tage": 1,
+            "fabelwesen": [
+                {"art_id": "gluthase", "spitzname": "Gluthase", "starter_kandidat": True},
+            ],
+            "ziele": {"abgeschlossene_aktion": "ausdruck_üben", "wettbewerb_mindestens": {"ausdruck": 50}},
+            "belohnungen": {"geld": 200, "ruf": {"pflege": 4, "zuverlässigkeit": 5}},
+        }
+    )
     futter = GegenstandDefinition.model_validate(
         {
             "gegenstand_id": "apfelstücke",
@@ -173,12 +247,22 @@ def inhalts_katalog() -> InhaltsKatalog:
             "effekte": {"stimmung": 3, "energie": 2},
         }
     )
+    kräuterheu = GegenstandDefinition.model_validate(
+        {
+            "gegenstand_id": "kräuterheu",
+            "name": "Kräuterheu",
+            "kategorie": "futter",
+            "preis": 7,
+            "effekte": {"gesundheit": 1},
+        }
+    )
     return InhaltsKatalog(
-        arten={"gluthase": art},
+        arten={"gluthase": art, "moosluchs": moosluchs, "quellfink": quellfink},
         pflegeaktionen={
             "sanfte_fellpflege": aktion,
             "kontrollierte_ruhe": ruhe,
             "gemeinsames_spiel": spiel,
+            "kurze_pause": pause,
             "ausdruck_üben": training,
             "kurzer_blick": check,
         },
@@ -186,8 +270,12 @@ def inhalts_katalog() -> InhaltsKatalog:
             "pflege_einfach_001": auftrag,
             "tutorial_ruhe_001": tutorial_auftrag,
             "tutorial_pflege_002": tutorial_pflege,
+            "tutorial_aktiv_passiv_003": tutorial_aktiv_passiv,
+            "tutorial_futter_004": tutorial_futter,
+            "tutorial_betreuung_005": tutorial_betreuung,
+            "tutorial_wettbewerb_006": tutorial_wettbewerb,
         },
-        gegenstände={"apfelstücke": futter},
+        gegenstände={"apfelstücke": futter, "kräuterheu": kräuterheu},
     )
 
 
@@ -229,20 +317,36 @@ class SpielDienstTests(unittest.TestCase):
         )
         spiel.spieler.speichern(spieler)
 
-    def test_profil_erzeugung_startet_pflicht_tutorial(self) -> None:
+    def schließe_aktivität_ab(self, spiel: SpielDienst, aktivität) -> None:
+        jetzt = datetime.now(timezone.utc)
+        dauer = max(1.0, (aktivität.endet_am - aktivität.gestartet_am).total_seconds())
+        spiel.aktivitäten.speichern(
+            aktivität.model_copy(
+                update={
+                    "gestartet_am": jetzt - timedelta(seconds=dauer + 1),
+                    "endet_am": jetzt - timedelta(seconds=1),
+                }
+            )
+        )
+        spiel.aktivität_abholen(aktivität.spieler_id, aktivität.id)
+
+    def test_profil_erzeugung_wartet_auf_bewussten_tutorialstart(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             spieler = spiel.stelle_spieler_sicher("123")
             kapazität = spiel.stall_kapazität("123")
             hat_freien_stall = spiel.hat_freien_stall("123")
             sammlung = spiel.sammlung("123")
+            gestartet = spiel.tutorial_starten("123")
 
         self.assertEqual(spieler.geld, 500)
-        self.assertEqual(spieler.tutorialstatus, "aktiv")
-        self.assertEqual(spieler.tutorialschritt, "ruhe_starten")
-        self.assertEqual(kapazität, 3)
+        self.assertEqual(spieler.tutorialstatus, "neu")
+        self.assertEqual(spieler.tutorialschritt, "registrierung")
+        self.assertEqual(kapazität, 1)
         self.assertEqual(len(sammlung), 0)
         self.assertTrue(hat_freien_stall)
+        self.assertEqual(gestartet.tutorialstatus, "aktiv")
+        self.assertEqual(gestartet.tutorialschritt, "ruhe_starten")
 
     def test_pflegeaktion_kann_einfachen_auftrag_abschließen(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -461,7 +565,7 @@ class SpielDienstTests(unittest.TestCase):
     def test_tutorial_ruheauftrag_wird_per_abgabe_abgeschlossen(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
-            spieler = spiel.stelle_spieler_sicher("123")
+            spieler = spiel.tutorial_starten("123")
             auftrag = spiel.pflegeauftrag_starten("123")
             aktivität = spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe")
             spiel.aktivitäten.speichern(aktivität.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)}))
@@ -486,37 +590,54 @@ class SpielDienstTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3", zeitfaktor=1000)
 
+            spiel.tutorial_starten("123")
             erster_auftrag = spiel.pflegeauftrag_starten("123")
             ruhe = spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe")
-            spiel.aktivitäten.speichern(ruhe.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)}))
-            spiel.aktivität_abholen("123", ruhe.id)
+            self.schließe_aktivität_ab(spiel, ruhe)
             spiel.auftrag_abgeben("123")
 
             zweiter_auftrag = spiel.pflegeauftrag_starten("123")
             pflege = spiel.pflegeaktivität_starten("123", "sanfte_fellpflege")
-            spiel.aktivitäten.speichern(pflege.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)}))
-            spiel.aktivität_abholen("123", pflege.id)
+            self.schließe_aktivität_ab(spiel, pflege)
             zweite_abgabe = spiel.auftrag_abgeben("123")
             nach_pflege = spiel.spieler.holen("123")
-            starter = spiel.sammlung("123")
+            ausbau = spiel.stallausbau_starten("123")
+            spieler_mit_abgelaufenem_ausbau = spiel.spieler.holen("123")
+            assert spieler_mit_abgelaufenem_ausbau is not None
+            spiel.spieler.speichern(
+                spieler_mit_abgelaufenem_ausbau.model_copy(
+                    update={"tutorialpfad": f"stallausbau:{(datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()}"}
+                )
+            )
+            spiel.stallausbau_abholen("123")
+            nach_ausbau = spiel.spieler.holen("123")
 
-            kauf = spiel.gegenstand_kaufen("123", "apfelstücke")
-            nach_kauf = spiel.spieler.holen("123")
-            fütterung = spiel.futter_geben("123", "apfelstücke")
-            nach_futter = spiel.spieler.holen("123")
+            dritter_auftrag = spiel.pflegeauftrag_starten("123")
+            fablinge = spiel.sammlung("123")
+            ruhe_fabling = next(fabling for fabling in fablinge if fabling.art_id == "quellfink")
+            spiel_fabling = next(fabling for fabling in fablinge if fabling.art_id == "gluthase")
+            self.schließe_aktivität_ab(spiel, spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe", ruhe_fabling.id))
+            self.schließe_aktivität_ab(spiel, spiel.pflegeaktivität_starten("123", "gemeinsames_spiel", spiel_fabling.id))
+            dritte_abgabe = spiel.auftrag_abgeben("123")
 
-            spiel_aktivität = spiel.pflegeaktivität_starten("123", "gemeinsames_spiel", fütterung.fabelwesen.id)
-            spiel.aktivitäten.speichern(spiel_aktivität.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)}))
-            spiel.aktivität_abholen("123", spiel_aktivität.id)
-            nach_spiel = spiel.spieler.holen("123")
+            vierter_auftrag = spiel.pflegeauftrag_starten("123")
+            moosluchs = spiel.sammlung("123")[0]
+            spiel.futterpriorität_setzen("123", moosluchs.id, "kräuterheu")
+            vierte_abgabe = spiel.auftrag_abgeben("123")
 
-            training = spiel.pflegeaktivität_starten("123", "ausdruck_üben", fütterung.fabelwesen.id)
-            spiel.aktivitäten.speichern(training.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)}))
-            spiel.aktivität_abholen("123", training.id)
-            nach_training = spiel.spieler.holen("123")
+            fünfter_auftrag = spiel.pflegeauftrag_starten("123")
+            quellfink = spiel.sammlung("123")[0]
+            self.schließe_aktivität_ab(spiel, spiel.pflegeaktivität_starten("123", "gemeinsames_spiel", quellfink.id))
+            self.schließe_aktivität_ab(spiel, spiel.pflegeaktivität_starten("123", "kurze_pause", quellfink.id))
+            fünfte_abgabe = spiel.auftrag_abgeben("123")
 
-            check = spiel.pflegeaktivität_starten("123", "kurzer_blick", fütterung.fabelwesen.id)
-            spiel.aktivität_abholen("123", check.id)
+            sechster_auftrag = spiel.pflegeauftrag_starten("123")
+            wettbewerbs_fabling = spiel.sammlung("123")[0]
+            self.schließe_aktivität_ab(spiel, spiel.pflegeaktivität_starten("123", "ausdruck_üben", wettbewerbs_fabling.id))
+            sechste_abgabe = spiel.auftrag_abgeben("123")
+            vor_starterwahl = spiel.spieler.holen("123")
+
+            starter = spiel.tutorial_starter_wählen("123", "gluthase")
             abgeschlossen = spiel.spieler.holen("123")
 
         self.assertEqual(erster_auftrag.auftrag_id, "tutorial_ruhe_001")
@@ -524,22 +645,24 @@ class SpielDienstTests(unittest.TestCase):
         self.assertTrue(zweite_abgabe.erfolgreich)
         self.assertIsNotNone(nach_pflege)
         assert nach_pflege is not None
-        self.assertEqual(nach_pflege.tutorialschritt, "futter_kaufen")
-        self.assertEqual(len(starter), 1)
-        self.assertFalse(starter[0].status.get("leih_fabling", False))
-        self.assertEqual(kauf.gegenstand_id, "apfelstücke")
-        self.assertIsNotNone(nach_kauf)
-        assert nach_kauf is not None
-        self.assertEqual(nach_kauf.tutorialschritt, "futter_geben")
-        self.assertIsNotNone(nach_futter)
-        assert nach_futter is not None
-        self.assertEqual(nach_futter.tutorialschritt, "aktive_betreuung")
-        self.assertIsNotNone(nach_spiel)
-        assert nach_spiel is not None
-        self.assertEqual(nach_spiel.tutorialschritt, "training")
-        self.assertIsNotNone(nach_training)
-        assert nach_training is not None
-        self.assertEqual(nach_training.tutorialschritt, "check")
+        self.assertEqual(nach_pflege.tutorialschritt, "stall_ausbauen")
+        self.assertEqual(ausbau.status, "läuft")
+        self.assertIsNotNone(nach_ausbau)
+        assert nach_ausbau is not None
+        self.assertEqual(nach_ausbau.freigeschaltete_ställe, 2)
+        self.assertEqual(nach_ausbau.tutorialschritt, "aktiv_passiv")
+        self.assertEqual(dritter_auftrag.auftrag_id, "tutorial_aktiv_passiv_003")
+        self.assertTrue(dritte_abgabe.erfolgreich)
+        self.assertEqual(vierter_auftrag.auftrag_id, "tutorial_futter_004")
+        self.assertTrue(vierte_abgabe.erfolgreich)
+        self.assertEqual(fünfter_auftrag.auftrag_id, "tutorial_betreuung_005")
+        self.assertTrue(fünfte_abgabe.erfolgreich)
+        self.assertEqual(sechster_auftrag.auftrag_id, "tutorial_wettbewerb_006")
+        self.assertTrue(sechste_abgabe.erfolgreich)
+        self.assertIsNotNone(vor_starterwahl)
+        assert vor_starterwahl is not None
+        self.assertEqual(vor_starterwahl.tutorialschritt, "starter_wählen")
+        self.assertEqual(starter.art_id, "gluthase")
         self.assertIsNotNone(abgeschlossen)
         assert abgeschlossen is not None
         self.assertEqual(abgeschlossen.tutorialstatus, "abgeschlossen")

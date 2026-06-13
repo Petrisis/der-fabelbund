@@ -51,6 +51,7 @@ class AuftragAbgabeErgebnis:
     geld_erhalten: int
     ruf_erhalten: dict[str, int]
     hinweis: str
+    rückgabe_text: str
 
 
 @dataclass
@@ -60,6 +61,13 @@ class KaufErgebnis:
     name: str
     anzahl: int
     kosten: int
+
+
+@dataclass
+class StallausbauErgebnis:
+    spieler: SpielerProfil
+    status: str
+    endet_am: datetime | None = None
 
 
 @dataclass
@@ -110,8 +118,6 @@ class SpielDienst:
         if spieler is None:
             spieler = SpielerProfil(nutzer_id=nutzer_id)
             self.spieler.speichern(spieler)
-        if spieler.tutorialstatus == "neu":
-            spieler = self.tutorial_starten(nutzer_id)
         return spieler
 
     def tutorial_starten(self, nutzer_id: str) -> SpielerProfil:
@@ -123,8 +129,8 @@ class SpielDienst:
         aktualisiert.tutorialstatus = "aktiv"
         aktualisiert.tutorialschritt = "ruhe_starten"
         aktualisiert.offizielles_mitglied = False
-        aktualisiert.freigeschaltete_ställe = max(aktualisiert.freigeschaltete_ställe, 3)
-        aktualisiert.stalltypen["neutral"] = max(int(aktualisiert.stalltypen.get("neutral", 0)), 3)
+        aktualisiert.freigeschaltete_ställe = max(aktualisiert.freigeschaltete_ställe, 1)
+        aktualisiert.stalltypen["neutral"] = max(int(aktualisiert.stalltypen.get("neutral", 0)), 1)
         self.spieler.speichern(aktualisiert)
         return aktualisiert
 
@@ -217,6 +223,41 @@ class SpielDienst:
                 return stalltyp
         return None
 
+    def stallausbau_starten(self, nutzer_id: str) -> StallausbauErgebnis:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        if spieler.tutorialstatus == "aktiv" and spieler.tutorialschritt != "stall_ausbauen":
+            raise ValueError("Ein Stallausbau ist gerade nicht Teil deiner Einführung.")
+        if spieler.freigeschaltete_ställe >= MAXIMALE_FABLINGE_PRO_SPIELER:
+            raise ValueError("Mehr Stallplätze sind aktuell nicht möglich.")
+        if isinstance(spieler.tutorialpfad, str) and spieler.tutorialpfad.startswith("stallausbau:"):
+            endet_am = datetime.fromisoformat(spieler.tutorialpfad.split(":", 1)[1])
+            return StallausbauErgebnis(spieler=spieler, status="läuft", endet_am=endet_am)
+        kosten = 180
+        if spieler.geld < kosten:
+            raise ValueError("Dafür hast du nicht genug Geld.")
+        endet_am = datetime.now(timezone.utc) + timedelta(seconds=self._skalierte_dauer(60))
+        aktualisiert = spieler.model_copy(deep=True)
+        aktualisiert.geld -= kosten
+        aktualisiert.tutorialpfad = f"stallausbau:{endet_am.isoformat()}"
+        self.spieler.speichern(aktualisiert)
+        return StallausbauErgebnis(spieler=aktualisiert, status="läuft", endet_am=endet_am)
+
+    def stallausbau_abholen(self, nutzer_id: str) -> StallausbauErgebnis:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        if not isinstance(spieler.tutorialpfad, str) or not spieler.tutorialpfad.startswith("stallausbau:"):
+            raise ValueError("Es läuft kein Stallausbau.")
+        endet_am = datetime.fromisoformat(spieler.tutorialpfad.split(":", 1)[1])
+        if datetime.now(timezone.utc) < endet_am:
+            return StallausbauErgebnis(spieler=spieler, status="läuft", endet_am=endet_am)
+        aktualisiert = spieler.model_copy(deep=True)
+        aktualisiert.freigeschaltete_ställe = min(MAXIMALE_FABLINGE_PRO_SPIELER, aktualisiert.freigeschaltete_ställe + 1)
+        aktualisiert.stalltypen["neutral"] = int(aktualisiert.stalltypen.get("neutral", 0)) + 1
+        aktualisiert.tutorialpfad = None
+        if aktualisiert.tutorialstatus == "aktiv" and aktualisiert.tutorialschritt == "stall_ausbauen":
+            aktualisiert.tutorialschritt = "aktiv_passiv"
+        self.spieler.speichern(aktualisiert)
+        return StallausbauErgebnis(spieler=aktualisiert, status="abgeschlossen")
+
     def pflegeauftrag_starten(self, nutzer_id: str) -> AktiverAuftrag:
         spieler = self.stelle_spieler_sicher(nutzer_id)
         aktiver_auftrag = self.aufträge.aktiven_holen(nutzer_id)
@@ -295,6 +336,10 @@ class SpielDienst:
         return {
             "ruhe_starten": "tutorial_ruhe_001",
             "pflege_und_ausrüstung": "tutorial_pflege_002",
+            "aktiv_passiv": "tutorial_aktiv_passiv_003",
+            "futterauftrag": "tutorial_futter_004",
+            "betreuungszeit": "tutorial_betreuung_005",
+            "wettbewerb_vorbereitung": "tutorial_wettbewerb_006",
         }.get(spieler.tutorialschritt)
 
     def _auftrag_fablinge_erzeugen(self, nutzer_id: str, auftrag) -> list[Fabelwesen]:
@@ -313,6 +358,9 @@ class SpielDienst:
             fabling.status["tutorial_fabling"] = auftrag.art == "tutorial"
             fabling.status["auftrag_charakter"] = zugeteilt.charakter
             fabling.status["zuletzt_versorgt_am"] = None
+            for schlüssel, wert in zugeteilt.start_zustand.items():
+                if schlüssel in fabling.zustand:
+                    fabling.zustand[schlüssel] = wert
             if zugeteilt.lieblingsfutter:
                 fabling.persönlichkeit["lieblingsfutter"] = zugeteilt.lieblingsfutter
             self.fabelwesen.speichern(fabling)
@@ -344,7 +392,8 @@ class SpielDienst:
             raise ValueError("Das Auftrags-Fabelwesen wurde nicht gefunden.")
 
         auftrag = self.inhalte.aufträge[aktiver_auftrag.auftrag_id]
-        if not self.auftrag_dienst.ziele_erfüllt(auftrag, fabelwesen):
+        fabelwesen_liste = self._auftrag_fablinge_holen(aktiver_auftrag)
+        if not self.auftrag_dienst.ziele_erfüllt(auftrag, fabelwesen, fabelwesen_liste):
             return AuftragAbgabeErgebnis(
                 auftrag=aktiver_auftrag,
                 fabelwesen=fabelwesen,
@@ -352,6 +401,7 @@ class SpielDienst:
                 geld_erhalten=0,
                 ruf_erhalten={},
                 hinweis=self._auftrag_hinweis(auftrag, fabelwesen),
+                rückgabe_text="",
             )
 
         geld_vorher = spieler.geld
@@ -372,6 +422,7 @@ class SpielDienst:
                 if aktualisierter_spieler.ruf.get(schlüssel, 0) != ruf_vorher.get(schlüssel, 0)
             },
             hinweis=self._tutorial_hinweis_nach_abgabe(abgeschlossen),
+            rückgabe_text=self._rückgabe_text(auftrag, fabelwesen),
         )
 
     def _auftrag_fablinge_zurückgeben(self, auftrag: AktiverAuftrag, hauptfabling: Fabelwesen) -> None:
@@ -389,12 +440,26 @@ class SpielDienst:
         for fabelwesen_id in fabelwesen_ids:
             self.fabelwesen.löschen(str(fabelwesen_id))
 
+    def _auftrag_fablinge_holen(self, auftrag: AktiverAuftrag) -> list[Fabelwesen]:
+        fabelwesen_ids = auftrag.fortschritt.get("fabelwesen_ids", [auftrag.fabelwesen_id])
+        if not isinstance(fabelwesen_ids, list):
+            fabelwesen_ids = [auftrag.fabelwesen_id]
+        fabelwesen_liste: list[Fabelwesen] = []
+        for fabelwesen_id in fabelwesen_ids:
+            fabling = self.fabelwesen.holen(str(fabelwesen_id))
+            if fabling is not None:
+                fabelwesen_liste.append(fabling)
+        return fabelwesen_liste
+
+    def auftrag_fablinge(self, auftrag: AktiverAuftrag) -> list[Fabelwesen]:
+        return self._auftrag_fablinge_holen(auftrag)
+
     def auftrag_erfüllbar(self, aktiver_auftrag: AktiverAuftrag) -> bool:
         fabelwesen = self.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
         if fabelwesen is None:
             return False
         auftrag = self.inhalte.aufträge[aktiver_auftrag.auftrag_id]
-        return self.auftrag_dienst.ziele_erfüllt(auftrag, fabelwesen)
+        return self.auftrag_dienst.ziele_erfüllt(auftrag, fabelwesen, self._auftrag_fablinge_holen(aktiver_auftrag))
 
     def gegenstand_kaufen(self, nutzer_id: str, gegenstand_id: str, anzahl: int = 1) -> KaufErgebnis:
         if anzahl < 1:
@@ -409,7 +474,11 @@ class SpielDienst:
 
         aktualisiert = spieler.model_copy(deep=True)
         aktualisiert.geld -= kosten
-        aktualisiert.inventar[gegenstand_id] = int(aktualisiert.inventar.get(gegenstand_id, 0)) + anzahl
+        aktualisiert.inventar[gegenstand_id] = self._inventar_eintrag_nach_kauf(
+            aktualisiert.inventar.get(gegenstand_id),
+            gegenstand_id,
+            anzahl,
+        )
         self.spieler.speichern(aktualisiert)
         aktualisiert = self._tutorial_nach_kauf_aktualisieren(aktualisiert, gegenstand_id)
         return KaufErgebnis(
@@ -420,16 +489,20 @@ class SpielDienst:
             kosten=kosten,
         )
 
-    def inventar(self, nutzer_id: str) -> dict[str, int]:
+    def inventar(self, nutzer_id: str) -> dict[str, object]:
         spieler = self.stelle_spieler_sicher(nutzer_id)
-        return {gegenstand_id: anzahl for gegenstand_id, anzahl in spieler.inventar.items() if anzahl > 0}
+        return {
+            gegenstand_id: eintrag
+            for gegenstand_id, eintrag in spieler.inventar.items()
+            if self._inventar_anzahl(eintrag) > 0
+        }
 
     def futter_geben(self, nutzer_id: str, gegenstand_id: str, fabelwesen_id: str | None = None) -> FütterungErgebnis:
         spieler = self.stelle_spieler_sicher(nutzer_id)
         gegenstand = self.inhalte.gegenstände.get(gegenstand_id)
         if gegenstand is None or gegenstand.kategorie != "futter":
             raise ValueError("Dieser Gegenstand ist kein Futter.")
-        if int(spieler.inventar.get(gegenstand_id, 0)) <= 0:
+        if self._inventar_anzahl(spieler.inventar.get(gegenstand_id)) <= 0:
             raise ValueError("Dieses Futter ist nicht in deinem Inventar.")
 
         if fabelwesen_id is None:
@@ -439,15 +512,15 @@ class SpielDienst:
             else:
                 eigene_fabelwesen = self.fabelwesen.für_besitzer_auflisten(nutzer_id)
                 if len(eigene_fabelwesen) != 1:
-                    raise ValueError("Wähle zuerst in `/fablinge`, welcher Fabling Futter bekommen soll.")
+                    raise ValueError("Wähle zuerst in deinen Fablingen aus, welcher Fabling Futter bekommen soll.")
                 fabelwesen_id = eigene_fabelwesen[0].id
         fabelwesen = self.fabelwesen.holen(fabelwesen_id)
         if fabelwesen is None or fabelwesen.besitzer_id != nutzer_id:
             raise ValueError("Dieser Fabling wurde nicht gefunden.")
 
         aktualisierter_spieler = spieler.model_copy(deep=True)
-        aktualisierter_spieler.inventar[gegenstand_id] = int(aktualisierter_spieler.inventar.get(gegenstand_id, 0)) - 1
-        if aktualisierter_spieler.inventar[gegenstand_id] <= 0:
+        aktualisierter_spieler.inventar[gegenstand_id] = self._inventar_anzahl(aktualisierter_spieler.inventar.get(gegenstand_id)) - 1
+        if self._inventar_anzahl(aktualisierter_spieler.inventar[gegenstand_id]) <= 0:
             del aktualisierter_spieler.inventar[gegenstand_id]
 
         aktualisiertes_fabling = fabelwesen.model_copy(deep=True)
@@ -484,8 +557,15 @@ class SpielDienst:
         if auftrag.auftrag_id == "tutorial_ruhe_001":
             aktualisiert.tutorialschritt = "pflege_und_ausrüstung"
         elif auftrag.auftrag_id == "tutorial_pflege_002":
-            aktualisiert.tutorialschritt = "futter_kaufen"
-            self._tutorial_starter_vergeben(aktualisiert.nutzer_id)
+            aktualisiert.tutorialschritt = "stall_ausbauen"
+        elif auftrag.auftrag_id == "tutorial_aktiv_passiv_003":
+            aktualisiert.tutorialschritt = "futterauftrag"
+        elif auftrag.auftrag_id == "tutorial_futter_004":
+            aktualisiert.tutorialschritt = "betreuungszeit"
+        elif auftrag.auftrag_id == "tutorial_betreuung_005":
+            aktualisiert.tutorialschritt = "wettbewerb_vorbereitung"
+        elif auftrag.auftrag_id == "tutorial_wettbewerb_006":
+            aktualisiert.tutorialschritt = "starter_wählen"
         return aktualisiert
 
     def _tutorial_nach_kauf_aktualisieren(self, spieler: SpielerProfil, gegenstand_id: str) -> SpielerProfil:
@@ -544,18 +624,51 @@ class SpielDienst:
         starter.status["zuletzt_versorgt_am"] = datetime.now(timezone.utc).isoformat()
         self.fabelwesen.speichern(starter)
 
+    def tutorial_starter_wählen(self, nutzer_id: str, art_id: str) -> Fabelwesen:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        if spieler.tutorialstatus != "aktiv" or spieler.tutorialschritt != "starter_wählen":
+            raise ValueError("Die Starterwahl ist gerade nicht offen.")
+        art = self.inhalte.arten.get(art_id)
+        if art is None or art_id not in {"gluthase", "moosluchs", "quellfink"}:
+            raise ValueError("Dieser Starter ist nicht verfügbar.")
+        if not self.hat_freien_stall(nutzer_id):
+            raise ValueError("Du brauchst zuerst einen freien Stallplatz.")
+        starter = self.fabrik.erzeuge_starter(nutzer_id, art).model_copy(deep=True)
+        starter.spitzname = art.name
+        starter.herkunft["methode"] = "tutorial_starter"
+        starter.status["starter_fabling"] = True
+        starter.status["zuletzt_versorgt_am"] = datetime.now(timezone.utc).isoformat()
+        self.fabelwesen.speichern(starter)
+        aktualisiert = spieler.model_copy(deep=True)
+        aktualisiert.tutorialstatus = "abgeschlossen"
+        aktualisiert.tutorialschritt = "fertig"
+        aktualisiert.offizielles_mitglied = True
+        if "mitglied:fabelbund" not in aktualisiert.lizenzen:
+            aktualisiert.lizenzen.append("mitglied:fabelbund")
+        self.spieler.speichern(aktualisiert)
+        return starter
+
     def _tutorial_hinweis_nach_abgabe(self, auftrag: AktiverAuftrag) -> str:
         if auftrag.auftrag_id == "tutorial_ruhe_001":
-            return "Mira nickt zufrieden: Eine eingehaltene Ruhephase ist kein Stillstand, sondern verlässliche Betreuung. Als Nächstes geht es um Pflege und Ausrüstung."
+            return "Mira nickt zufrieden: Eine eingehaltene Ruhephase ist kein Stillstand, sondern verlässliche Betreuung."
         if auftrag.auftrag_id == "tutorial_pflege_002":
-            return "Brann notiert die Rückgabe knapp: Sauberer Zustand, Auftrag erfüllt. Danach wird dir dein erster eigener Fabling anvertraut; als Nächstes geht es um Futter und Vorlieben."
+            return "Brann notiert die Rückgabe knapp: Sauberer Zustand, Auftrag erfüllt."
         return "Der Auftrag wurde sauber abgegeben."
+
+    def _rückgabe_text(self, auftrag, fabelwesen: Fabelwesen) -> str:
+        if auftrag.npc:
+            return f"{fabelwesen.spitzname} geht zurück in {auftrag.npc}s Obhut."
+        return f"{fabelwesen.spitzname} geht zurück in die Obhut der zuständigen Betreuung."
 
     def _auftrag_hinweis(self, auftrag, fabelwesen: Fabelwesen) -> str:
         if auftrag.ziele.get("abgeschlossene_aktion") == "kontrollierte_ruhe":
             return f"{fabelwesen.spitzname} sollte zuerst eine vollständige Ruhephase abschließen."
         if auftrag.ziele.get("gefüttert"):
             return f"{fabelwesen.spitzname} wurde noch nicht passend versorgt."
+        if auftrag.ziele.get("futter_priorität"):
+            return f"{fabelwesen.spitzname} braucht erst die passende Futterpräferenz."
+        if auftrag.ziele.get("betreuungsdauer_sekunden"):
+            return f"{fabelwesen.spitzname} wurde noch nicht lange genug betreut."
         return f"{fabelwesen.spitzname} erfüllt den Auftrag noch nicht überzeugend."
 
     def laufende_aktivität(self, nutzer_id: str) -> Aktivität | None:
@@ -588,6 +701,10 @@ class SpielDienst:
         aktion = self.inhalte.pflegeaktionen[aktion_id]
         if aktion.gesperrt:
             raise ValueError("Diese Aktion ist noch nicht freigeschaltet.")
+        if aktion.benötigter_gegenstand and self._inventar_anzahl(self.stelle_spieler_sicher(nutzer_id).inventar.get(aktion.benötigter_gegenstand)) <= 0:
+            gegenstand = self.inhalte.gegenstände.get(aktion.benötigter_gegenstand)
+            name = gegenstand.name if gegenstand else aktion.benötigter_gegenstand
+            raise ValueError(f"Für diese Aktion brauchst du: {name}.")
         if aktion.braucht_spieler:
             aktive_aktivität = self.laufende_aktive_spieleraktivität(nutzer_id)
             if aktive_aktivität is not None:
@@ -693,6 +810,7 @@ class SpielDienst:
             sport_änderungen,
         )
         self.fabelwesen.speichern(aktualisiert)
+        self._werkzeug_abnutzen(spieler, beendete_aktivität)
         self._tutorial_nach_aktivität_aktualisieren(spieler, beendete_aktivität, status)
 
         return AktivitätErgebnis(
@@ -790,6 +908,8 @@ class SpielDienst:
         log = daten.status.get("aktivitätslog", [])
         if not isinstance(log, list):
             log = []
+        aktion = self.inhalte.pflegeaktionen.get(aktivität.aktion_id)
+        spieldauer = round((aktion.dauer_sekunden if aktion is not None else 0) * anteil)
         log.append(
             {
                 "aktivität_id": aktivität.id,
@@ -802,6 +922,7 @@ class SpielDienst:
                 "gestartet_am": aktivität.gestartet_am.isoformat(),
                 "endet_am": aktivität.endet_am.isoformat(),
                 "beendet_am": aktivität.beendet_am.isoformat() if aktivität.beendet_am else None,
+                "spieldauer_sekunden": spieldauer,
                 "änderungen": änderungen,
                 "wettbewerb_änderungen": wettbewerb_änderungen,
                 "sport_änderungen": sport_änderungen,
@@ -869,3 +990,43 @@ class SpielDienst:
         if sekunden <= 0:
             return 0.0
         return max(1.0, sekunden / self.zeitfaktor)
+
+    def _inventar_anzahl(self, eintrag: object) -> int:
+        if eintrag is None:
+            return 0
+        if isinstance(eintrag, dict):
+            return int(eintrag.get("anzahl", 0))
+        return int(eintrag)
+
+    def _inventar_eintrag_nach_kauf(self, bisher: object, gegenstand_id: str, anzahl: int) -> object:
+        gegenstand = self.inhalte.gegenstände.get(gegenstand_id)
+        haltbarkeit = 20 if gegenstand is not None and "haltbarkeit_20" in gegenstand.markierungen else None
+        bisherige_anzahl = self._inventar_anzahl(bisher)
+        if haltbarkeit is None:
+            return bisherige_anzahl + anzahl
+        bestehende_haltbarkeit = []
+        if isinstance(bisher, dict) and isinstance(bisher.get("haltbarkeit"), list):
+            bestehende_haltbarkeit = [int(wert) for wert in bisher["haltbarkeit"]]
+        bestehende_haltbarkeit.extend([haltbarkeit] * anzahl)
+        return {"anzahl": bisherige_anzahl + anzahl, "haltbarkeit": bestehende_haltbarkeit}
+
+    def _werkzeug_abnutzen(self, spieler: SpielerProfil, aktivität: Aktivität) -> None:
+        if aktivität.status != "abgeschlossen":
+            return
+        aktion = self.inhalte.pflegeaktionen.get(aktivität.aktion_id)
+        if aktion is None or not aktion.benötigter_gegenstand:
+            return
+        aktualisiert = spieler.model_copy(deep=True)
+        eintrag = aktualisiert.inventar.get(aktion.benötigter_gegenstand)
+        if not isinstance(eintrag, dict):
+            return
+        haltbarkeit = [int(wert) for wert in eintrag.get("haltbarkeit", [])]
+        if not haltbarkeit:
+            return
+        haltbarkeit[0] -= 1
+        haltbarkeit = [wert for wert in haltbarkeit if wert > 0]
+        if haltbarkeit:
+            aktualisiert.inventar[aktion.benötigter_gegenstand] = {"anzahl": len(haltbarkeit), "haltbarkeit": haltbarkeit}
+        else:
+            del aktualisiert.inventar[aktion.benötigter_gegenstand]
+        self.spieler.speichern(aktualisiert)

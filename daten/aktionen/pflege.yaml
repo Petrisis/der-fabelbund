@@ -10,6 +10,24 @@ pflegeaktionen:
     folgeaktionen: ["genauer_check", "sanfte_fellpflege", "kontrollierte_ruhe"]
     markierungen: ["check", "sofort"]
 
+  angeleitete_tutorialruhe:
+    name: "Angeleitete Ruhe"
+    beschreibung: "Mira zeigt dir eine kurze, klare Ruhephase für die Einführung."
+    kategorie: "ruhe"
+    intensität: "tutorial"
+    dauer_sekunden: 180
+    braucht_spieler: false
+    effekte:
+      energie: 24
+      stress: -14
+      muskelkater: -8
+      stimmung: 4
+    abbruch_effekte:
+      vertrauen: -1
+      sicherheit: -1
+    folgeaktionen: ["kurzer_blick", "sanfte_fellpflege"]
+    markierungen: ["tutorial", "erholung", "kurz"]
+
   genauer_check:
     name: "Genauer Check"
     beschreibung: "Du spielst mit dem Fabling, um dir Pfoten, Kopf und Zähne genauer anschauen zu können."
@@ -43,6 +61,7 @@ pflegeaktionen:
     intensität: "mittel"
     dauer_sekunden: 600
     braucht_spieler: true
+    benötigter_gegenstand: "moosbürste"
     effekte:
       fellpflege: 12
       stimmung: 4

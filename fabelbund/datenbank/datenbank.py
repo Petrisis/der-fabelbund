@@ -82,6 +82,17 @@ class Datenbank:
                     endet_am TEXT NOT NULL,
                     beendet_am TEXT
                 );
+
+                CREATE TABLE IF NOT EXISTS server_konfigurationen (
+                    guild_id TEXT PRIMARY KEY,
+                    kategorie_id TEXT NOT NULL,
+                    aufträge_kanal_id TEXT NOT NULL,
+                    chronik_kanal_id TEXT NOT NULL,
+                    events_kanal_id TEXT NOT NULL,
+                    auftragswand_nachricht_id TEXT,
+                    eingerichtet_am TEXT NOT NULL,
+                    aktualisiert_am TEXT NOT NULL
+                );
                 """
             )
             spalten = {

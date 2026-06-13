@@ -2,6 +2,7 @@ aufträge:
   - auftrag_id: "tutorial_ruhe_001"
     name: "Einführung: Ruhe einhalten"
     art: "tutorial"
+    öffentlich: false
     npc: "Mira"
     beschreibung: "Mira übergibt dir Gluthase nur für diesen Auftrag. Er ist aufgeweckt und möchte lieber alles erkunden, aber heute sollst du lernen, dass verlässliche Ruhe zur Betreuung gehört."
     dauer_tage: 1
@@ -25,6 +26,7 @@ aufträge:
   - auftrag_id: "tutorial_pflege_002"
     name: "Einführung: Pflege und Ausrüstung"
     art: "tutorial"
+    öffentlich: false
     npc: "Brann"
     beschreibung: "Brann übergibt dir Moosluchs für diesen Auftrag. Er achtet streng darauf, dass Leih-Fablinge ordentlich versorgt und vollständig zurückgegeben werden."
     dauer_tage: 1
@@ -48,6 +50,9 @@ aufträge:
   - auftrag_id: "pflege_einfach_001"
     name: "Grundpflegeauftrag"
     art: "pflege"
+    öffentlich: true
+    aushang_gewicht: 100
+    mindestens_offizielles_mitglied: true
     npc: "Fabelbund-Auftragsstelle"
     beschreibung: "Ein Fabling wird dir für eine einfache Pflegeeinschätzung übergeben. Sorge für einen stabilen Eindruck und gib ihn danach wieder beim Fabelbund ab."
     dauer_tage: 3
@@ -75,4 +80,98 @@ aufträge:
       geld_multiplikator: 0.3
       ruf_verlust:
         zuverlässigkeit: 3
+
+  - auftrag_id: "ruhe_einfach_001"
+    name: "Unruhiger Gluthase"
+    art: "pflege"
+    öffentlich: true
+    aushang_gewicht: 90
+    mindestens_offizielles_mitglied: true
+    npc: "Fabelbund-Auftragsstelle"
+    beschreibung: "Ein Gluthase war den ganzen Morgen aufgeregt. Gib ihm einen verlässlichen ruhigen Rahmen und bring ihn danach zurück."
+    dauer_tage: 2
+    fabelwesen:
+      - art_id: "gluthase"
+        spitzname: "Glutfunke"
+        charakter: "neugierig und schnell überreizt"
+        lieblingsfutter: "honigbeeren"
+        starter_kandidat: false
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      abgeschlossene_aktion: "kontrollierte_ruhe"
+      stress_höchstens: 35
+    belohnungen:
+      geld: 240
+      ruf:
+        pflege: 8
+        zuverlässigkeit: 6
+    fehlschlag:
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 3
+
+  - auftrag_id: "pflege_futter_001"
+    name: "Futtervorliebe prüfen"
+    art: "pflege"
+    öffentlich: true
+    aushang_gewicht: 80
+    mindestens_offizielles_mitglied: true
+    npc: "Mira"
+    beschreibung: "Ein Moosluchs soll kurz betreut und passend gefüttert werden. Achte darauf, ob seine Vorlieben erkennbar sind."
+    dauer_tage: 2
+    fabelwesen:
+      - art_id: "moosluchs"
+        spitzname: "Moosblick"
+        charakter: "vorsichtig und wählerisch"
+        lieblingsfutter: "kräuterheu"
+        starter_kandidat: false
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      gefüttert: true
+    belohnungen:
+      geld: 180
+      ruf:
+        pflege: 6
+        zuverlässigkeit: 3
+    fehlschlag:
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "training_ausdruck_001"
+    name: "Kurze Ausdrucksübung"
+    art: "training"
+    öffentlich: true
+    aushang_gewicht: 70
+    mindestens_offizielles_mitglied: true
+    npc: "Brann"
+    beschreibung: "Ein Fabling soll vor einem kleinen Sichtungstermin eine ruhige Ausdrucksübung absolvieren."
+    dauer_tage: 3
+    fabelwesen:
+      - art_id: "gluthase"
+        spitzname: "Funkenlauf"
+        charakter: "lebhaft und schnell abgelenkt"
+        lieblingsfutter: "honigbeeren"
+        starter_kandidat: false
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      abgeschlossene_aktion: "ausdruck_üben"
+    belohnungen:
+      geld: 260
+      ruf:
+        pflege: 6
+        zuverlässigkeit: 4
+    fehlschlag:
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
 

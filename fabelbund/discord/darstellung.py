@@ -46,6 +46,38 @@ def auftrag_einbettung(aktiver_auftrag: AktiverAuftrag, auftrag: AuftragDefiniti
     return embed
 
 
+def auftragswand_einbettung(aufträge: Sequence[AuftragDefinition]) -> discord.Embed:
+    embed = discord.Embed(
+        title="Auftragswand",
+        description="Öffentliche Aufträge des Fabelbunds. Wähle einen Aushang, wenn du einen freien Stallplatz hast.",
+        color=discord.Color.gold(),
+    )
+    if not aufträge:
+        embed.add_field(
+            name="Keine offenen Aushänge",
+            value="Im Moment ist kein passender öffentlicher Auftrag verfügbar.",
+            inline=False,
+        )
+        return embed
+
+    for auftrag in aufträge:
+        fabelwesen_text = ", ".join(
+            f"{eintrag.spitzname} ({lesbarer_artname(eintrag.art_id)})"
+            for eintrag in auftrag.fabelwesen
+        ) or "wird bei Annahme zugeteilt"
+        embed.add_field(
+            name=auftrag.name,
+            value=(
+                f"{auftrag.beschreibung}\n"
+                f"**Leih-Fabling:** {fabelwesen_text}\n"
+                f"**Voraussetzung:** {voraussetzung_text(auftrag)}\n"
+                f"**Belohnung:** {belohnung_text(auftrag)}"
+            ),
+            inline=False,
+        )
+    return embed
+
+
 def auftrag_abgabe_einbettung(ergebnis: AuftragAbgabeErgebnis) -> discord.Embed:
     titel = "Auftrag abgegeben" if ergebnis.erfolgreich else "Auftrag noch offen"
     embed = discord.Embed(title=titel, color=discord.Color.gold())
@@ -65,6 +97,19 @@ def belohnung_text(auftrag: AuftragDefinition) -> str:
     if isinstance(ruf, dict):
         teile.extend(f"{schlüssel} +{wert}" for schlüssel, wert in ruf.items())
     return "\n".join(teile) or "Keine feste Belohnung"
+
+
+def voraussetzung_text(auftrag: AuftragDefinition) -> str:
+    teile: list[str] = []
+    if auftrag.mindestens_offizielles_mitglied:
+        teile.append("offizielles Mitglied")
+    mindest_ruf = auftrag.voraussetzungen.get("mindest_ruf")
+    if isinstance(mindest_ruf, dict):
+        teile.extend(f"{schlüssel_label(str(schlüssel))} {wert}+" for schlüssel, wert in mindest_ruf.items())
+    mindest_lizenz = auftrag.voraussetzungen.get("mindest_lizenz")
+    if mindest_lizenz:
+        teile.append(f"Lizenz {mindest_lizenz}")
+    return ", ".join(teile) or "keine besondere Voraussetzung"
 
 
 def kauf_einbettung(ergebnis: KaufErgebnis) -> discord.Embed:

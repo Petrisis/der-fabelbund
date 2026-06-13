@@ -25,6 +25,17 @@ class AuftragSpeicher:
             return None
         return self._aus_zeile(zeile)
 
+    def aktive_auflisten(self) -> list[AktiverAuftrag]:
+        with self.datenbank.verbinden() as verbindung:
+            zeilen = verbindung.execute(
+                """
+                SELECT * FROM aktive_aufträge
+                WHERE status = 'aktiv'
+                ORDER BY gestartet_am DESC
+                """
+            ).fetchall()
+        return [self._aus_zeile(zeile) for zeile in zeilen]
+
     def speichern(self, auftrag: AktiverAuftrag) -> None:
         nutzlast = (
             auftrag.id,

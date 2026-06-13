@@ -83,6 +83,9 @@ class AuftragDefinition(BaseModel):
     beschreibung: str = ""
     npc: str = ""
     dauer_tage: int = Field(gt=0)
+    öffentlich: bool = False
+    aushang_gewicht: int = 0
+    mindestens_offizielles_mitglied: bool = False
     fabelwesen: list["AuftragFablingDefinition"] = Field(default_factory=list)
     voraussetzungen: dict[str, object] = Field(default_factory=dict)
     ziele: dict[str, object]

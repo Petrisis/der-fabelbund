@@ -7,6 +7,7 @@ from fabelbund.datenbank.datenbank import Datenbank
 from fabelbund.datenbank.speicher.aktivität_speicher import AktivitätSpeicher
 from fabelbund.datenbank.speicher.auftrag_speicher import AuftragSpeicher
 from fabelbund.datenbank.speicher.fabelwesen_speicher import FabelwesenSpeicher
+from fabelbund.datenbank.speicher.server_speicher import ServerSpeicher
 from fabelbund.datenbank.speicher.spieler_speicher import SpielerSpeicher
 from fabelbund.dienste.auftrag_dienst import AuftragDienst
 from fabelbund.dienste.fabelwesen_fabrik import FabelwesenFabrik
@@ -18,6 +19,7 @@ from fabelbund.dienste.yaml_lader import YamlLader
 @dataclass(frozen=True)
 class Anwendungskontext:
     spiel: SpielDienst
+    server: ServerSpeicher
 
     @classmethod
     def aus_pfaden(cls, daten_ordner: Path, datenbank_pfad: Path, zeitfaktor: float = 1.0) -> "Anwendungskontext":
@@ -29,6 +31,7 @@ class Anwendungskontext:
         fabelwesen_speicher = FabelwesenSpeicher(datenbank)
         auftrag_speicher = AuftragSpeicher(datenbank)
         aktivität_speicher = AktivitätSpeicher(datenbank)
+        server_speicher = ServerSpeicher(datenbank)
 
         spiel = SpielDienst(
             inhalte=inhalte,
@@ -41,4 +44,4 @@ class Anwendungskontext:
             auftrag_dienst=AuftragDienst(),
             zeitfaktor=zeitfaktor,
         )
-        return cls(spiel=spiel)
+        return cls(spiel=spiel, server=server_speicher)

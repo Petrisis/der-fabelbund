@@ -9,13 +9,14 @@ from fabelbund.datenbank.datenbank import Datenbank
 from fabelbund.datenbank.speicher.aktivität_speicher import AktivitätSpeicher
 from fabelbund.datenbank.speicher.auftrag_speicher import AuftragSpeicher
 from fabelbund.datenbank.speicher.fabelwesen_speicher import FabelwesenSpeicher
+from fabelbund.datenbank.speicher.server_speicher import ServerSpeicher
 from fabelbund.datenbank.speicher.spieler_speicher import SpielerSpeicher
 from fabelbund.dienste.auftrag_dienst import AuftragDienst
 from fabelbund.dienste.fabelwesen_fabrik import FabelwesenFabrik
 from fabelbund.dienste.pflege_dienst import PflegeDienst
 from fabelbund.dienste.spiel_dienst import SpielDienst
 from fabelbund.modelle.inhalte import ArtDefinition, AuftragDefinition, GegenstandDefinition, InhaltsKatalog, PflegeaktionDefinition
-from fabelbund.modelle.laufzeit import SpielerProfil
+from fabelbund.modelle.laufzeit import ServerKonfiguration, SpielerProfil
 
 
 def inhalts_katalog() -> InhaltsKatalog:
@@ -91,6 +92,9 @@ def inhalts_katalog() -> InhaltsKatalog:
             "auftrag_id": "pflege_einfach_001",
             "name": "Grundpflegeauftrag",
             "art": "pflege",
+            "öffentlich": True,
+            "aushang_gewicht": 100,
+            "mindestens_offizielles_mitglied": True,
             "dauer_tage": 3,
             "fabelwesen": [
                 {
@@ -254,6 +258,38 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(auftrag.auftrag_id, "pflege_einfach_001")
         self.assertEqual(len(sammlung), 1)
         self.assertTrue(sammlung[0].status["leih_fabling"])
+
+    def test_öffentliche_aufträge_schließen_tutorial_aus(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            aufträge = spiel.öffentliche_aufträge()
+
+        self.assertEqual([auftrag.auftrag_id for auftrag in aufträge], ["pflege_einfach_001"])
+
+    def test_öffentlichen_auftrag_kann_nur_offizielles_mitglied_annehmen(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            fehlertext = None
+            try:
+                spiel.öffentlichen_auftrag_annehmen("123", "pflege_einfach_001", "guild_1")
+            except ValueError as fehler:
+                fehlertext = str(fehler)
+
+        self.assertEqual(fehlertext, "Diesen Auftrag kannst du erst nach dem Tutorial annehmen.")
+
+    def test_öffentlichen_auftrag_annehmen_erzeugt_leih_fabling_und_quelle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.speichere_offiziellen_spieler(spiel)
+            auftrag = spiel.öffentlichen_auftrag_annehmen("123", "pflege_einfach_001", "guild_1")
+            sammlung = spiel.sammlung("123")
+            verfügbare = spiel.öffentliche_aufträge()
+
+        self.assertEqual(auftrag.fortschritt["quelle"], "auftragswand")
+        self.assertEqual(auftrag.fortschritt["guild_id"], "guild_1")
+        self.assertEqual(len(sammlung), 1)
+        self.assertTrue(sammlung[0].status["leih_fabling"])
+        self.assertEqual(verfügbare, [])
 
     def test_stallpriorität_wird_am_fabling_gespeichert(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -444,6 +480,30 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertEqual(aktualisiert.status["futter_priorität"], ["apfelstücke"])
         self.assertTrue(fütterung.lieblingsfutter)
+
+    def test_serverkonfiguration_wird_gespeichert(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank = Datenbank(Path(tmp) / "test.sqlite3")
+            datenbank.migrieren()
+            speicher = ServerSpeicher(datenbank)
+            speicher.speichern(
+                ServerKonfiguration(
+                    guild_id="1",
+                    kategorie_id="2",
+                    aufträge_kanal_id="3",
+                    chronik_kanal_id="4",
+                    events_kanal_id="5",
+                    auftragswand_nachricht_id="6",
+                )
+            )
+            geladen = speicher.holen("1")
+            alle = speicher.auflisten()
+
+        self.assertIsNotNone(geladen)
+        assert geladen is not None
+        self.assertEqual(geladen.aufträge_kanal_id, "3")
+        self.assertEqual(geladen.auftragswand_nachricht_id, "6")
+        self.assertEqual(len(alle), 1)
 
 
 if __name__ == "__main__":

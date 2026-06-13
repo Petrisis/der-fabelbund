@@ -235,6 +235,58 @@ class SpielDienst:
         self.aufträge.speichern(aktiver_auftrag)
         return aktiver_auftrag
 
+    def öffentliche_aufträge(self, limit: int = 3) -> list:
+        aktive_öffentliche_ids = {
+            auftrag.auftrag_id
+            for auftrag in self.aufträge.aktive_auflisten()
+            if auftrag.fortschritt.get("quelle") == "auftragswand"
+        }
+        aufträge = [
+            auftrag
+            for auftrag in self.inhalte.aufträge.values()
+            if auftrag.öffentlich and auftrag.auftrag_id not in aktive_öffentliche_ids
+        ]
+        return sorted(aufträge, key=lambda eintrag: (-eintrag.aushang_gewicht, eintrag.auftrag_id))[:limit]
+
+    def öffentlichen_auftrag_annehmen(self, nutzer_id: str, auftrag_id: str, guild_id: str | None = None) -> AktiverAuftrag:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        aktiver_auftrag = self.aufträge.aktiven_holen(nutzer_id)
+        if aktiver_auftrag is not None:
+            raise ValueError("Du hast bereits einen aktiven Auftrag.")
+        auftrag = self.inhalte.aufträge.get(auftrag_id)
+        if auftrag is None or not auftrag.öffentlich:
+            raise ValueError("Dieser Auftrag ist nicht öffentlich verfügbar.")
+        if auftrag not in self.öffentliche_aufträge(limit=25):
+            raise ValueError("Dieser Aushang ist nicht mehr verfügbar.")
+        self._auftrag_voraussetzungen_prüfen(spieler, auftrag)
+        if not self.hat_freien_stall(nutzer_id):
+            raise ValueError("Du brauchst zuerst einen freien Stallplatz.")
+
+        fabelwesen_liste = self._auftrag_fablinge_erzeugen(nutzer_id, auftrag)
+        if not fabelwesen_liste:
+            raise ValueError("Dieser Auftrag hat keinen zugeteilten Fabling.")
+        fabelwesen = fabelwesen_liste[0]
+        aktiver_auftrag = self.auftrag_dienst.erstelle_aktiven_auftrag(nutzer_id, auftrag, fabelwesen.id)
+        aktiver_auftrag.fortschritt["quelle"] = "auftragswand"
+        aktiver_auftrag.fortschritt["guild_id"] = guild_id
+        aktiver_auftrag.fortschritt["fabelwesen_ids"] = [fabling.id for fabling in fabelwesen_liste]
+        aktiver_auftrag.fortschritt["angenommen_am"] = datetime.now(timezone.utc).isoformat()
+        self.aufträge.speichern(aktiver_auftrag)
+        return aktiver_auftrag
+
+    def _auftrag_voraussetzungen_prüfen(self, spieler: SpielerProfil, auftrag) -> None:
+        if auftrag.mindestens_offizielles_mitglied and not spieler.offizielles_mitglied:
+            raise ValueError("Diesen Auftrag kannst du erst nach dem Tutorial annehmen.")
+        voraussetzungen = auftrag.voraussetzungen
+        mindest_lizenz = voraussetzungen.get("mindest_lizenz")
+        if mindest_lizenz and str(mindest_lizenz) not in spieler.lizenzen:
+            raise ValueError("Dir fehlt die passende Lizenz für diesen Auftrag.")
+        mindest_ruf = voraussetzungen.get("mindest_ruf")
+        if isinstance(mindest_ruf, dict):
+            for bereich, wert in mindest_ruf.items():
+                if int(spieler.ruf.get(str(bereich), 0)) < int(wert):
+                    raise ValueError("Dein Ruf reicht für diesen Auftrag noch nicht aus.")
+
     def _auftrag_id_für_spieler(self, spieler: SpielerProfil) -> str:
         if spieler.offizielles_mitglied:
             return "pflege_einfach_001"

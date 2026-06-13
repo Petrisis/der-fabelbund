@@ -71,3 +71,14 @@ class Aktivität(BaseModel):
     gestartet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     endet_am: datetime
     beendet_am: datetime | None = None
+
+
+class ServerKonfiguration(BaseModel):
+    guild_id: str
+    kategorie_id: str
+    aufträge_kanal_id: str
+    chronik_kanal_id: str
+    events_kanal_id: str
+    auftragswand_nachricht_id: str | None = None
+    eingerichtet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    aktualisiert_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

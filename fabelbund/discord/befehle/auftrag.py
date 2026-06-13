@@ -5,6 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
+from fabelbund.discord.auftragswand import chronik_senden, auftragswand_aktualisieren
 from fabelbund.discord.darstellung import auftrag_abgabe_einbettung, auftrag_einbettung
 
 
@@ -15,8 +16,23 @@ class AuftragBefehle(commands.Cog):
     @app_commands.command(name="auftrag", description="Startet oder zeigt deinen aktuellen Auftrag.")
     async def auftrag(self, interaction: discord.Interaction) -> None:
         nutzer_id = str(interaction.user.id)
+        spieler = self.kontext.spiel.stelle_spieler_sicher(nutzer_id)
+        aktiver_auftrag = self.kontext.spiel.aktiver_auftrag(nutzer_id)
+        if aktiver_auftrag is None and spieler.offizielles_mitglied:
+            kanalhinweis = "in #aufträge"
+            if interaction.guild is not None:
+                konfiguration = self.kontext.server.holen(str(interaction.guild.id))
+                if konfiguration is not None:
+                    kanal = interaction.guild.get_channel(int(konfiguration.aufträge_kanal_id))
+                    if isinstance(kanal, discord.TextChannel):
+                        kanalhinweis = kanal.mention
+            await interaction.response.send_message(
+                f"Du hast keinen aktiven Auftrag. Öffentliche Aufträge findest du {kanalhinweis}.",
+                ephemeral=True,
+            )
+            return
         try:
-            aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(nutzer_id)
+            aktiver_auftrag = aktiver_auftrag or self.kontext.spiel.pflegeauftrag_starten(nutzer_id)
         except ValueError as fehler:
             await interaction.response.send_message(str(fehler), ephemeral=True)
             return
@@ -60,6 +76,14 @@ class AuftragAnsicht(discord.ui.View):
         else:
             view = AuftragAnsicht(self.kontext, self.nutzer_id)
         await interaction.response.edit_message(embed=auftrag_abgabe_einbettung(ergebnis), view=view)
+        if ergebnis.erfolgreich and ergebnis.auftrag.fortschritt.get("quelle") == "auftragswand":
+            auftrag = self.kontext.spiel.inhalte.aufträge[ergebnis.auftrag.auftrag_id]
+            await chronik_senden(
+                self.kontext,
+                interaction.guild,
+                f"<@{self.nutzer_id}> hat **{auftrag.name}** abgeschlossen und den Leih-Fabling zurückgegeben.",
+            )
+            await auftragswand_aktualisieren(self.kontext, interaction.guild)
 
 
 class NächsterAuftragAnsicht(discord.ui.View):

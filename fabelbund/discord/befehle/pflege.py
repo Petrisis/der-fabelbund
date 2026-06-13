@@ -16,8 +16,23 @@ class PflegeBefehle(commands.Cog):
     @app_commands.command(name="pflege", description="Öffnet Pflegeaktionen für deinen aktuellen Auftrag.")
     async def pflege(self, interaction: discord.Interaction) -> None:
         nutzer_id = str(interaction.user.id)
+        spieler = self.kontext.spiel.stelle_spieler_sicher(nutzer_id)
+        aktiver_auftrag = self.kontext.spiel.aktiver_auftrag(nutzer_id)
+        if aktiver_auftrag is None and spieler.offizielles_mitglied:
+            kanalhinweis = "in #aufträge"
+            if interaction.guild is not None:
+                konfiguration = self.kontext.server.holen(str(interaction.guild.id))
+                if konfiguration is not None:
+                    kanal = interaction.guild.get_channel(int(konfiguration.aufträge_kanal_id))
+                    if isinstance(kanal, discord.TextChannel):
+                        kanalhinweis = kanal.mention
+            await interaction.response.send_message(
+                f"Du hast keinen aktiven Auftrag. Öffentliche Aufträge findest du {kanalhinweis}.",
+                ephemeral=True,
+            )
+            return
         try:
-            aktiver_auftrag = self.kontext.spiel.pflegeauftrag_starten(nutzer_id)
+            aktiver_auftrag = aktiver_auftrag or self.kontext.spiel.pflegeauftrag_starten(nutzer_id)
         except ValueError as fehler:
             await interaction.response.send_message(str(fehler), ephemeral=True)
             return

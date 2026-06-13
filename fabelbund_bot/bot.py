@@ -6,7 +6,9 @@ import discord
 from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
+from fabelbund.discord.auftragswand import AuftragswandAnsicht
 from fabelbund.discord.befehle.auftrag import AuftragBefehle
+from fabelbund.discord.befehle.einrichtung import EinrichtungBefehle
 from fabelbund.discord.befehle.inventar import InventarBefehle
 from fabelbund.discord.befehle.laden import LadenBefehle
 from fabelbund.discord.befehle.pflege import PflegeBefehle
@@ -28,6 +30,9 @@ class FabelbundBot(commands.Bot):
         self.testserver_id = testserver_id
 
     async def setup_hook(self) -> None:
+        for server in self.kontext.server.auflisten():
+            self.add_view(AuftragswandAnsicht(self.kontext, server.guild_id))
+        await self.add_cog(EinrichtungBefehle(self.kontext))
         await self.add_cog(ProfilBefehle(self.kontext))
         await self.add_cog(SammlungBefehle(self.kontext))
         await self.add_cog(StallBefehle(self.kontext))

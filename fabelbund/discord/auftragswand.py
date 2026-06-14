@@ -107,15 +107,10 @@ async def tutorial_fortsetzen_senden(
         return
 
     if spieler.tutorialschritt == "starter_wählen":
-        from fabelbund.discord.befehle.auftrag import StarterWahlAnsicht
+        from fabelbund.discord.befehle.auftrag import StarterWahlAnsicht, starterwahl_einbettung
 
-        embed = discord.Embed(
-            title="Starterwahl",
-            description="Mira, Brann und Jonna bieten dir je einen Fabling aus ihrer Zucht an.",
-            color=discord.Color.green(),
-        )
         await interaction.response.send_message(
-            embed=embed,
+            embed=starterwahl_einbettung(),
             view=StarterWahlAnsicht(kontext, nutzer_id),
             ephemeral=True,
         )

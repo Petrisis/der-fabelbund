@@ -26,6 +26,7 @@ TUTORIAL_DAUER_OVERRIDES_SEKUNDEN = {
     ("tutorial_aktiv_passiv_003", "gemeinsames_spiel"): 180,
     ("tutorial_betreuung_005", "gemeinsames_spiel"): 120,
     ("tutorial_betreuung_005", "kurze_pause"): 120,
+    ("tutorial_wettbewerb_006", "ausdruck_üben"): 180,
 }
 
 
@@ -190,6 +191,7 @@ class SpielDienst:
         return aktualisiert
 
     def futterpriorität_setzen(self, nutzer_id: str, fabelwesen_id: str, gegenstand_id: str | None) -> Fabelwesen:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
         fabelwesen = self.fabelwesen.holen(fabelwesen_id)
         if fabelwesen is None or fabelwesen.besitzer_id != nutzer_id:
             raise ValueError("Dieser Fabling wurde nicht gefunden.")
@@ -197,6 +199,8 @@ class SpielDienst:
             gegenstand = self.inhalte.gegenstände.get(gegenstand_id)
             if gegenstand is None or gegenstand.kategorie != "futter":
                 raise ValueError("Dieses Futter ist nicht verfügbar.")
+            if self._inventar_anzahl(spieler.inventar.get(gegenstand_id)) <= 0:
+                raise ValueError("Dieses Futter ist nicht in deinem Inventar.")
 
         aktualisiert = fabelwesen.model_copy(deep=True)
         if gegenstand_id is None:

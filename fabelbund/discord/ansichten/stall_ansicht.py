@@ -548,11 +548,12 @@ class FutterPrioritätAuswahl(discord.ui.Select):
         self.nutzer_id = nutzer_id
         self.fabelwesen_id = fabelwesen_id
         self.kontext = kontext
+        inventar = spiel.inventar(nutzer_id)
         optionen = [discord.SelectOption(label="Automatisch", value="automatisch", description="Persönliche Vorlieben beachten.")]
         optionen.extend(
             discord.SelectOption(label=gegenstand.name, value=gegenstand.gegenstand_id)
-            for gegenstand in spiel.inhalte.gegenstände.values()
-            if gegenstand.kategorie == "futter"
+            for gegenstand_id in inventar
+            if (gegenstand := spiel.inhalte.gegenstände.get(gegenstand_id)) is not None and gegenstand.kategorie == "futter"
         )
         super().__init__(
             placeholder="Futterpräferenz wählen",

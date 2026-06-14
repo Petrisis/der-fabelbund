@@ -103,7 +103,7 @@ class AuftragAnsicht(discord.ui.View):
             elif spieler is not None and spieler.tutorialstatus == "aktiv" and spieler.tutorialschritt == "stall_ausbauen":
                 view = TutorialZwischenschrittAnsicht(self.kontext, self.nutzer_id)
             elif spieler is not None and spieler.tutorialstatus == "aktiv" and spieler.tutorialschritt == "starter_wählen":
-                view = StarterWahlAnsicht(self.kontext, self.nutzer_id)
+                view = StarterEinleitungAnsicht(self.kontext, self.nutzer_id)
         else:
             auftrag = self.kontext.spiel.inhalte.aufträge[ergebnis.auftrag.auftrag_id]
             fabelwesen = self.kontext.spiel.fabelwesen.holen(ergebnis.auftrag.fabelwesen_id)
@@ -259,6 +259,45 @@ def auftragsziel_text(ziele: dict[str, object]) -> str:
     if ziele.get("fellpflege_mindestens") is not None:
         teile.append("Das Fell soll ordentlich gepflegt sein.")
     return "\n".join(teile) or "Erfülle die Auftragsbedingungen und gib den Auftrag danach ab."
+
+
+class StarterEinleitungAnsicht(discord.ui.View):
+    def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
+        super().__init__(timeout=EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN)
+        self.kontext = kontext
+        self.nutzer_id = nutzer_id
+        button = discord.ui.Button(label="Nächster Auftrag", style=discord.ButtonStyle.primary, custom_id="starter:einleitung")
+        button.callback = self._einleitung_öffnen
+        self.add_item(button)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if str(interaction.user.id) == self.nutzer_id:
+            return True
+        await interaction.response.send_message("Diese Ansicht gehört einem anderen Spieler.", ephemeral=True)
+        return False
+
+    async def _einleitung_öffnen(self, interaction: discord.Interaction) -> None:
+        await interaction.response.edit_message(
+            embed=starterwahl_einbettung(),
+            view=StarterWahlAnsicht(self.kontext, self.nutzer_id),
+        )
+
+
+def starterwahl_einbettung() -> discord.Embed:
+    embed = discord.Embed(
+        title="Dein erster eigener Fabling",
+        description=(
+            "Mira sagt: „Du hast jetzt genug gesehen, um nicht nur einen Auftrag abzuarbeiten, "
+            "sondern Verantwortung für einen eigenen Fabling zu übernehmen.“\n\n"
+            "Brann ergänzt: „Ein Gluthase ist lebhaft und braucht klare Führung. Ein Moosluchs ist stolz "
+            "und reagiert stark auf gute Pflege.“\n\n"
+            "Jonna sagt: „Ein Quellfink ist aufmerksam und vorsichtig. Wenn du ruhig und verlässlich bleibst, "
+            "lernt er schnell, dir zu vertrauen.“\n\n"
+            "Wähle den Fabling, mit dem du deine eigene Zucht im Fabelbund beginnen möchtest."
+        ),
+        color=discord.Color.green(),
+    )
+    return embed
 
 
 class StarterWahlAnsicht(discord.ui.View):

@@ -681,6 +681,19 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(round((spiel_aktivität.endet_am - spiel_aktivität.gestartet_am).total_seconds()), 120)
         self.assertEqual(round((pause.endet_am - pause.gestartet_am).total_seconds()), 120)
 
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            spieler = spiel.tutorial_starten("123").model_copy(
+                update={"tutorialschritt": "wettbewerb_vorbereitung"}
+            )
+            spiel.spieler.speichern(spieler)
+            wettbewerbsauftrag = spiel.pflegeauftrag_starten("123")
+            fabling = spiel.sammlung("123")[0]
+            training = spiel.pflegeaktivität_starten("123", "ausdruck_üben", fabling.id)
+
+        self.assertEqual(wettbewerbsauftrag.auftrag_id, "tutorial_wettbewerb_006")
+        self.assertEqual(round((training.endet_am - training.gestartet_am).total_seconds()), 180)
+
     def test_tutorial_führt_bis_zur_offiziellen_mitgliedschaft(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3", zeitfaktor=1000)
@@ -717,6 +730,7 @@ class SpielDienstTests(unittest.TestCase):
 
             vierter_auftrag = spiel.pflegeauftrag_starten("123")
             moosluchs = spiel.sammlung("123")[0]
+            spiel.gegenstand_kaufen("123", "kräuterheu")
             spiel.futterpriorität_setzen("123", moosluchs.id, "kräuterheu")
             vierte_abgabe = spiel.auftrag_abgeben("123")
 
@@ -773,6 +787,7 @@ class SpielDienstTests(unittest.TestCase):
             self.erzeuge_starter(spiel)
             fabling = spiel.sammlung("123")[0]
             spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=1)
+            spiel.gegenstand_kaufen("123", "kräuterheu", anzahl=1)
 
             aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "apfelstücke")
             aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "kräuterheu")
@@ -781,6 +796,20 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertEqual(aktualisiert.status["futter_priorität"], ["apfelstücke"])
         self.assertTrue(fütterung.lieblingsfutter)
+
+    def test_futterpriorität_braucht_futter_im_inventar(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+            fehlertext = None
+
+            try:
+                spiel.futterpriorität_setzen("123", fabling.id, "kräuterheu")
+            except ValueError as fehler:
+                fehlertext = str(fehler)
+
+        self.assertEqual(fehlertext, "Dieses Futter ist nicht in deinem Inventar.")
 
     def test_serverkonfiguration_wird_gespeichert(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

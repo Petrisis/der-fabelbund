@@ -672,6 +672,15 @@ class SpielDienst:
         return f"{namen} {verb} zurück in die Obhut der zuständigen Betreuung."
 
     def _auftrag_hinweis(self, auftrag, fabelwesen: Fabelwesen) -> str:
+        hinweis = auftrag.fehlschlag.get("hinweis")
+        if isinstance(hinweis, str) and hinweis:
+            return hinweis
+        if auftrag.ziele.get("fabling_ziele"):
+            return "Die geforderten Zustände der zugeteilten Fablinge sind noch nicht erreicht."
+        if auftrag.ziele.get("fellpflege_mindestens"):
+            return f"{fabelwesen.spitzname} wirkt noch nicht gepflegt genug."
+        if auftrag.ziele.get("wettbewerb_mindestens"):
+            return f"{fabelwesen.spitzname} ist für diesen Probewettbewerb noch nicht gut genug vorbereitet."
         if auftrag.ziele.get("abgeschlossene_aktion") == "kontrollierte_ruhe":
             return f"{fabelwesen.spitzname} sollte zuerst eine vollständige Ruhephase abschließen."
         if auftrag.ziele.get("gefüttert"):

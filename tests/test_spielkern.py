@@ -123,7 +123,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "dauer_tage": 3,
             "fabelwesen": [
                 {
-                    "art_id": "gluthase",
+                    "art_id": "moosluchs",
                     "spitzname": "Glutgast",
                     "charakter": "stolz und pflegeempfindlich",
                     "lieblingsfutter": "apfelstücke",
@@ -147,13 +147,13 @@ def inhalts_katalog() -> InhaltsKatalog:
             "fabelwesen": [
                 {
                     "art_id": "gluthase",
-                    "spitzname": "Gluthase",
+                    "spitzname": "Miras Gluthase",
                     "charakter": "aufgeweckt und ruhelos",
                     "lieblingsfutter": "apfelstücke",
                     "starter_kandidat": True,
                 }
             ],
-            "ziele": {"abgeschlossene_aktion": "kontrollierte_ruhe"},
+            "ziele": {"energie_mindestens": 49, "stress_höchstens": 32},
             "belohnungen": {"geld": 80, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
         }
     )
@@ -166,13 +166,13 @@ def inhalts_katalog() -> InhaltsKatalog:
             "fabelwesen": [
                 {
                     "art_id": "gluthase",
-                    "spitzname": "Glutgast",
+                    "spitzname": "Branns Moosluchs",
                     "charakter": "stolz und pflegeempfindlich",
                     "lieblingsfutter": "apfelstücke",
                     "starter_kandidat": True,
                 }
             ],
-            "ziele": {"abgeschlossene_aktion": "sanfte_fellpflege"},
+            "ziele": {"fellpflege_mindestens": 50},
             "belohnungen": {"geld": 90, "ruf": {"pflege": 3, "zuverlässigkeit": 1}},
         }
     )
@@ -183,10 +183,15 @@ def inhalts_katalog() -> InhaltsKatalog:
             "art": "tutorial",
             "dauer_tage": 1,
             "fabelwesen": [
-                {"art_id": "quellfink", "spitzname": "Quellfink", "starter_kandidat": True},
-                {"art_id": "gluthase", "spitzname": "Gluthase", "starter_kandidat": True},
+                {"art_id": "quellfink", "spitzname": "Miras Quellfink", "starter_kandidat": True},
+                {"art_id": "gluthase", "spitzname": "Miras Gluthase", "starter_kandidat": True},
             ],
-            "ziele": {"abgeschlossene_aktionen": ["kontrollierte_ruhe", "gemeinsames_spiel"]},
+            "ziele": {
+                "fabling_ziele": [
+                    {"spitzname": "Miras Quellfink", "energie_mindestens": 50, "stress_höchstens": 28},
+                    {"spitzname": "Miras Gluthase", "vertrauen_mindestens": 42, "stimmung_mindestens": 54},
+                ],
+            },
             "belohnungen": {"geld": 120, "ruf": {"pflege": 3, "zuverlässigkeit": 3}},
         }
     )
@@ -197,7 +202,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "art": "tutorial",
             "dauer_tage": 1,
             "fabelwesen": [
-                {"art_id": "moosluchs", "spitzname": "Moosluchs", "lieblingsfutter": "kräuterheu", "starter_kandidat": True},
+                {"art_id": "moosluchs", "spitzname": "Jonnas Moosluchs", "lieblingsfutter": "kräuterheu", "starter_kandidat": True},
             ],
             "ziele": {"futter_priorität": "kräuterheu"},
             "belohnungen": {"geld": 110, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
@@ -212,13 +217,12 @@ def inhalts_katalog() -> InhaltsKatalog:
             "fabelwesen": [
                 {
                     "art_id": "quellfink",
-                    "spitzname": "Quellfink",
+                    "spitzname": "Jonnas Quellfink",
                     "starter_kandidat": True,
                     "start_zustand": {"vertrauen": 34},
                 },
             ],
             "ziele": {
-                "abgeschlossene_aktionen": ["gemeinsames_spiel", "kurze_pause"],
                 "betreuungsdauer_sekunden": 1800,
                 "vertrauen_mindestens": 41,
             },
@@ -232,9 +236,9 @@ def inhalts_katalog() -> InhaltsKatalog:
             "art": "tutorial",
             "dauer_tage": 1,
             "fabelwesen": [
-                {"art_id": "gluthase", "spitzname": "Gluthase", "starter_kandidat": True},
+                {"art_id": "gluthase", "spitzname": "Branns Gluthase", "starter_kandidat": True},
             ],
-            "ziele": {"abgeschlossene_aktion": "ausdruck_üben", "wettbewerb_mindestens": {"ausdruck": 50}},
+            "ziele": {"wettbewerb_mindestens": {"ausdruck": 50}},
             "belohnungen": {"geld": 200, "ruf": {"pflege": 4, "zuverlässigkeit": 5}},
         }
     )

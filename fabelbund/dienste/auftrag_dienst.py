@@ -34,6 +34,7 @@ class AuftragDienst:
             and self._futter_priorität(fabelwesen, ziele.get("futter_priorität"))
             and self._betreuungsdauer(alle_fabelwesen, ziele.get("betreuungsdauer_sekunden"))
             and self._wettbewerb_mindestens(fabelwesen, ziele.get("wettbewerb_mindestens"))
+            and self._fabling_ziele(alle_fabelwesen, ziele.get("fabling_ziele"))
         )
 
     def abschließen(self, spieler: SpielerProfil, aktiv: AktiverAuftrag, auftrag: AuftragDefinition) -> tuple[SpielerProfil, AktiverAuftrag]:
@@ -143,3 +144,58 @@ class AuftragDienst:
         if not isinstance(werte, dict):
             return True
         return all(int(fabelwesen.wettbewerbswerte.get(str(schlüssel), 0)) >= int(wert) for schlüssel, wert in werte.items())
+
+    @classmethod
+    def _fabling_ziele(cls, fabelwesen_liste: list[Fabelwesen], ziele: object) -> bool:
+        if ziele is None:
+            return True
+        if not isinstance(ziele, list):
+            return False
+        for ziel in ziele:
+            if not isinstance(ziel, dict):
+                return False
+            fabelwesen = cls._passenden_fabling_finden(fabelwesen_liste, ziel)
+            if fabelwesen is None:
+                return False
+            if not cls._zielwerte_erfüllt(fabelwesen, ziel):
+                return False
+        return True
+
+    @staticmethod
+    def _passenden_fabling_finden(fabelwesen_liste: list[Fabelwesen], ziel: dict[str, object]) -> Fabelwesen | None:
+        art_id = ziel.get("art_id")
+        spitzname = ziel.get("spitzname")
+        for fabelwesen in fabelwesen_liste:
+            if art_id is not None and fabelwesen.art_id != str(art_id):
+                continue
+            if spitzname is not None and fabelwesen.spitzname != str(spitzname):
+                continue
+            return fabelwesen
+        return None
+
+    @classmethod
+    def _zielwerte_erfüllt(cls, fabelwesen: Fabelwesen, ziel: dict[str, object]) -> bool:
+        prüfungen = {
+            "gesundheit_mindestens": ("zustand", "gesundheit", "mindestens"),
+            "stimmung_mindestens": ("zustand", "stimmung", "mindestens"),
+            "energie_mindestens": ("zustand", "energie", "mindestens"),
+            "vertrauen_mindestens": ("zustand", "vertrauen", "mindestens"),
+            "sicherheit_mindestens": ("zustand", "sicherheit", "mindestens"),
+            "fellpflege_mindestens": ("zustand", "fellpflege", "mindestens"),
+            "stress_höchstens": ("zustand", "stress", "höchstens"),
+        }
+        for zielschlüssel, (bereich, wertschlüssel, vergleich) in prüfungen.items():
+            erwartung = ziel.get(zielschlüssel)
+            if erwartung is None:
+                continue
+            werte = getattr(fabelwesen, bereich)
+            ist = int(werte.get(wertschlüssel, 0))
+            soll = int(erwartung)
+            if vergleich == "mindestens" and ist < soll:
+                return False
+            if vergleich == "höchstens" and ist > soll:
+                return False
+        wettbewerb = ziel.get("wettbewerb_mindestens")
+        if wettbewerb is not None and not cls._wettbewerb_mindestens(fabelwesen, wettbewerb):
+            return False
+        return True

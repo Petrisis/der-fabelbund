@@ -100,6 +100,10 @@ Diese Liste ist ein Vorschlag und muss gemeinsam entschieden werden.
 
 ## Designentscheidungen
 
+### Auftragsschema
+
+Die verbindliche Regel für neue Aufträge steht in [auftragsschema.md](auftragsschema.md). Kurzfassung: Auftragsabgaben prüfen Zielzustände, nicht abgeschlossene Aktionen. Aktionen sind Wege zum Ziel, aber nicht selbst die Abgabebedingung.
+
 ### Auftragsprüfungen
 
 Aufträge dürfen direkt prüfen:

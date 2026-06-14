@@ -68,6 +68,19 @@ Setze danach `DISCORD_TOKEN` in `.env` oder in deiner Shell-Umgebung.
 python -m fabelbund_bot.bot
 ```
 
+Alternativ kann der Bot unter Windows manuell über die Projektskripte gestartet und beendet werden:
+
+```powershell
+.\scripts\start-bot.ps1
+.\scripts\stop-bot.ps1
+```
+
+`start-bot.ps1` startet den Bot im Hintergrund und schreibt nach `bot.log` und `bot.err`. Im aktuellen Entwicklungsstand setzt das Skript automatisch `FABELBUND_BEFEHLE_SYNCHRONISIEREN=1` und `FABELBUND_ZEITFAKTOR=5.0`, damit der Bot auf dem konfigurierten Testserver mit fünffachem Spieltempo läuft. Für einen sichtbaren Vordergrundstart:
+
+```powershell
+.\scripts\start-bot.ps1 -Vordergrund
+```
+
 Für die erste Befehlsregistrierung während der Entwicklung:
 
 ```powershell

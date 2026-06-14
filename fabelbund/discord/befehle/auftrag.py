@@ -227,6 +227,14 @@ def auftragsziel_text(ziele: dict[str, object]) -> str:
         return "Moosbürste kaufen. Danach: Pflege: Sanfte Fellpflege."
     if ziele.get("abgeschlossene_aktion") == "ausdruck_üben":
         return "Training: Ausdruck üben."
+    if ziele.get("fellpflege_mindestens") is not None:
+        return "Moosbürste kaufen. Danach soll das Fell sichtbar gepflegt wirken."
+    if ziele.get("fabling_ziele"):
+        return "Miras Quellfink soll ausgeruhter und ruhiger wirken. Miras Gluthase soll zutraulicher und merklich besser gestimmt wirken."
+    if ziele.get("betreuungsdauer_sekunden") and ziele.get("vertrauen_mindestens"):
+        return "Baue Vertrauen auf und erreiche insgesamt 30 Minuten Betreuungszeit. Sinnvolle Pausen zählen dazu."
+    if ziele.get("wettbewerb_mindestens"):
+        return "Bereite den Fabling so vor, dass sein Ausdruck für den Probewettbewerb reicht."
     if ziele.get("abgeschlossene_aktionen"):
         aktionen = ziele.get("abgeschlossene_aktionen")
         if aktionen == ["kontrollierte_ruhe", "gemeinsames_spiel"]:

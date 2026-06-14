@@ -73,7 +73,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "folgeaktionen": ["kontrollierte_ruhe", "kurzer_blick"],
         }
     )
-    moosluchs = art.model_copy(update={"art_id": "moosluchs", "name": "Moosluchs", "element": "wald"})
+    moosluchs = art.model_copy(update={"art_id": "moosluchs", "name": "Moosluchs", "element": "wald", "grundseltenheit": "selten"})
     quellfink = art.model_copy(update={"art_id": "quellfink", "name": "Quellfink", "element": "wasser"})
     ruhe = PflegeaktionDefinition.model_validate(
         {
@@ -159,7 +159,7 @@ def inhalts_katalog() -> InhaltsKatalog:
                 "stress_höchstens": 25,
                 "fellpflege_mindestens": 55,
             },
-            "belohnungen": {"geld": 300, "ruf": {"pflege": 12, "zuverlässigkeit": 5}},
+            "belohnungen": {"geld": 45, "ruf": {"pflege": 12, "zuverlässigkeit": 5}},
         }
     )
     tutorial_auftrag = AuftragDefinition.model_validate(
@@ -409,10 +409,10 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertFalse(ergebnis.auftrag_abgeschlossen)
         self.assertTrue(abgabe.erfolgreich)
-        self.assertEqual(abgabe.geld_erhalten, 300)
+        self.assertEqual(abgabe.geld_erhalten, 45)
         self.assertIsNotNone(spieler)
         assert spieler is not None
-        self.assertEqual(spieler.geld, 800)
+        self.assertEqual(spieler.geld, 545)
         self.assertEqual(spieler.ruf["pflege"], 12)
         self.assertEqual(spieler.ruf["zuverlässigkeit"], 5)
 
@@ -426,6 +426,39 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(auftrag.auftrag_id, "pflege_einfach_001")
         self.assertEqual(len(sammlung), 1)
         self.assertTrue(sammlung[0].status["leih_fabling"])
+
+    def test_fablingkauf_kostet_mehrere_normale_aufträge(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            öffentliche_belohnungen = [
+                int(auftrag.belohnungen.get("geld", 0))
+                for auftrag in getattr(katalog, "aufträge").values()
+                if getattr(auftrag, "öffentlich")
+            ]
+            gewöhnlicher_preis = spiel.fabelwesen_preis("gluthase")
+            seltener_preis = spiel.fabelwesen_preis("moosluchs")
+
+        self.assertGreaterEqual(gewöhnlicher_preis, max(öffentliche_belohnungen) * 4)
+        self.assertGreaterEqual(seltener_preis, max(öffentliche_belohnungen) * 10)
+
+    def test_fablingkauf_zieht_siegel_ab_und_braucht_stallplatz(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.speichere_offiziellen_spieler(spiel)
+            ergebnis = spiel.fabelwesen_kaufen("123", "gluthase")
+            sammlung = spiel.sammlung("123")
+            fehlertext = None
+            try:
+                spiel.fabelwesen_kaufen("123", "gluthase")
+            except ValueError as fehler:
+                fehlertext = str(fehler)
+
+        self.assertEqual(ergebnis.preis, 240)
+        self.assertEqual(ergebnis.spieler.geld, 260)
+        self.assertEqual(len(sammlung), 1)
+        self.assertTrue(sammlung[0].status["gekaufter_fabling"])
+        self.assertEqual(fehlertext, "Du brauchst zuerst einen freien Stallplatz.")
 
     def test_öffentliche_aufträge_schließen_tutorial_aus(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -535,7 +568,7 @@ class SpielDienstTests(unittest.TestCase):
         self.assertTrue(abgabe.erfolgreich)
         self.assertIsNotNone(spieler)
         assert spieler is not None
-        self.assertEqual(spieler.geld, 800)
+        self.assertEqual(spieler.geld, 545)
 
     def test_passive_aktivitäten_dürfen_parallel_laufen(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

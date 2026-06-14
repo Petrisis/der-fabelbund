@@ -1,0 +1,81 @@
+art_id: "kohligel"
+name: "Kohligel"
+grundseltenheit: "gewöhnlich"
+element: "glut"
+lebensraum: "aschehang"
+
+grundwerte:
+  schönheit: 30
+  eleganz: 24
+  charme: 34
+  intelligenz: 36
+  ausdruck: 38
+  disziplin: 46
+  harmonie: 35
+  stärke: 42
+  beweglichkeit: 22
+  ausdauer: 55
+  technik: 34
+  deckung: 58
+  kontrolle: 44
+  kampfgeist: 40
+
+genpools:
+  farben:
+    gewöhnlich: ["kohle", "aschegrau", "dunkelbraun"]
+    selten: ["glutkante", "rauchschwarz"]
+  muster:
+    gewöhnlich: ["stachelband", "rußflecken"]
+    selten: ["glimmerrand"]
+
+persönlichkeits_gewichte:
+  treu: 30
+  stolz: 20
+  scheu: 15
+  wild: 10
+  neugierig: 15
+
+wettbewerbs_neigungen:
+  schönheit: 0.85
+  eleganz: 0.8
+  ausdruck: 1.05
+  disziplin: 1.15
+  harmonie: 0.95
+
+sport_neigungen:
+  stärke: 1.05
+  beweglichkeit: 0.75
+  ausdauer: 1.25
+  technik: 0.95
+  deckung: 1.3
+  kontrolle: 1.1
+  kampfgeist: 1.0
+
+vorlieben:
+  - "warme_liegeplätze"
+  - "ruhige_pflege"
+  - "strukturierte_übungen"
+
+abneigungen:
+  - "nasse_kälte"
+  - "hektische_pflege"
+  - "zu_viele_wiederholungen"
+
+stärken:
+  - "deckung"
+  - "ausdauer"
+  - "disziplin"
+
+schwächen:
+  - "beweglichkeit"
+  - "eleganz"
+  - "nasse_kälte"
+
+habits:
+  - "rollt sich bei Unsicherheit eng zusammen und wartet, bis die Umgebung still wird"
+  - "schiebt warme Asche zu kleinen Mulden zusammen"
+  - "arbeitet zuverlässiger, wenn Übungen klar beginnen und klar enden"
+
+lieblingsfutter:
+  - "geröstete_wurzeln"
+  - "warme_samen"

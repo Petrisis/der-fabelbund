@@ -1,0 +1,83 @@
+art_id: "funkenkraehe"
+name: "Funkenkrähe"
+grundseltenheit: "selten"
+element: "glut"
+lebensraum: "warmfeld"
+
+grundwerte:
+  schönheit: 46
+  eleganz: 48
+  charme: 40
+  intelligenz: 50
+  ausdruck: 59
+  disziplin: 31
+  harmonie: 34
+  stärke: 27
+  beweglichkeit: 52
+  ausdauer: 36
+  technik: 44
+  deckung: 24
+  kontrolle: 38
+  kampfgeist: 48
+
+genpools:
+  farben:
+    gewöhnlich: ["rußschwarz", "glutrot", "rauchgrau"]
+    selten: ["kupferglanz", "goldfunke"]
+  muster:
+    gewöhnlich: ["flügelspitzen", "brustfunken"]
+    selten: ["funkenkranz"]
+
+persönlichkeits_gewichte:
+  stolz: 35
+  neugierig: 20
+  wild: 20
+  scheu: 10
+  treu: 10
+
+wettbewerbs_neigungen:
+  schönheit: 1.1
+  eleganz: 1.15
+  charme: 1.0
+  intelligenz: 1.1
+  ausdruck: 1.3
+  disziplin: 0.8
+  harmonie: 0.9
+
+sport_neigungen:
+  stärke: 0.8
+  beweglichkeit: 1.2
+  ausdauer: 0.9
+  technik: 1.1
+  deckung: 0.75
+  kontrolle: 0.95
+  kampfgeist: 1.15
+
+vorlieben:
+  - "sichtbare_erfolge"
+  - "kurze_spiele"
+  - "warme_liegeplätze"
+
+abneigungen:
+  - "laute_umgebung"
+  - "hektische_pflege"
+  - "unbeachtete_leistung"
+
+stärken:
+  - "ausdruck"
+  - "beweglichkeit"
+  - "intelligenz"
+
+schwächen:
+  - "deckung"
+  - "disziplin"
+  - "stärke"
+
+habits:
+  - "ordnet glänzende Gegenstände an gut sichtbaren Stellen"
+  - "reagiert besser, wenn gelungene Übungen klar beendet werden"
+  - "weicht bei Hektik nach oben aus und beobachtet von erhöhter Position"
+
+lieblingsfutter:
+  - "glanzkörner"
+  - "rauchbeeren"

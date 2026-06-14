@@ -1,0 +1,83 @@
+art_id: "aschmarder"
+name: "Aschmarder"
+grundseltenheit: "gewöhnlich"
+element: "glut"
+lebensraum: "aschehang"
+
+grundwerte:
+  schönheit: 35
+  eleganz: 42
+  charme: 32
+  intelligenz: 44
+  ausdruck: 40
+  disziplin: 26
+  harmonie: 30
+  stärke: 34
+  beweglichkeit: 56
+  ausdauer: 42
+  technik: 46
+  deckung: 28
+  kontrolle: 32
+  kampfgeist: 52
+
+genpools:
+  farben:
+    gewöhnlich: ["aschegrau", "rußbraun", "glutrot"]
+    selten: ["silberasche", "funkenfell"]
+  muster:
+    gewöhnlich: ["rauchstreifen", "dunkelpfoten"]
+    selten: ["glutmaske"]
+
+persönlichkeits_gewichte:
+  wild: 35
+  neugierig: 25
+  stolz: 20
+  treu: 10
+  scheu: 5
+
+wettbewerbs_neigungen:
+  schönheit: 0.95
+  eleganz: 1.1
+  charme: 0.9
+  intelligenz: 1.05
+  ausdruck: 1.1
+  disziplin: 0.75
+  harmonie: 0.85
+
+sport_neigungen:
+  stärke: 0.95
+  beweglichkeit: 1.3
+  ausdauer: 1.05
+  technik: 1.15
+  deckung: 0.8
+  kontrolle: 0.9
+  kampfgeist: 1.2
+
+vorlieben:
+  - "kurze_spiele"
+  - "warme_liegeplätze"
+  - "wechselnde_übungen"
+
+abneigungen:
+  - "enge_räume"
+  - "zu_viele_wiederholungen"
+  - "lange_wartezeiten"
+
+stärken:
+  - "beweglichkeit"
+  - "technik"
+  - "kampfgeist"
+
+schwächen:
+  - "disziplin"
+  - "deckung"
+  - "harmonie"
+
+habits:
+  - "prüft jeden Ausgang, bevor es sich auf Pflege einlässt"
+  - "versteckt kleine warme Steine in den Ecken des Stalls"
+  - "arbeitet stark mit, solange Übungen kurz und wechselhaft bleiben"
+
+lieblingsfutter:
+  - "rauchbeeren"
+  - "geröstete_nüsse"

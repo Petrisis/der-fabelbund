@@ -1,0 +1,83 @@
+art_id: "schilfhirsch"
+name: "Schilfhirsch"
+grundseltenheit: "selten"
+element: "wasser"
+lebensraum: "schilfbruch"
+
+grundwerte:
+  schönheit: 58
+  eleganz: 60
+  charme: 44
+  intelligenz: 42
+  ausdruck: 50
+  disziplin: 36
+  harmonie: 55
+  stärke: 28
+  beweglichkeit: 46
+  ausdauer: 40
+  technik: 38
+  deckung: 30
+  kontrolle: 44
+  kampfgeist: 26
+
+genpools:
+  farben:
+    gewöhnlich: ["schilfgrün", "sandbraun", "bachblau"]
+    selten: ["silberschilf", "perlweiß"]
+  muster:
+    gewöhnlich: ["halmstreifen", "wasserflecken"]
+    selten: ["spiegelmale"]
+
+persönlichkeits_gewichte:
+  scheu: 30
+  stolz: 25
+  treu: 20
+  neugierig: 15
+  wild: 5
+
+wettbewerbs_neigungen:
+  schönheit: 1.25
+  eleganz: 1.3
+  charme: 1.05
+  intelligenz: 1.0
+  ausdruck: 1.15
+  disziplin: 0.95
+  harmonie: 1.25
+
+sport_neigungen:
+  stärke: 0.75
+  beweglichkeit: 1.05
+  ausdauer: 0.95
+  technik: 0.95
+  deckung: 0.8
+  kontrolle: 1.05
+  kampfgeist: 0.75
+
+vorlieben:
+  - "wassergeräusche"
+  - "ruhige_pflege"
+  - "weite_räume"
+
+abneigungen:
+  - "enge_räume"
+  - "laute_umgebung"
+  - "hektische_pflege"
+
+stärken:
+  - "eleganz"
+  - "schönheit"
+  - "harmonie"
+
+schwächen:
+  - "kampfgeist"
+  - "stärke"
+  - "deckung"
+
+habits:
+  - "stellt sich so, dass es einen freien Rückweg sieht"
+  - "nimmt Pflege besser an, wenn sie langsam und gleichmäßig erfolgt"
+  - "reagiert stark auf spiegelnde Wasserflächen und ruhige Bewegungen"
+
+lieblingsfutter:
+  - "schilfsprossen"
+  - "wasserkräuter"

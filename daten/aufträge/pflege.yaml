@@ -216,7 +216,7 @@ aufträge:
       stress_höchstens: 25
       fellpflege_mindestens: 55
     belohnungen:
-      geld: 300
+      geld: 45
       ruf:
         pflege: 12
         zuverlässigkeit: 5
@@ -253,7 +253,7 @@ aufträge:
       energie_mindestens: 55
       stress_höchstens: 32
     belohnungen:
-      geld: 240
+      geld: 35
       ruf:
         pflege: 8
         zuverlässigkeit: 6
@@ -296,7 +296,7 @@ aufträge:
       stress_höchstens: 28
       fellpflege_mindestens: 55
     belohnungen:
-      geld: 210
+      geld: 30
       ruf:
         pflege: 5
         zuverlässigkeit: 7
@@ -334,7 +334,7 @@ aufträge:
       wettbewerb_mindestens:
         ausdruck: 50
     belohnungen:
-      geld: 260
+      geld: 50
       ruf:
         pflege: 6
         zuverlässigkeit: 4

@@ -1,0 +1,82 @@
+art_id: "farnwidder"
+name: "Farnwidder"
+grundseltenheit: "gewöhnlich"
+element: "wald"
+lebensraum: "wurzelhain"
+
+grundwerte:
+  schönheit: 38
+  eleganz: 32
+  charme: 36
+  intelligenz: 35
+  ausdruck: 42
+  disziplin: 48
+  harmonie: 40
+  stärke: 52
+  beweglichkeit: 26
+  ausdauer: 57
+  technik: 34
+  deckung: 50
+  kontrolle: 42
+  kampfgeist: 46
+
+genpools:
+  farben:
+    gewöhnlich: ["farngrün", "rindenbraun", "erdgrau"]
+    selten: ["altmoos", "hellrinde"]
+  muster:
+    gewöhnlich: ["blattkranz", "wurzelflecken"]
+    selten: ["farnspiralen"]
+
+persönlichkeits_gewichte:
+  stolz: 30
+  treu: 25
+  wild: 15
+  scheu: 10
+  neugierig: 10
+
+wettbewerbs_neigungen:
+  schönheit: 0.95
+  eleganz: 0.85
+  charme: 0.95
+  ausdruck: 1.1
+  disziplin: 1.15
+  harmonie: 1.0
+
+sport_neigungen:
+  stärke: 1.2
+  beweglichkeit: 0.75
+  ausdauer: 1.3
+  technik: 0.9
+  deckung: 1.15
+  kontrolle: 1.05
+  kampfgeist: 1.1
+
+vorlieben:
+  - "strukturierte_übungen"
+  - "feste_routinen"
+  - "ruhige_pflege"
+
+abneigungen:
+  - "zu_viele_wiederholungen"
+  - "hektische_pflege"
+  - "unregelmäßige_betreuung"
+
+stärken:
+  - "ausdauer"
+  - "stärke"
+  - "deckung"
+
+schwächen:
+  - "beweglichkeit"
+  - "eleganz"
+  - "technik"
+
+habits:
+  - "stellt sich vor Aufgaben breit hin und wartet auf ein klares Zeichen"
+  - "geht nach Belastung langsam feste Runden, bevor es ruht"
+  - "verweigert abrupte Wechsel, arbeitet aber zuverlässig in bekannten Abläufen"
+
+lieblingsfutter:
+  - "farnspitzen"
+  - "erdknollen"

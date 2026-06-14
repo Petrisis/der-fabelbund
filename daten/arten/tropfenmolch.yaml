@@ -1,0 +1,83 @@
+art_id: "tropfenmolch"
+name: "Tropfenmolch"
+grundseltenheit: "gewöhnlich"
+element: "wasser"
+lebensraum: "bachufer"
+
+grundwerte:
+  schönheit: 36
+  eleganz: 44
+  charme: 42
+  intelligenz: 46
+  ausdruck: 34
+  disziplin: 32
+  harmonie: 50
+  stärke: 20
+  beweglichkeit: 48
+  ausdauer: 38
+  technik: 54
+  deckung: 26
+  kontrolle: 46
+  kampfgeist: 24
+
+genpools:
+  farben:
+    gewöhnlich: ["bachblau", "kieselgrau", "schilfgrün"]
+    selten: ["glasblau", "silbertropfen"]
+  muster:
+    gewöhnlich: ["tropfenpunkte", "wellenlinie"]
+    selten: ["regenmale"]
+
+persönlichkeits_gewichte:
+  neugierig: 35
+  scheu: 20
+  treu: 20
+  wild: 10
+  stolz: 10
+
+wettbewerbs_neigungen:
+  schönheit: 0.95
+  eleganz: 1.1
+  charme: 1.05
+  intelligenz: 1.1
+  ausdruck: 0.9
+  disziplin: 0.9
+  harmonie: 1.2
+
+sport_neigungen:
+  stärke: 0.7
+  beweglichkeit: 1.1
+  ausdauer: 0.95
+  technik: 1.25
+  deckung: 0.8
+  kontrolle: 1.15
+  kampfgeist: 0.75
+
+vorlieben:
+  - "wassergeräusche"
+  - "kurze_spiele"
+  - "feuchte_pflege"
+
+abneigungen:
+  - "trockene_hitze"
+  - "grobe_bürsten"
+  - "laute_umgebung"
+
+stärken:
+  - "technik"
+  - "harmonie"
+  - "kontrolle"
+
+schwächen:
+  - "stärke"
+  - "kampfgeist"
+  - "deckung"
+
+habits:
+  - "sucht nach flachen Wasserschalen, bevor es frisst"
+  - "folgt langsam wiederkehrenden Geräuschen mit hoher Aufmerksamkeit"
+  - "zieht sich bei trockener Luft in kühle Ecken zurück"
+
+lieblingsfutter:
+  - "bachlarven"
+  - "weiche_algen"

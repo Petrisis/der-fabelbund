@@ -17,6 +17,11 @@ from fabelbund.modelle.laufzeit import AktiverAuftrag, Aktivität, Fabelwesen, S
 
 
 MAXIMALE_FABLINGE_PRO_SPIELER = 25
+FABELWESEN_PREISE_NACH_SELTENHEIT = {
+    "gewöhnlich": 240,
+    "selten": 520,
+    "episch": 900,
+}
 INAKTIVITÄT_START_SEKUNDEN = 60 * 60
 INAKTIVITÄT_MAX_WIRKUNG_SEKUNDEN = 8 * 60 * 60
 VERWAHRLOSUNG_START_SEKUNDEN = 24 * 60 * 60
@@ -74,6 +79,13 @@ class KaufErgebnis:
     name: str
     anzahl: int
     kosten: int
+
+
+@dataclass
+class FablingKaufErgebnis:
+    spieler: SpielerProfil
+    fabelwesen: Fabelwesen
+    preis: int
 
 
 @dataclass
@@ -233,6 +245,36 @@ class SpielDienst:
     def aktionsdauer_sekunden(self, nutzer_id: str, aktion_id: str) -> int:
         aktion = self.inhalte.pflegeaktionen[aktion_id]
         return self._aktionsdauer_für_spieler(nutzer_id, aktion_id, aktion.dauer_sekunden)
+
+    def fabelwesen_preis(self, art_id: str) -> int:
+        art = self.inhalte.arten.get(art_id)
+        if art is None:
+            raise ValueError("Diese Fabling-Art ist nicht verfügbar.")
+        return FABELWESEN_PREISE_NACH_SELTENHEIT.get(art.grundseltenheit, 1200)
+
+    def fabelwesen_kaufen(self, nutzer_id: str, art_id: str) -> FablingKaufErgebnis:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        if not spieler.offizielles_mitglied:
+            raise ValueError("Fablinge kannst du erst nach der Einführung kaufen.")
+        art = self.inhalte.arten.get(art_id)
+        if art is None:
+            raise ValueError("Diese Fabling-Art ist nicht verfügbar.")
+        if not self.hat_freien_stall(nutzer_id):
+            raise ValueError("Du brauchst zuerst einen freien Stallplatz.")
+
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        preis = self.fabelwesen_preis(art_id)
+        if spieler.geld < preis:
+            raise ValueError("Dafür hast du nicht genug Bundsiegel.")
+
+        aktualisierter_spieler = spieler.model_copy(deep=True)
+        aktualisierter_spieler.geld -= preis
+        fabelwesen = self.fabrik.erzeuge_starter(nutzer_id, art).model_copy(deep=True)
+        fabelwesen.herkunft["methode"] = "eventmarkt"
+        fabelwesen.status["gekaufter_fabling"] = True
+        self.spieler.speichern(aktualisierter_spieler)
+        self.fabelwesen.speichern(fabelwesen)
+        return FablingKaufErgebnis(spieler=aktualisierter_spieler, fabelwesen=fabelwesen, preis=preis)
 
     def _passenden_stall_finden(
         self,

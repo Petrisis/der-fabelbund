@@ -1,0 +1,83 @@
+art_id: "rindenfuchs"
+name: "Rindenfuchs"
+grundseltenheit: "gewöhnlich"
+element: "wald"
+lebensraum: "wurzelhain"
+
+grundwerte:
+  schönheit: 42
+  eleganz: 48
+  charme: 36
+  intelligenz: 54
+  ausdruck: 39
+  disziplin: 38
+  harmonie: 44
+  stärke: 30
+  beweglichkeit: 50
+  ausdauer: 36
+  technik: 52
+  deckung: 32
+  kontrolle: 46
+  kampfgeist: 28
+
+genpools:
+  farben:
+    gewöhnlich: ["rindenbraun", "moosgrün", "fuchsrot"]
+    selten: ["silberrinde", "nachtmoos"]
+  muster:
+    gewöhnlich: ["rückenstreifen", "blattflecken"]
+    selten: ["wurzelmale"]
+
+persönlichkeits_gewichte:
+  neugierig: 30
+  scheu: 25
+  treu: 20
+  stolz: 15
+  wild: 10
+
+wettbewerbs_neigungen:
+  schönheit: 1.0
+  eleganz: 1.15
+  charme: 0.95
+  intelligenz: 1.25
+  ausdruck: 1.0
+  disziplin: 1.0
+  harmonie: 1.1
+
+sport_neigungen:
+  stärke: 0.85
+  beweglichkeit: 1.15
+  ausdauer: 0.95
+  technik: 1.2
+  deckung: 0.9
+  kontrolle: 1.15
+  kampfgeist: 0.8
+
+vorlieben:
+  - "ruhige_pflege"
+  - "strukturierte_übungen"
+  - "weiche_bürsten"
+
+abneigungen:
+  - "laute_umgebung"
+  - "hektische_pflege"
+  - "enge_räume"
+
+stärken:
+  - "intelligenz"
+  - "technik"
+  - "kontrolle"
+
+schwächen:
+  - "kampfgeist"
+  - "stärke"
+  - "deckung"
+
+habits:
+  - "beobachtet neue Betreuer lange aus der Entfernung"
+  - "merkt sich feste Wege im Stall und nutzt sie bevorzugt"
+  - "unterbricht Übungen, wenn die Umgebung unruhig wird"
+
+lieblingsfutter:
+  - "waldbeeren"
+  - "weiche_wurzeln"

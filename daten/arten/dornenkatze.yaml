@@ -1,0 +1,83 @@
+art_id: "dornenkatze"
+name: "Dornenkatze"
+grundseltenheit: "selten"
+element: "wald"
+lebensraum: "dornenrand"
+
+grundwerte:
+  schönheit: 44
+  eleganz: 55
+  charme: 28
+  intelligenz: 46
+  ausdruck: 56
+  disziplin: 24
+  harmonie: 27
+  stärke: 38
+  beweglichkeit: 58
+  ausdauer: 35
+  technik: 48
+  deckung: 30
+  kontrolle: 31
+  kampfgeist: 54
+
+genpools:
+  farben:
+    gewöhnlich: ["dornbraun", "schattengrün", "rindenrot"]
+    selten: ["weißdorn", "nachtblatt"]
+  muster:
+    gewöhnlich: ["dornenstreifen", "schattenflecken"]
+    selten: ["rankennarben"]
+
+persönlichkeits_gewichte:
+  stolz: 35
+  wild: 25
+  scheu: 20
+  neugierig: 10
+  treu: 5
+
+wettbewerbs_neigungen:
+  schönheit: 1.05
+  eleganz: 1.25
+  charme: 0.75
+  intelligenz: 1.05
+  ausdruck: 1.25
+  disziplin: 0.7
+  harmonie: 0.75
+
+sport_neigungen:
+  stärke: 1.0
+  beweglichkeit: 1.3
+  ausdauer: 0.9
+  technik: 1.15
+  deckung: 0.85
+  kontrolle: 0.8
+  kampfgeist: 1.25
+
+vorlieben:
+  - "klare_aufgaben"
+  - "sichtbare_erfolge"
+  - "ruhige_annäherung"
+
+abneigungen:
+  - "enge_räume"
+  - "hektische_pflege"
+  - "zu_schnelle_nähe"
+
+stärken:
+  - "beweglichkeit"
+  - "ausdruck"
+  - "kampfgeist"
+
+schwächen:
+  - "disziplin"
+  - "harmonie"
+  - "vertrauen"
+
+habits:
+  - "setzt sich mit dem Rücken zur Wand, bis es eine Person einschätzen kann"
+  - "nimmt Pflege erst an, wenn Werkzeug und Hände ruhig bleiben"
+  - "verlässt eine Übung lieber selbstständig, als sich drängen zu lassen"
+
+lieblingsfutter:
+  - "herbe_beeren"
+  - "dornensamen"

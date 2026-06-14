@@ -14,6 +14,7 @@ from fabelbund.discord.befehle.laden import LadenBefehle
 from fabelbund.discord.befehle.profil import ProfilBefehle
 from fabelbund.discord.befehle.sammlung import SammlungBefehle
 from fabelbund.discord.befehle.stall import StallBefehle
+from fabelbund.discord.eventmarkt import eventmarkt_ansichten, eventmarkt_aktualisieren
 from fabelbund.discord.server_einrichtung import ServerEinrichtungDienst, guild_ids_für_nachholeinrichtung
 from fabelbund_bot.konfiguration import lade_konfiguration
 
@@ -31,8 +32,11 @@ class FabelbundBot(commands.Bot):
         self.server_einrichtung = ServerEinrichtungDienst(kontext, self)
         self.server_einrichtung_geprüft = False
         self.auftragswand_task: asyncio.Task[None] | None = None
+        self.eventmarkt_task: asyncio.Task[None] | None = None
 
     async def setup_hook(self) -> None:
+        for ansicht in eventmarkt_ansichten(self.kontext):
+            self.add_view(ansicht)
         for server in self.kontext.server.auflisten():
             if server.eingerichtet:
                 self.add_view(TutorialEinstiegAnsicht(self.kontext))
@@ -66,8 +70,11 @@ class FabelbundBot(commands.Bot):
                 await self.server_einrichtung.guild_sicherstellen(guild)
             else:
                 await auftragswand_aktualisieren(self.kontext, guild)
+                await eventmarkt_aktualisieren(self.kontext, guild)
         if self.auftragswand_task is None or self.auftragswand_task.done():
             self.auftragswand_task = asyncio.create_task(self._auftragswand_regelmäßig_aktualisieren())
+        if self.eventmarkt_task is None or self.eventmarkt_task.done():
+            self.eventmarkt_task = asyncio.create_task(self._eventmarkt_regelmäßig_aktualisieren())
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.server_einrichtung.guild_sicherstellen(guild)
@@ -80,6 +87,15 @@ class FabelbundBot(commands.Bot):
                     await auftragswand_aktualisieren(self.kontext, guild)
                 except Exception:
                     log.exception("Auftragswand konnte nicht automatisch aktualisiert werden: %s (%s)", guild.name, guild.id)
+
+    async def _eventmarkt_regelmäßig_aktualisieren(self) -> None:
+        while not self.is_closed():
+            await asyncio.sleep(30 * 60)
+            for guild in list(self.guilds):
+                try:
+                    await eventmarkt_aktualisieren(self.kontext, guild)
+                except Exception:
+                    log.exception("Eventmarkt konnte nicht automatisch aktualisiert werden: %s (%s)", guild.name, guild.id)
 
 
 def main() -> None:

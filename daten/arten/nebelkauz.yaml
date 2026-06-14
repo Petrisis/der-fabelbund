@@ -1,0 +1,83 @@
+art_id: "nebelkauz"
+name: "Nebelkauz"
+grundseltenheit: "selten"
+element: "wasser"
+lebensraum: "nebelmoor"
+
+grundwerte:
+  schönheit: 50
+  eleganz: 54
+  charme: 31
+  intelligenz: 58
+  ausdruck: 48
+  disziplin: 40
+  harmonie: 56
+  stärke: 22
+  beweglichkeit: 42
+  ausdauer: 34
+  technik: 50
+  deckung: 28
+  kontrolle: 52
+  kampfgeist: 20
+
+genpools:
+  farben:
+    gewöhnlich: ["nebelgrau", "moorblau", "nachtbraun"]
+    selten: ["mondsilber", "dämmerweiß"]
+  muster:
+    gewöhnlich: ["weiche_sprenkel", "schleierstreifen"]
+    selten: ["mondringe"]
+
+persönlichkeits_gewichte:
+  scheu: 40
+  neugierig: 20
+  treu: 15
+  stolz: 15
+  wild: 5
+
+wettbewerbs_neigungen:
+  schönheit: 1.15
+  eleganz: 1.2
+  charme: 0.8
+  intelligenz: 1.3
+  ausdruck: 1.1
+  disziplin: 1.0
+  harmonie: 1.25
+
+sport_neigungen:
+  stärke: 0.7
+  beweglichkeit: 0.95
+  ausdauer: 0.9
+  technik: 1.15
+  deckung: 0.8
+  kontrolle: 1.2
+  kampfgeist: 0.7
+
+vorlieben:
+  - "ruhige_pflege"
+  - "wassergeräusche"
+  - "gedämpftes_licht"
+
+abneigungen:
+  - "laute_umgebung"
+  - "grelles_licht"
+  - "zu_schnelle_nähe"
+
+stärken:
+  - "intelligenz"
+  - "harmonie"
+  - "kontrolle"
+
+schwächen:
+  - "kampfgeist"
+  - "stärke"
+  - "stress"
+
+habits:
+  - "bewegt sich erst frei, wenn Geräusche und Licht ruhig bleiben"
+  - "merkt sich Stimmen schneller als Gesichter"
+  - "ruht bevorzugt erhöht und im Halbdunkel"
+
+lieblingsfutter:
+  - "moorbeeren"
+  - "nachtkörner"

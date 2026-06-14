@@ -62,6 +62,10 @@ class AuftragSpeicher:
                 nutzlast,
             )
 
+    def für_spieler_löschen(self, spieler_id: str) -> None:
+        with self.datenbank.verbinden() as verbindung:
+            verbindung.execute("DELETE FROM aktive_aufträge WHERE spieler_id = ?", (spieler_id,))
+
     @staticmethod
     def _aus_zeile(zeile) -> AktiverAuftrag:
         return AktiverAuftrag.model_validate(

@@ -128,6 +128,12 @@ class SpielDienst:
             self.spieler.speichern(spieler)
         return spieler
 
+    def spielerfortschritt_zurücksetzen(self, nutzer_id: str) -> None:
+        self.aktivitäten.für_spieler_löschen(nutzer_id)
+        self.aufträge.für_spieler_löschen(nutzer_id)
+        self.fabelwesen.für_besitzer_löschen(nutzer_id)
+        self.spieler.löschen(nutzer_id)
+
     def tutorial_starten(self, nutzer_id: str) -> SpielerProfil:
         spieler = self.spieler.holen(nutzer_id) or SpielerProfil(nutzer_id=nutzer_id)
         if spieler.tutorialstatus != "neu":

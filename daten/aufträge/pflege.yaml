@@ -132,7 +132,7 @@ aufträge:
     art: "tutorial"
     öffentlich: false
     npc: "Jonna"
-    beschreibung: "Jonna sagt: „Vertrauen wächst durch verlässliche Nähe. Gemeinsames Spiel kann einen scheuen Fabling öffnen, aber Dauerfeuer kippt schnell in Überforderung. Wenn du merkst, dass ein Fabling müde oder angespannt wird, gib ihm eine kurze Pause. Für diesen Auftrag zählt beides: Zeit mit dir und ein Quellfink, der dir danach mehr zutraut.“"
+    beschreibung: "Jonna sagt: „Vertrauen wächst durch verlässliche Nähe. Gemeinsames Spiel ist hier der naheliegende Weg, einen scheuen Fabling zu öffnen, aber Dauerfeuer kippt schnell in Überforderung. Wenn du merkst, dass ein Fabling müde oder angespannt wird, gib ihm eine kurze Pause. Für diesen Auftrag zählt beides: Zeit mit dir und ein Quellfink, der dir danach mehr zutraut.“"
     dauer_tage: 1
     fabelwesen:
       - art_id: "quellfink"

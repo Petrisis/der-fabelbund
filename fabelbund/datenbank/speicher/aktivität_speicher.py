@@ -105,6 +105,10 @@ class AktivitätSpeicher:
                 nutzlast,
             )
 
+    def für_spieler_löschen(self, spieler_id: str) -> None:
+        with self.datenbank.verbinden() as verbindung:
+            verbindung.execute("DELETE FROM aktivitäten WHERE spieler_id = ?", (spieler_id,))
+
     @staticmethod
     def _aus_zeile(zeile) -> Aktivität:
         return Aktivität.model_validate(

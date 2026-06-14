@@ -50,3 +50,7 @@ class FabelwesenSpeicher:
     def löschen(self, fabelwesen_id: str) -> None:
         with self.datenbank.verbinden() as verbindung:
             verbindung.execute("DELETE FROM fabelwesen WHERE id = ?", (fabelwesen_id,))
+
+    def für_besitzer_löschen(self, besitzer_id: str) -> None:
+        with self.datenbank.verbinden() as verbindung:
+            verbindung.execute("DELETE FROM fabelwesen WHERE besitzer_id = ?", (besitzer_id,))

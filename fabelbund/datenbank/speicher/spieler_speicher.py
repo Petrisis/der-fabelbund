@@ -69,3 +69,7 @@ class SpielerSpeicher:
                 """,
                 nutzlast,
             )
+
+    def löschen(self, nutzer_id: str) -> None:
+        with self.datenbank.verbinden() as verbindung:
+            verbindung.execute("DELETE FROM spieler WHERE nutzer_id = ?", (nutzer_id,))

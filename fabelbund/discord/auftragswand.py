@@ -22,6 +22,13 @@ class TutorialEinstiegAnsicht(discord.ui.View):
         )
         einstieg.callback = self._einstieg
         self.add_item(einstieg)
+        reset = discord.ui.Button(
+            label="Fortschritt zurücksetzen",
+            style=discord.ButtonStyle.danger,
+            custom_id="auftragswand:reset",
+        )
+        reset.callback = self._reset_starten
+        self.add_item(reset)
 
     async def _einstieg(self, interaction: discord.Interaction) -> None:
         nutzer_id = str(interaction.user.id)
@@ -43,6 +50,82 @@ class TutorialEinstiegAnsicht(discord.ui.View):
             embed=embed,
             view=TutorialStartAnsicht(self.kontext),
             ephemeral=True,
+        )
+
+    async def _reset_starten(self, interaction: discord.Interaction) -> None:
+        nutzer_id = str(interaction.user.id)
+        embed = discord.Embed(
+            title="Fortschritt zurücksetzen",
+            description=(
+                "Das entfernt dein Spielerprofil, alle Fablinge, aktive und abgeschlossene Aufträge, "
+                "laufende Aktivitäten, Inventar, Geld, Ruf, Lizenzen und Stallausbau."
+            ),
+            color=discord.Color.red(),
+        )
+        await interaction.response.send_message(
+            embed=embed,
+            view=ResetErsteBestätigungAnsicht(self.kontext, nutzer_id),
+            ephemeral=True,
+        )
+
+
+class ResetErsteBestätigungAnsicht(discord.ui.View):
+    def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
+        super().__init__(timeout=12 * 60 * 60)
+        self.kontext = kontext
+        self.nutzer_id = nutzer_id
+        button = discord.ui.Button(label="Reset vorbereiten", style=discord.ButtonStyle.danger, custom_id="reset:vorbereiten")
+        button.callback = self._vorbereiten
+        self.add_item(button)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if str(interaction.user.id) == self.nutzer_id:
+            return True
+        await interaction.response.send_message("Dieser Reset gehört einem anderen Spieler.", ephemeral=True)
+        return False
+
+    async def _vorbereiten(self, interaction: discord.Interaction) -> None:
+        embed = discord.Embed(
+            title="Endgültige Bestätigung",
+            description=(
+                "Dieser Schritt ist nicht rückgängig zu machen. Serverkanäle und Auftragswand bleiben erhalten, "
+                "aber dein gesamter Spielfortschritt wird gelöscht."
+            ),
+            color=discord.Color.red(),
+        )
+        await interaction.response.edit_message(
+            embed=embed,
+            view=ResetEndgültigeBestätigungAnsicht(self.kontext, self.nutzer_id),
+        )
+
+
+class ResetEndgültigeBestätigungAnsicht(discord.ui.View):
+    def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
+        super().__init__(timeout=12 * 60 * 60)
+        self.kontext = kontext
+        self.nutzer_id = nutzer_id
+        button = discord.ui.Button(label="Endgültig zurücksetzen", style=discord.ButtonStyle.danger, custom_id="reset:endgültig")
+        button.callback = self._zurücksetzen
+        self.add_item(button)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if str(interaction.user.id) == self.nutzer_id:
+            return True
+        await interaction.response.send_message("Dieser Reset gehört einem anderen Spieler.", ephemeral=True)
+        return False
+
+    async def _zurücksetzen(self, interaction: discord.Interaction) -> None:
+        self.kontext.spiel.spielerfortschritt_zurücksetzen(self.nutzer_id)
+        embed = discord.Embed(
+            title="Fortschritt zurückgesetzt",
+            description="Dein Fortschritt wurde vollständig zurückgesetzt. Du kannst über die Auftragswand neu beginnen.",
+            color=discord.Color.green(),
+        )
+        await interaction.response.edit_message(embed=embed, view=None)
+        await chronik_senden(
+            self.kontext,
+            interaction.guild,
+            f"{interaction.user.mention} hat den eigenen Fortschritt zurückgesetzt und beginnt neu.",
         )
 
 
@@ -188,6 +271,11 @@ class TutorialStartAnsicht(discord.ui.View):
         )
         embed.add_field(name="Status", value=spieler.tutorialschritt.replace("_", " "), inline=True)
         await interaction.response.edit_message(embed=embed, view=TutorialErsterAuftragAnsicht(self.kontext, str(interaction.user.id)))
+        await chronik_senden(
+            self.kontext,
+            interaction.guild,
+            f"{interaction.user.mention} beginnt die Einführung im Fabelbund.",
+        )
 
 
 class TutorialErsterAuftragAnsicht(discord.ui.View):

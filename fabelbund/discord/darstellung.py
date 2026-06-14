@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 import hashlib
 
 import discord
@@ -73,8 +74,57 @@ def auftrag_einbettung(
                 wert += f"\n{charakter}"
             zeilen.append(wert)
         embed.add_field(name="Zugegeteilt", value="\n\n".join(zeilen), inline=False)
+    betreuungszeit = betreuungszeit_text(aktiver_auftrag, auftrag, zugeteilte)
+    if betreuungszeit:
+        embed.add_field(name="Betreuungszeit", value=betreuungszeit, inline=False)
     embed.add_field(name="Belohnung", value=belohnung_text(auftrag), inline=False)
     return embed
+
+
+def betreuungszeit_text(aktiver_auftrag: AktiverAuftrag, auftrag: AuftragDefinition, fabelwesen_liste: Sequence[Fabelwesen]) -> str:
+    minimum = auftrag.ziele.get("betreuungsdauer_sekunden")
+    if minimum is None:
+        return ""
+    ziel = int(minimum)
+    gesammelt = betreuungszeit_gesammelt(fabelwesen_liste)
+    offen = max(0, ziel - gesammelt)
+    zeilen = [f"Gesammelt: {dauer_text(gesammelt)} von {dauer_text(ziel)}."]
+    if offen <= 0:
+        zeilen.append("Früheste Abgabe: jetzt.")
+    else:
+        zielzeit = datetime.now(timezone.utc) + timedelta(seconds=offen)
+        zeilen.append(f"Früheste Abgabe bei fortlaufender Betreuung: <t:{unixzeit(zielzeit)}:R>.")
+    return "\n".join(zeilen)
+
+
+def betreuungszeit_gesammelt(fabelwesen_liste: Sequence[Fabelwesen]) -> int:
+    gesamt = 0.0
+    for fabelwesen in fabelwesen_liste:
+        log = fabelwesen.status.get("aktivitätslog", [])
+        if not isinstance(log, list):
+            continue
+        for eintrag in log:
+            if not isinstance(eintrag, dict) or eintrag.get("status") != "abgeschlossen":
+                continue
+            if eintrag.get("spieldauer_sekunden") is not None:
+                gesamt += float(eintrag["spieldauer_sekunden"])
+                continue
+            try:
+                start = datetime.fromisoformat(str(eintrag["gestartet_am"]))
+                ende = datetime.fromisoformat(str(eintrag["beendet_am"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+            gesamt += max(0.0, (ende - start).total_seconds())
+    return int(round(gesamt))
+
+
+def dauer_text(sekunden: int) -> str:
+    minuten, restsekunden = divmod(max(0, int(sekunden)), 60)
+    if minuten and restsekunden:
+        return f"{minuten}m {restsekunden}s"
+    if minuten:
+        return f"{minuten}m"
+    return f"{restsekunden}s"
 
 
 def auftragswand_einbettung(aufträge: Sequence[AuftragDefinition]) -> discord.Embed:
@@ -214,6 +264,8 @@ def zustand_text(fabelwesen: Fabelwesen) -> str:
 def veränderung_text(ergebnis: AktivitätErgebnis) -> str:
     if ergebnis.aktivität.kategorie == "check":
         return check_text(ergebnis)
+    if ergebnis.aktivität.aktion_id == "selbstbeschäftigung":
+        return selbstbeschäftigung_text(ergebnis)
 
     einsetzungen = Änderungseinsetzungen.aus_ergebnis(ergebnis)
     if not einsetzungen.hat_inhalt:
@@ -231,6 +283,16 @@ def veränderung_text(ergebnis: AktivitätErgebnis) -> str:
     )
     vorlage = wähle_variante(vorlagen, ergebnis.aktivität.id)
     return vorlage.formatieren(einsetzungen)
+
+
+def selbstbeschäftigung_text(ergebnis: AktivitätErgebnis) -> str:
+    name = ergebnis.fabelwesen.spitzname
+    varianten = (
+        f"{name} hat sich eine ruhige Ecke gesucht und die Umgebung aufmerksam beobachtet. {zustand_text(ergebnis.fabelwesen)}",
+        f"{name} hat sich selbst beschäftigt und zwischendurch sichtbar zur Ruhe gefunden. {zustand_text(ergebnis.fabelwesen)}",
+        f"{name} hat die Zeit genutzt, um auf eigene Weise wieder etwas Ordnung in sich zu bringen. {zustand_text(ergebnis.fabelwesen)}",
+    )
+    return varianten[int(hashlib.sha1(ergebnis.fabelwesen.id.encode("utf-8")).hexdigest(), 16) % len(varianten)]
 
 
 def check_text(ergebnis: AktivitätErgebnis) -> str:
@@ -313,6 +375,16 @@ class Änderungseinsetzungen:
 
         if pflege_und_stimmung >= belastung:
             stufe = veränderungsstufe(pflege_und_stimmung)
+            if fellpflege <= 0 and stimmung > 0:
+                return cls(
+                    name=name,
+                    abschluss=abschluss_stimmung(stufe),
+                    hauptsatz=hauptsatz_stimmung(stufe),
+                    nebensatz=nebensatz_beschäftigung_oder_müdigkeit(stress_sinkt, negative_energie),
+                    hauptbild=hauptbild_stimmung(stufe),
+                    zusatzsatz=zusatzsatz_beschäftigung_oder_müdigkeit(stress_sinkt, negative_energie),
+                    hat_inhalt=True,
+                )
             return cls(
                 name=name,
                 abschluss=abschluss_pflege(stufe),
@@ -482,6 +554,33 @@ def hauptbild_pflege(stufe: str) -> str:
     }[stufe]
 
 
+def abschluss_stimmung(stufe: str) -> str:
+    return {
+        "leicht": "etwas offener",
+        "gut": "zufriedener",
+        "deutlich": "deutlich zugewandter",
+        "auffallend": "auffallend gelöst",
+    }[stufe]
+
+
+def hauptsatz_stimmung(stufe: str) -> str:
+    return {
+        "leicht": "Die Beschäftigung hat seine Stimmung leicht gehoben.",
+        "gut": "Er wirkt zufriedener und lässt sich besser ansprechen.",
+        "deutlich": "Er begegnet dir sichtbar offener.",
+        "auffallend": "Die gemeinsame Zeit hat ihn klar gelöst.",
+    }[stufe]
+
+
+def hauptbild_stimmung(stufe: str) -> str:
+    return {
+        "leicht": "eine leichte Aufhellung",
+        "gut": "ein zufriedenerer Eindruck",
+        "deutlich": "eine deutlich offenere Haltung",
+        "auffallend": "eine auffallend gelöste Stimmung",
+    }[stufe]
+
+
 def abschluss_belastung(stufe: str) -> str:
     return {
         "leicht": "etwas müder",
@@ -539,6 +638,16 @@ def nebensatz_ruhe_oder_müdigkeit(stress_sinkt: int, negative_energie: int) -> 
     return ""
 
 
+def nebensatz_beschäftigung_oder_müdigkeit(stress_sinkt: int, negative_energie: int) -> str:
+    if stress_sinkt >= 7 and negative_energie >= 1:
+        return "Dabei ist er ruhiger geworden, wirkt aber etwas müder."
+    if stress_sinkt >= 7:
+        return "Dabei ist er ruhiger geworden."
+    if negative_energie >= 1:
+        return "Die Beschäftigung hat ihn allerdings etwas müde gemacht."
+    return ""
+
+
 def zusatzsatz_ruhe_oder_müdigkeit(stress_sinkt: int, negative_energie: int) -> str:
     if stress_sinkt >= 7 and negative_energie >= 1:
         return "Er bleibt ruhiger als zuvor, braucht danach aber etwas Pause."
@@ -546,6 +655,16 @@ def zusatzsatz_ruhe_oder_müdigkeit(stress_sinkt: int, negative_energie: int) ->
         return "Er bleibt ruhiger als zuvor."
     if negative_energie >= 1:
         return "Die Aktivität hat ihn ein wenig ermüdet."
+    return ""
+
+
+def zusatzsatz_beschäftigung_oder_müdigkeit(stress_sinkt: int, negative_energie: int) -> str:
+    if stress_sinkt >= 7 and negative_energie >= 1:
+        return "Er bleibt ruhiger als zuvor, braucht danach aber etwas Pause."
+    if stress_sinkt >= 7:
+        return "Er bleibt ruhiger als zuvor."
+    if negative_energie >= 1:
+        return "Die Beschäftigung hat ihn ein wenig ermüdet."
     return ""
 
 

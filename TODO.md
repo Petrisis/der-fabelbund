@@ -108,7 +108,7 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [ ] alle Tutorialaktivitäten auf ca. 2-5 Minuten Spielzeit bringen
   - [x] Betreuungszeit-Auftrag auf 2-5 Minuten Gesamtzeit senken
   - [x] keine 30-Minuten-Bedingung in der Einführung verwenden
-  - [ ] prüfen, ob Zeitfaktor 5x im Testserver daraus angenehme reale Wartezeiten macht
+  - [ ] prüfen, ob Zeitfaktor 10x im Testserver daraus angenehme reale Wartezeiten macht
 - [ ] Tutorialtexte auf erwachsenen, knappen Stil prüfen
   - [ ] keine Slash-Command-Verweise
   - [ ] keine redundanten "danach abholen/abgeben"-Erklärungen
@@ -175,7 +175,7 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 ## 6. Betrieb und Testserver-Skripte
 
 - [x] Start-/Stop-Skripte sauber einführen
-  - [x] `scripts/start-bot.ps1` startet aktuell Testserver mit `5.0x`
+  - [x] `scripts/start-bot.ps1` startet aktuell Testserver mit `10.0x`
   - [x] `scripts/stop-bot.ps1` beendet Bot-Prozesse
   - [x] README-Hinweise prüfen
   - [x] Prozessanzeige unterscheidet Hauptprozess und Python-Kindprozess

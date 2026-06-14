@@ -75,7 +75,7 @@ Alternativ kann der Bot unter Windows manuell über die Projektskripte gestartet
 .\scripts\stop-bot.ps1
 ```
 
-`start-bot.ps1` startet den Bot im Hintergrund und schreibt nach `bot.log` und `bot.err`. Im aktuellen Entwicklungsstand setzt das Skript automatisch `FABELBUND_BEFEHLE_SYNCHRONISIEREN=1` und `FABELBUND_ZEITFAKTOR=5.0`, damit der Bot auf dem konfigurierten Testserver mit fünffachem Spieltempo läuft. Für einen sichtbaren Vordergrundstart:
+`start-bot.ps1` startet den Bot im Hintergrund und schreibt nach `bot.log` und `bot.err`. Im aktuellen Entwicklungsstand setzt das Skript automatisch `FABELBUND_BEFEHLE_SYNCHRONISIEREN=1` und `FABELBUND_ZEITFAKTOR=10.0`, damit der Bot auf dem konfigurierten Testserver mit zehnfachem Spieltempo läuft. Für einen sichtbaren Vordergrundstart:
 
 ```powershell
 .\scripts\start-bot.ps1 -Vordergrund

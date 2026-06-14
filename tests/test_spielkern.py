@@ -17,6 +17,12 @@ from fabelbund.dienste.fabelwesen_fabrik import FabelwesenFabrik
 from fabelbund.dienste.pflege_dienst import PflegeDienst
 from fabelbund.dienste.spiel_dienst import SpielDienst
 from fabelbund.anwendung import Anwendungskontext
+from fabelbund.discord.darstellung import (
+    aktivität_ergebnis_einbettung,
+    auftrag_einbettung,
+    betreuungszeit_text,
+    veränderung_text,
+)
 from fabelbund.discord.server_einrichtung import guild_ids_für_nachholeinrichtung
 from fabelbund.modelle.inhalte import ArtDefinition, AuftragDefinition, GegenstandDefinition, InhaltsKatalog, PflegeaktionDefinition
 from fabelbund.modelle.laufzeit import ServerKonfiguration, SpielerProfil
@@ -781,6 +787,59 @@ class SpielDienstTests(unittest.TestCase):
         self.assertTrue(abgeschlossen.offizielles_mitglied)
         self.assertIn("mitglied:fabelbund", abgeschlossen.lizenzen)
 
+    def test_spielerreset_löscht_spieldaten_aber_keine_serverkonfiguration(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank_pfad = Path(tmp) / "test.sqlite3"
+            spiel = self.baue_spiel(datenbank_pfad)
+            server = ServerSpeicher(Datenbank(datenbank_pfad))
+            server.speichern(
+                ServerKonfiguration(
+                    guild_id="1",
+                    eingerichtet=True,
+                    kategorie_id="2",
+                    aufträge_kanal_id="3",
+                    chronik_kanal_id="4",
+                    events_kanal_id="5",
+                )
+            )
+            spiel.tutorial_starten("123")
+            spiel.pflegeauftrag_starten("123")
+            fabling = spiel.sammlung("123")[0]
+            spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe", fabling.id)
+
+            spiel.spielerfortschritt_zurücksetzen("123")
+            spieler = spiel.spieler.holen("123")
+            sammlung = spiel.sammlung("123")
+            auftrag = spiel.aktiver_auftrag("123")
+            aktivitäten = spiel.laufende_aktivitäten("123")
+            serverkonfiguration = server.holen("1")
+
+        self.assertIsNone(spieler)
+        self.assertEqual(sammlung, [])
+        self.assertIsNone(auftrag)
+        self.assertEqual(aktivitäten, [])
+        self.assertIsNotNone(serverkonfiguration)
+        assert serverkonfiguration is not None
+        self.assertTrue(serverkonfiguration.eingerichtet)
+
+    def test_auftragsansicht_zeigt_betreuungszeit_zielpunkt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            spieler = spiel.tutorial_starten("123").model_copy(
+                update={"tutorialschritt": "betreuungszeit"}
+            )
+            spiel.spieler.speichern(spieler)
+            auftrag = spiel.pflegeauftrag_starten("123")
+            definition = spiel.inhalte.aufträge[auftrag.auftrag_id]
+            fabling = spiel.sammlung("123")[0]
+
+            text = betreuungszeit_text(auftrag, definition, [fabling])
+            embed = auftrag_einbettung(auftrag, definition, fabling, [fabling])
+
+        self.assertIn("Gesammelt: 0s von 4m.", text)
+        self.assertIn("Früheste Abgabe", text)
+        self.assertTrue(any(feld.name == "Betreuungszeit" for feld in embed.fields))
+
     def test_futterpriorität_steuert_bevorzugtes_futter(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
@@ -810,6 +869,22 @@ class SpielDienstTests(unittest.TestCase):
                 fehlertext = str(fehler)
 
         self.assertEqual(fehlertext, "Dieses Futter ist nicht in deinem Inventar.")
+
+    def test_spielaktivität_spricht_nicht_von_pflegewirkung(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            aktivität = spiel.pflegeaktivität_starten("123", "gemeinsames_spiel")
+            spiel.aktivitäten.speichern(
+                aktivität.model_copy(update={"endet_am": datetime.now(timezone.utc) - timedelta(seconds=1)})
+            )
+
+            ergebnis = spiel.aktivität_abholen("123", aktivität.id)
+            text = veränderung_text(ergebnis)
+
+        self.assertNotIn("Pflege", text)
+        self.assertNotIn("Fell", text)
+        self.assertIn("zufrieden", text.lower())
 
     def test_serverkonfiguration_wird_gespeichert(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

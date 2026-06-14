@@ -586,6 +586,34 @@ class SpielDienstTests(unittest.TestCase):
         assert aktualisierter_spieler is not None
         self.assertEqual(aktualisierter_spieler.tutorialschritt, "pflege_und_ausrüstung")
 
+    def test_tutorial_nutzt_kurze_aktionsdauern(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            spieler = spiel.tutorial_starten("123").model_copy(
+                update={"tutorialschritt": "pflege_und_ausrüstung"}
+            )
+            spiel.spieler.speichern(spieler)
+            pflegeauftrag = spiel.pflegeauftrag_starten("123")
+            pflege = spiel.pflegeaktivität_starten("123", "sanfte_fellpflege")
+            self.schließe_aktivität_ab(spiel, pflege)
+            spiel.auftrag_abgeben("123")
+            spieler = spiel.spieler.holen("123")
+            assert spieler is not None
+            spieler = spieler.model_copy(update={"tutorialschritt": "aktiv_passiv"})
+            spiel.spieler.speichern(spieler)
+            aktiv_passiv = spiel.pflegeauftrag_starten("123")
+            fablinge = spiel.sammlung("123")
+            quellfink = next(fabling for fabling in fablinge if fabling.art_id == "quellfink")
+            gluthase = next(fabling for fabling in fablinge if fabling.art_id == "gluthase")
+            ruhe = spiel.pflegeaktivität_starten("123", "kontrollierte_ruhe", quellfink.id)
+            spiel_aktivität = spiel.pflegeaktivität_starten("123", "gemeinsames_spiel", gluthase.id)
+
+        self.assertEqual(pflegeauftrag.auftrag_id, "tutorial_pflege_002")
+        self.assertEqual(round((pflege.endet_am - pflege.gestartet_am).total_seconds()), 120)
+        self.assertEqual(aktiv_passiv.auftrag_id, "tutorial_aktiv_passiv_003")
+        self.assertEqual(round((ruhe.endet_am - ruhe.gestartet_am).total_seconds()), 180)
+        self.assertEqual(round((spiel_aktivität.endet_am - spiel_aktivität.gestartet_am).total_seconds()), 180)
+
     def test_tutorial_führt_bis_zur_offiziellen_mitgliedschaft(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3", zeitfaktor=1000)
@@ -653,6 +681,8 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(nach_ausbau.tutorialschritt, "aktiv_passiv")
         self.assertEqual(dritter_auftrag.auftrag_id, "tutorial_aktiv_passiv_003")
         self.assertTrue(dritte_abgabe.erfolgreich)
+        self.assertIn("Quellfink", dritte_abgabe.rückgabe_text)
+        self.assertIn("Gluthase", dritte_abgabe.rückgabe_text)
         self.assertEqual(vierter_auftrag.auftrag_id, "tutorial_futter_004")
         self.assertTrue(vierte_abgabe.erfolgreich)
         self.assertEqual(fünfter_auftrag.auftrag_id, "tutorial_betreuung_005")
@@ -677,6 +707,8 @@ class SpielDienstTests(unittest.TestCase):
             fabling = spiel.sammlung("123")[0]
             spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=1)
 
+            aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "apfelstücke")
+            aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "kräuterheu")
             aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "apfelstücke")
             fütterung = spiel.futter_geben("123", "apfelstücke", fabling.id)
 

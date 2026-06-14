@@ -6,7 +6,7 @@ import discord
 
 from fabelbund.dienste.spiel_dienst import MAXIMALE_FABLINGE_PRO_SPIELER, SpielDienst
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, tutorial_hinweis_text, unixzeit
+from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, unixzeit
 from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 from fabelbund.modelle.laufzeit import Fabelwesen
 
@@ -262,8 +262,9 @@ class StallAnsicht(discord.ui.View):
         for aktion in self.spiel.inhalte.pflegeaktionen.values():
             if aktion.gesperrt or aktion.kategorie != kategorie:
                 continue
+            dauer_sekunden = self.spiel.aktionsdauer_sekunden(self.nutzer_id, aktion.aktion_id)
             button = discord.ui.Button(
-                label=f"{aktion.name} ({dauer_kurz(aktion.dauer_sekunden)})",
+                label=f"{aktion.name} ({dauer_kurz(dauer_sekunden)})",
                 style=discord.ButtonStyle.secondary,
                 custom_id=f"stall:aktion:{aktion.aktion_id}",
                 row=2,
@@ -352,11 +353,6 @@ def stallübersicht_einbettung(spiel: SpielDienst, nutzer_id: str, fabelwesen: l
             value="\n".join(f"{stalltyp_label(eintrag.stalltyp)}: {eintrag.belegt}/{eintrag.kapazität}" for eintrag in belegung),
             inline=False,
         )
-    spieler = spiel.spieler.holen(nutzer_id)
-    if spieler is not None:
-        hinweis = tutorial_hinweis_text(spieler)
-        if hinweis:
-            embed.add_field(name="Einführung", value=hinweis, inline=False)
     return embed
 
 

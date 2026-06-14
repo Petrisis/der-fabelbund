@@ -20,6 +20,11 @@ MAXIMALE_FABLINGE_PRO_SPIELER = 25
 INAKTIVITÄT_START_SEKUNDEN = 60 * 60
 INAKTIVITÄT_MAX_WIRKUNG_SEKUNDEN = 8 * 60 * 60
 VERWAHRLOSUNG_START_SEKUNDEN = 24 * 60 * 60
+TUTORIAL_DAUER_OVERRIDES_SEKUNDEN = {
+    ("tutorial_pflege_002", "sanfte_fellpflege"): 120,
+    ("tutorial_aktiv_passiv_003", "kontrollierte_ruhe"): 180,
+    ("tutorial_aktiv_passiv_003", "gemeinsames_spiel"): 180,
+}
 
 
 @dataclass
@@ -195,13 +200,13 @@ class SpielDienst:
         if gegenstand_id is None:
             aktualisiert.status["futter_priorität"] = []
         else:
-            bisher = aktualisiert.status.get("futter_priorität", [])
-            if not isinstance(bisher, list):
-                bisher = []
-            liste = [gegenstand_id] + [str(eintrag) for eintrag in bisher if str(eintrag) != gegenstand_id]
-            aktualisiert.status["futter_priorität"] = liste[:5]
+            aktualisiert.status["futter_priorität"] = [gegenstand_id]
         self.fabelwesen.speichern(aktualisiert)
         return aktualisiert
+
+    def aktionsdauer_sekunden(self, nutzer_id: str, aktion_id: str) -> int:
+        aktion = self.inhalte.pflegeaktionen[aktion_id]
+        return self._aktionsdauer_für_spieler(nutzer_id, aktion_id, aktion.dauer_sekunden)
 
     def _passenden_stall_finden(
         self,
@@ -410,6 +415,7 @@ class SpielDienst:
         aktualisierter_spieler = self._tutorial_nach_auftrag_aktualisieren(aktualisierter_spieler, abgeschlossen)
         self.spieler.speichern(aktualisierter_spieler)
         self.aufträge.speichern(abgeschlossen)
+        rückgabe_fablinge = list(fabelwesen_liste or [fabelwesen])
         self._auftrag_fablinge_zurückgeben(abgeschlossen, fabelwesen)
         return AuftragAbgabeErgebnis(
             auftrag=abgeschlossen,
@@ -422,7 +428,7 @@ class SpielDienst:
                 if aktualisierter_spieler.ruf.get(schlüssel, 0) != ruf_vorher.get(schlüssel, 0)
             },
             hinweis=self._tutorial_hinweis_nach_abgabe(abgeschlossen),
-            rückgabe_text=self._rückgabe_text(auftrag, fabelwesen),
+            rückgabe_text=self._rückgabe_text(auftrag, rückgabe_fablinge),
         )
 
     def _auftrag_fablinge_zurückgeben(self, auftrag: AktiverAuftrag, hauptfabling: Fabelwesen) -> None:
@@ -655,10 +661,15 @@ class SpielDienst:
             return "Brann notiert die Rückgabe knapp: Sauberer Zustand, Auftrag erfüllt."
         return "Der Auftrag wurde sauber abgegeben."
 
-    def _rückgabe_text(self, auftrag, fabelwesen: Fabelwesen) -> str:
+    def _rückgabe_text(self, auftrag, fabelwesen_liste: list[Fabelwesen]) -> str:
+        namen = ", ".join(fabelwesen.spitzname for fabelwesen in fabelwesen_liste)
+        verb = "gehen" if len(fabelwesen_liste) != 1 else "geht"
+        if not namen:
+            namen = "Der Fabling"
+            verb = "geht"
         if auftrag.npc:
-            return f"{fabelwesen.spitzname} geht zurück in {auftrag.npc}s Obhut."
-        return f"{fabelwesen.spitzname} geht zurück in die Obhut der zuständigen Betreuung."
+            return f"{namen} {verb} zurück in {auftrag.npc}s Obhut."
+        return f"{namen} {verb} zurück in die Obhut der zuständigen Betreuung."
 
     def _auftrag_hinweis(self, auftrag, fabelwesen: Fabelwesen) -> str:
         if auftrag.ziele.get("abgeschlossene_aktion") == "kontrollierte_ruhe":
@@ -715,6 +726,7 @@ class SpielDienst:
             return laufend
 
         jetzt = datetime.now(timezone.utc)
+        dauer_sekunden = self._aktionsdauer_für_spieler(nutzer_id, aktion_id, aktion.dauer_sekunden)
         aktivität = Aktivität(
             id=f"aktivität_{uuid4().hex[:12]}",
             spieler_id=nutzer_id,
@@ -732,7 +744,7 @@ class SpielDienst:
             abbruch_effekte=aktion.abbruch_effekte,
             folgeaktionen=aktion.folgeaktionen,
             gestartet_am=jetzt,
-            endet_am=jetzt + timedelta(seconds=self._skalierte_dauer(aktion.dauer_sekunden)),
+            endet_am=jetzt + timedelta(seconds=self._skalierte_dauer(dauer_sekunden)),
         )
         self.aktivitäten.speichern(aktivität)
         return aktivität
@@ -908,8 +920,15 @@ class SpielDienst:
         log = daten.status.get("aktivitätslog", [])
         if not isinstance(log, list):
             log = []
-        aktion = self.inhalte.pflegeaktionen.get(aktivität.aktion_id)
-        spieldauer = round((aktion.dauer_sekunden if aktion is not None else 0) * anteil)
+        geplante_dauer = (aktivität.endet_am - aktivität.gestartet_am).total_seconds() * self.zeitfaktor
+        if geplante_dauer <= 0:
+            aktion = self.inhalte.pflegeaktionen.get(aktivität.aktion_id)
+            geplante_dauer = self._aktionsdauer_für_spieler(
+                aktivität.spieler_id,
+                aktivität.aktion_id,
+                aktion.dauer_sekunden if aktion is not None else 0,
+            )
+        spieldauer = round(geplante_dauer * anteil)
         log.append(
             {
                 "aktivität_id": aktivität.id,
@@ -990,6 +1009,12 @@ class SpielDienst:
         if sekunden <= 0:
             return 0.0
         return max(1.0, sekunden / self.zeitfaktor)
+
+    def _aktionsdauer_für_spieler(self, nutzer_id: str, aktion_id: str, standard: int) -> int:
+        aktiver_auftrag = self.aufträge.aktiven_holen(nutzer_id)
+        if aktiver_auftrag is None:
+            return standard
+        return TUTORIAL_DAUER_OVERRIDES_SEKUNDEN.get((aktiver_auftrag.auftrag_id, aktion_id), standard)
 
     def _inventar_anzahl(self, eintrag: object) -> int:
         if eintrag is None:

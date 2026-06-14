@@ -232,7 +232,7 @@ def auftragsziel_text(ziele: dict[str, object]) -> str:
         if aktionen == ["kontrollierte_ruhe", "gemeinsames_spiel"]:
             return "Quellfink: Kontrollierte Ruhe. Gluthase: Gemeinsames Spiel."
         if aktionen == ["gemeinsames_spiel", "kurze_pause"]:
-            return "Gemeinsames Spiel und danach eine Kurze Pause. Insgesamt 30 Minuten Betreuung."
+            return "Gemeinsames Spiel und Kurze Pause. Bedingung: insgesamt 30 Minuten Betreuungszeit."
         return "Erfülle die genannten Betreuungen bei den zugeteilten Fablingen."
     if ziele.get("gefüttert"):
         return "Gib dem zugeteilten Fabling passendes Futter und gib den Auftrag danach ab."

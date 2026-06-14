@@ -65,7 +65,10 @@ def auftrag_einbettung(
         zeilen = []
         for eintrag in zugeteilte[:3]:
             charakter = eintrag.status.get("tutorial_charakter") or eintrag.status.get("auftrag_charakter")
-            wert = f"**{eintrag.spitzname}** ({lesbarer_artname(eintrag.art_id)})"
+            artname = lesbarer_artname(eintrag.art_id)
+            wert = f"**{eintrag.spitzname}**"
+            if eintrag.spitzname.casefold() != artname.casefold():
+                wert += f" ({artname})"
             if charakter:
                 wert += f"\n{charakter}"
             zeilen.append(wert)

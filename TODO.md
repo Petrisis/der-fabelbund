@@ -74,14 +74,21 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 - [x] Tutorialstatus als Spielerwert einführen
 - [x] Neuer Spieler startet ins Pflicht-Tutorial
 - [x] Tutorial vergibt erste Probe-Fablinge
-- [x] Tutorial erklärt Schritt für Schritt
+- [x] Tutorial erklärt Schritt für Schritt, funktional
   - [x] Profil
   - [x] Fablinge und Ställe über `/fablinge`
   - [x] ersten Fabling ansehen
   - [x] erste Pflege/Ruhe über Fabling-Detailansicht starten
   - [x] Aktivität abholen
   - [x] ersten Auftrag verstehen
-- [x] Erster Tutorialauftrag: kontrollierte Ruhe abschließen und Auftrag abgeben
+- [ ] Tutorial als spielbaren Qualitätsdurchlauf prüfen
+  - [ ] frischen Durchlauf mit Spielerreset testen
+  - [ ] jeden Schritt einmal normal abschließen
+  - [ ] jeden Auftrag einmal absichtlich zu früh abgeben
+  - [ ] prüfen, ob NPC-Hinweis verständlich sagt, was noch nicht passt
+  - [ ] prüfen, ob Buttons an jeder Stelle zum nächsten sinnvollen Menü führen
+  - [ ] prüfen, ob der Spieler nach dem Schließen einer ephemeren Ansicht wieder ins Tutorial zurückfindet
+- [x] Erster Tutorialauftrag: Ruhe herstellen und Auftrag abgeben
 - [x] Weitere Tutorialschritte ergänzen
   - [x] Pflege und Ausrüstung
   - [x] Starter-Fabling nach Probeaufträgen vergeben
@@ -92,6 +99,25 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [x] Training
   - [x] Check
   - [x] Abschluss als offizielles Mitglied
+- [ ] Tutorialziele vollständig zustandsbasiert machen
+  - [ ] keine Tutorialabgabe darf `abgeschlossene_aktion` oder `abgeschlossene_aktionen` prüfen
+  - [ ] Mehrfach-Fabling-Aufträge nutzen zielwertbasierte Einzelziele pro Fabling
+  - [ ] Zeitbedingungen bleiben erlaubt, wenn Zeit selbst Lernziel ist
+  - [ ] Tests ergänzen, die fehlschlagen, wenn Tutorialaufträge wieder Aktionsabschluss prüfen
+- [ ] Tutorialzeiten spaßfähig halten
+  - [ ] alle Tutorialaktivitäten auf ca. 2-5 Minuten Spielzeit bringen
+  - [ ] Betreuungszeit-Auftrag auf 2-5 Minuten Gesamtzeit senken
+  - [ ] keine 30-Minuten-Bedingung in der Einführung verwenden
+  - [ ] prüfen, ob Zeitfaktor 5x im Testserver daraus angenehme reale Wartezeiten macht
+- [ ] Tutorialtexte auf erwachsenen, knappen Stil prüfen
+  - [ ] keine Slash-Command-Verweise
+  - [ ] keine redundanten "danach abholen/abgeben"-Erklärungen
+  - [ ] Aufgabenblock beschreibt Zielzustand statt Klickanweisung
+  - [ ] NPC-Texte aktiv formulieren
+- [ ] Tutorial-Fablinge eindeutig benennen
+  - [ ] Besitzer-Spitznamen durchgehend verwenden
+  - [ ] Rückgabetexte bei einem und mehreren Fablingen prüfen
+  - [ ] Auftragsanzeige und Fablingübersicht mit diesen Namen testen
 - [ ] Danach erste spielbare Version mit echtem Einstieg testen
 
 ## 5. Danach: Aufträge und Spielfluss
@@ -107,6 +133,26 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 - [x] Grundinventar ergänzen
 - [x] Laden mit ersten Futter-, Pflege- und Spielgegenständen ergänzen
 - [x] Futter anwenden
+- [ ] Auftragshauptlogik auf zustandsbasierte Abgaben ausrichten
+  - [ ] Aufträge prüfen grundsätzlich Zielzustände, nicht absolvierte Aktionen
+  - [ ] erlaubte Ausnahmen explizit halten, z.B. Betreuungszeit, passende Futterpräferenz oder spätere Sondermechaniken
+  - [ ] alte `abgeschlossene_aktion`-/`abgeschlossene_aktionen`-Ziele aus normalen Aufträgen migrieren oder als Übergang markieren
+  - [ ] Tests ergänzen, die neue Aufträge gegen reine Aktionsabschlussprüfung absichern
+- [ ] Auftragsschema verbindlich machen
+  - [ ] `planung/auftragsschema.md` finalisieren
+  - [ ] aus `TODO.md` und `planung/stat-übersicht.md` darauf verweisen
+  - [ ] neue Inhalte anhand dieses Schemas prüfen
+- [ ] NPC-Fehlschlagantworten systematisch einführen
+  - [ ] jeder Auftrag bekommt `fehlschlag.hinweis`
+  - [ ] Text nennt allgemein, was am Fabling noch nicht passt
+  - [ ] keine internen Zahlenwerte im Spielertext
+  - [ ] keine exakte Klicklösung verraten
+- [ ] Menügraph vollständig testen
+  - [ ] Aufträge -> Fablinge -> Aktion -> Abholen -> Aufträge
+  - [ ] Auftrag -> Laden -> Inventar -> Fablinge -> Auftrag
+  - [ ] Inventar/Laden/Fablinge jeweils mit Rückweg zu Aufträgen
+  - [ ] aktive Betreuung blockiert andere Menüs
+  - [ ] passive Aktivitäten erlauben parallele Navigation
 - [ ] Mehrere einfache Pflegeaufträge ergänzen
 - [ ] Aufträge nicht nur als Zahlencheck denken
   - [ ] Betreuung über Zeit
@@ -125,3 +171,15 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [ ] Solange Lieblingsfutter im Magen ist, fallen negative Effekte schwächer aus
   - [ ] Stärke und Dauer des Lieblingsfutter-Bonus balancen
 - [ ] Prüfen, ob der Spieler nach dem Tutorial sinnvoll weiß, was er als Nächstes tun kann
+
+## 6. Betrieb und Testserver-Skripte
+
+- [x] Start-/Stop-Skripte sauber einführen
+  - [x] `scripts/start-bot.ps1` startet aktuell Testserver mit `5.0x`
+  - [x] `scripts/stop-bot.ps1` beendet Bot-Prozesse
+  - [x] README-Hinweise prüfen
+  - [x] Prozessanzeige unterscheidet Hauptprozess und Python-Kindprozess
+- [ ] Spielerreset als eigenes Skript ergänzen
+  - [ ] löscht nur `spieler`, `fabelwesen`, `aktive_aufträge`, `aktivitäten`
+  - [ ] erhält `server_konfigurationen`
+  - [ ] optional kombiniert: Stop -> Reset -> Start

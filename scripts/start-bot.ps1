@@ -4,6 +4,7 @@ param(
 
 $FehlerAktionVorher = $ErrorActionPreference
 $ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 try {
     $Projektpfad = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -18,8 +19,18 @@ try {
         }
 
     if ($Bestehend) {
-        $Ids = ($Bestehend | ForEach-Object { $_.ProcessId }) -join ", "
-        Write-Host "Der Bot läuft bereits. Prozess-ID(s): $Ids"
+        $AlleIds = @($Bestehend | ForEach-Object { $_.ProcessId })
+        $HauptIds = @(
+            $Bestehend |
+                Where-Object { $AlleIds -notcontains $_.ParentProcessId } |
+                ForEach-Object { $_.ProcessId }
+        )
+        Write-Host "Der Bot läuft bereits. Hauptprozess-ID(s): $($HauptIds -join ', ')"
+        if ($AlleIds.Count -gt $HauptIds.Count) {
+            $KindIds = @($AlleIds | Where-Object { $HauptIds -notcontains $_ })
+            Write-Host "Zugehörige Kindprozess-ID(s): $($KindIds -join ', ')"
+        }
+        Write-Host "Nutze .\scripts\stop-bot.ps1, wenn du ihn neu starten möchtest."
         exit 0
     }
 

@@ -81,6 +81,8 @@ Alternativ kann der Bot unter Windows manuell über die Projektskripte gestartet
 .\scripts\start-bot.ps1 -Vordergrund
 ```
 
+Wenn bereits eine Bot-Instanz läuft, startet `start-bot.ps1` keine zweite Instanz. `stop-bot.ps1` beendet alle laufenden `fabelbund_bot.bot`-Prozesse. Unter Windows können dabei ein Hauptprozess und ein zugehöriger Python-Kindprozess angezeigt werden; das ist kein zweiter Bot.
+
 Für die erste Befehlsregistrierung während der Entwicklung:
 
 ```powershell

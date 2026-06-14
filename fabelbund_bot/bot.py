@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import discord
 from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.auftragswand import AuftragswandAnsicht, TutorialEinstiegAnsicht, auftragswand_aktualisieren
+from fabelbund.discord.auftragswand import AuftragsnavigationAnsicht, AuftragswandAnsicht, TutorialEinstiegAnsicht, auftragswand_aktualisieren
 from fabelbund.discord.befehle.auftrag import AuftragBefehle
 from fabelbund.discord.befehle.inventar import InventarBefehle
 from fabelbund.discord.befehle.laden import LadenBefehle
@@ -29,11 +30,13 @@ class FabelbundBot(commands.Bot):
         self.testserver_id = testserver_id
         self.server_einrichtung = ServerEinrichtungDienst(kontext, self)
         self.server_einrichtung_geprüft = False
+        self.auftragswand_task: asyncio.Task[None] | None = None
 
     async def setup_hook(self) -> None:
         for server in self.kontext.server.auflisten():
             if server.eingerichtet:
                 self.add_view(TutorialEinstiegAnsicht(self.kontext))
+                self.add_view(AuftragsnavigationAnsicht(self.kontext))
                 self.add_view(AuftragswandAnsicht(self.kontext, server.guild_id))
         await self.add_cog(ProfilBefehle(self.kontext))
         await self.add_cog(SammlungBefehle(self.kontext))
@@ -63,9 +66,20 @@ class FabelbundBot(commands.Bot):
                 await self.server_einrichtung.guild_sicherstellen(guild)
             else:
                 await auftragswand_aktualisieren(self.kontext, guild)
+        if self.auftragswand_task is None or self.auftragswand_task.done():
+            self.auftragswand_task = asyncio.create_task(self._auftragswand_regelmäßig_aktualisieren())
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.server_einrichtung.guild_sicherstellen(guild)
+
+    async def _auftragswand_regelmäßig_aktualisieren(self) -> None:
+        while not self.is_closed():
+            await asyncio.sleep(7 * 60)
+            for guild in list(self.guilds):
+                try:
+                    await auftragswand_aktualisieren(self.kontext, guild)
+                except Exception:
+                    log.exception("Auftragswand konnte nicht automatisch aktualisiert werden: %s (%s)", guild.name, guild.id)
 
 
 def main() -> None:

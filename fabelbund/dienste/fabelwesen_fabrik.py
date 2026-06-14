@@ -27,6 +27,7 @@ class FabelwesenFabrik:
                 "gesundheit": 100,
                 "stimmung": 68,
                 "energie": 72,
+                "sättigung": 80,
                 "stress": 18,
                 "vertrauen": 35,
                 "sicherheit": 45,

@@ -20,6 +20,11 @@ MAXIMALE_FABLINGE_PRO_SPIELER = 25
 INAKTIVITÄT_START_SEKUNDEN = 60 * 60
 INAKTIVITÄT_MAX_WIRKUNG_SEKUNDEN = 8 * 60 * 60
 VERWAHRLOSUNG_START_SEKUNDEN = 24 * 60 * 60
+SÄTTIGUNG_VERBRAUCH_PRO_TAG = 100
+SÄTTIGUNG_FRESSSCHWELLE = 65
+SÄTTIGUNG_ZIELWERT = 85
+SÄTTIGUNG_NÄHRWERT_NORMAL = 20
+SÄTTIGUNG_NÄHRWERT_SONSTIG = 14
 TUTORIAL_DAUER_OVERRIDES_SEKUNDEN = {
     ("tutorial_pflege_002", "sanfte_fellpflege"): 120,
     ("tutorial_aktiv_passiv_003", "kontrollierte_ruhe"): 180,
@@ -149,10 +154,19 @@ class SpielDienst:
         return aktualisiert
 
     def sammlung(self, nutzer_id: str) -> list[Fabelwesen]:
-        self.stelle_spieler_sicher(nutzer_id)
+        spieler = self.stelle_spieler_sicher(nutzer_id)
         fabelwesen = self.fabelwesen.für_besitzer_auflisten(nutzer_id)
         jetzt = datetime.now(timezone.utc)
-        return [self._inaktivität_aktualisieren(fabling, jetzt) for fabling in fabelwesen]
+        aktualisierte_fablinge: list[Fabelwesen] = []
+        aktualisierter_spieler = spieler.model_copy(deep=True)
+        spieler_geändert = False
+        for fabling in fabelwesen:
+            ernährt, geändert = self._sättigung_aktualisieren(aktualisierter_spieler, fabling, jetzt)
+            spieler_geändert = spieler_geändert or geändert
+            aktualisierte_fablinge.append(self._inaktivität_aktualisieren(ernährt, jetzt))
+        if spieler_geändert:
+            self.spieler.speichern(aktualisierter_spieler)
+        return aktualisierte_fablinge
 
     def stall_kapazität(self, nutzer_id: str) -> int:
         spieler = self.stelle_spieler_sicher(nutzer_id)
@@ -251,7 +265,7 @@ class SpielDienst:
             return StallausbauErgebnis(spieler=spieler, status="läuft", endet_am=endet_am)
         kosten = 180
         if spieler.geld < kosten:
-            raise ValueError("Dafür hast du nicht genug Geld.")
+            raise ValueError("Dafür hast du nicht genug Bundsiegel.")
         endet_am = datetime.now(timezone.utc) + timedelta(seconds=self._skalierte_dauer(60))
         aktualisiert = spieler.model_copy(deep=True)
         aktualisiert.geld -= kosten
@@ -375,6 +389,7 @@ class SpielDienst:
             fabling.status["tutorial_fabling"] = auftrag.art == "tutorial"
             fabling.status["auftrag_charakter"] = zugeteilt.charakter
             fabling.status["zuletzt_versorgt_am"] = None
+            fabling.status["auftrag_start_zustand"] = dict(zugeteilt.start_zustand)
             for schlüssel, wert in zugeteilt.start_zustand.items():
                 if schlüssel in fabling.zustand:
                     fabling.zustand[schlüssel] = wert
@@ -488,7 +503,7 @@ class SpielDienst:
             raise ValueError("Dieser Gegenstand wurde nicht gefunden.")
         kosten = gegenstand.preis * anzahl
         if spieler.geld < kosten:
-            raise ValueError("Dafür hast du nicht genug Geld.")
+            raise ValueError("Dafür hast du nicht genug Bundsiegel.")
 
         aktualisiert = spieler.model_copy(deep=True)
         aktualisiert.geld -= kosten
@@ -550,11 +565,9 @@ class SpielDienst:
             (futter_priorität and str(futter_priorität[0]) == gegenstand_id)
             or aktualisiertes_fabling.persönlichkeit.get("lieblingsfutter") == gegenstand_id
         )
-        if lieblingsfutter:
-            effekte["stimmung"] = effekte.get("stimmung", 0) + 2
-            effekte["vertrauen"] = effekte.get("vertrauen", 0) + 1
-
         änderungen = self._werte_anteilig_anwenden(aktualisiertes_fabling.zustand, effekte, 1.0, standardwert=0)
+        sättigung = int(aktualisiertes_fabling.zustand.get("sättigung", 80))
+        aktualisiertes_fabling.zustand["sättigung"] = begrenze_prozent(sättigung + self._futter_nährwert(aktualisiertes_fabling, gegenstand_id))
         aktualisiertes_fabling.zustand["verletzungsrisiko"] = self.pflege._risiko_aus_zustand(aktualisiertes_fabling)
         aktualisiertes_fabling.status["zuletzt_gefüttert_am"] = datetime.now(timezone.utc).isoformat()
         aktualisiertes_fabling.status["letztes_futter"] = gegenstand_id
@@ -747,7 +760,7 @@ class SpielDienst:
             return laufend
         if aktion.kosten:
             if spieler.geld < aktion.kosten:
-                raise ValueError("Dafür hast du nicht genug Geld.")
+                raise ValueError("Dafür hast du nicht genug Bundsiegel.")
             aktualisierter_spieler = spieler.model_copy(deep=True)
             aktualisierter_spieler.geld -= aktion.kosten
             self.spieler.speichern(aktualisierter_spieler)
@@ -976,6 +989,109 @@ class SpielDienst:
         )
         daten.status["aktivitätslog"] = log
         return daten
+
+    def _sättigung_aktualisieren(self, spieler: SpielerProfil, fabelwesen: Fabelwesen, jetzt: datetime) -> tuple[Fabelwesen, bool]:
+        daten = fabelwesen.model_copy(deep=True)
+        if "sättigung" not in daten.zustand:
+            daten.zustand["sättigung"] = 80
+
+        letzter_wert = daten.status.get("sättigung_geprüft_am")
+        if letzter_wert is None:
+            daten.status["sättigung_geprüft_am"] = jetzt.isoformat()
+            self.fabelwesen.speichern(daten)
+            return daten, False
+
+        try:
+            letzter_zeitpunkt = datetime.fromisoformat(str(letzter_wert))
+        except ValueError:
+            letzter_zeitpunkt = jetzt
+        vergangen = max(0.0, (jetzt - letzter_zeitpunkt).total_seconds()) * self.zeitfaktor
+        verbrauch = int(vergangen / 86400 * SÄTTIGUNG_VERBRAUCH_PRO_TAG)
+        if verbrauch <= 0:
+            return daten, False
+
+        daten.zustand["sättigung"] = begrenze_prozent(int(daten.zustand.get("sättigung", 80)) - verbrauch)
+        daten.status["sättigung_geprüft_am"] = jetzt.isoformat()
+
+        spieler_geändert = False
+        while int(daten.zustand.get("sättigung", 0)) <= SÄTTIGUNG_FRESSSCHWELLE:
+            futter_id = self._automatisches_futter_wählen(spieler, daten)
+            if futter_id is None:
+                break
+            spieler.inventar[futter_id] = self._inventar_anzahl(spieler.inventar.get(futter_id)) - 1
+            if self._inventar_anzahl(spieler.inventar[futter_id]) <= 0:
+                del spieler.inventar[futter_id]
+            daten.zustand["sättigung"] = begrenze_prozent(int(daten.zustand.get("sättigung", 0)) + self._futter_nährwert(daten, futter_id))
+            daten.status["zuletzt_gefressen_am"] = jetzt.isoformat()
+            daten.status["letztes_futter"] = futter_id
+            daten.status["letztes_futter_art"] = self._futter_art(daten, futter_id)
+            spieler_geändert = True
+            if int(daten.zustand.get("sättigung", 0)) >= SÄTTIGUNG_ZIELWERT:
+                break
+
+        self._hungereffekte_anwenden(daten)
+        daten.zustand["verletzungsrisiko"] = self.pflege._risiko_aus_zustand(daten)
+        self.fabelwesen.speichern(daten)
+        return daten, spieler_geändert
+
+    def _automatisches_futter_wählen(self, spieler: SpielerProfil, fabelwesen: Fabelwesen) -> str | None:
+        kandidaten = self._verfügbare_futter_ids(spieler)
+        if not kandidaten:
+            return None
+
+        priorität = fabelwesen.status.get("futter_priorität", [])
+        if isinstance(priorität, list):
+            for futter_id in priorität:
+                if str(futter_id) in kandidaten:
+                    return str(futter_id)
+
+        lieblingsfutter = fabelwesen.persönlichkeit.get("lieblingsfutter")
+        if isinstance(lieblingsfutter, str) and lieblingsfutter in kandidaten:
+            return lieblingsfutter
+
+        neutrale = [
+            futter_id
+            for futter_id in kandidaten
+            if "neutral" in self.inhalte.gegenstände[futter_id].markierungen
+        ]
+        if neutrale:
+            return sorted(neutrale)[0]
+        return sorted(kandidaten)[0]
+
+    def _verfügbare_futter_ids(self, spieler: SpielerProfil) -> list[str]:
+        return [
+            gegenstand_id
+            for gegenstand_id, eintrag in spieler.inventar.items()
+            if self._inventar_anzahl(eintrag) > 0
+            and (gegenstand := self.inhalte.gegenstände.get(gegenstand_id)) is not None
+            and gegenstand.kategorie == "futter"
+        ]
+
+    def _futter_nährwert(self, fabelwesen: Fabelwesen, gegenstand_id: str) -> int:
+        art = self._futter_art(fabelwesen, gegenstand_id)
+        if art in {"bevorzugt", "neutral"}:
+            return SÄTTIGUNG_NÄHRWERT_NORMAL
+        return SÄTTIGUNG_NÄHRWERT_SONSTIG
+
+    def _futter_art(self, fabelwesen: Fabelwesen, gegenstand_id: str) -> str:
+        priorität = fabelwesen.status.get("futter_priorität", [])
+        if isinstance(priorität, list) and priorität and str(priorität[0]) == gegenstand_id:
+            return "bevorzugt"
+        if fabelwesen.persönlichkeit.get("lieblingsfutter") == gegenstand_id:
+            return "bevorzugt"
+        gegenstand = self.inhalte.gegenstände.get(gegenstand_id)
+        if gegenstand is not None and "neutral" in gegenstand.markierungen:
+            return "neutral"
+        return "sonstiges"
+
+    @staticmethod
+    def _hungereffekte_anwenden(fabelwesen: Fabelwesen) -> None:
+        sättigung = int(fabelwesen.zustand.get("sättigung", 80))
+        if sättigung < 30:
+            fabelwesen.zustand["stimmung"] = begrenze_prozent(int(fabelwesen.zustand.get("stimmung", 50)) - 3)
+            fabelwesen.zustand["stress"] = begrenze_prozent(int(fabelwesen.zustand.get("stress", 0)) + 3)
+        if sättigung < 10:
+            fabelwesen.zustand["gesundheit"] = begrenze_prozent(int(fabelwesen.zustand.get("gesundheit", 100)) - 2)
 
     def _inaktivität_aktualisieren(self, fabelwesen: Fabelwesen, jetzt: datetime) -> Fabelwesen:
         if self.aktivitäten.laufende_für_fabelwesen_holen(fabelwesen.id) is not None:

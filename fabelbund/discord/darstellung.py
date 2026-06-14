@@ -12,9 +12,17 @@ from fabelbund.modelle.inhalte import AuftragDefinition
 from fabelbund.modelle.laufzeit import AktiverAuftrag, Aktivität, Fabelwesen, SpielerProfil
 
 
+def siegel(betrag: int) -> str:
+    return f"🏵️ {betrag} Siegel"
+
+
+def siegel_übrig(betrag: int) -> str:
+    return f"{siegel(betrag)} übrig"
+
+
 def profil_einbettung(spieler: SpielerProfil) -> discord.Embed:
     embed = discord.Embed(title="Der Fabelbund", color=discord.Color.green())
-    embed.add_field(name="Geld", value=f"{spieler.geld} Credits", inline=True)
+    embed.add_field(name="Bundsiegel", value=siegel(spieler.geld), inline=True)
     embed.add_field(name="Ställe", value=str(spieler.freigeschaltete_ställe), inline=True)
     embed.add_field(name="Pflege-Ruf", value=str(spieler.ruf.get("pflege", 0)), inline=True)
     embed.add_field(name="Zuverlässigkeit", value=str(spieler.ruf.get("zuverlässigkeit", 0)), inline=True)
@@ -74,11 +82,187 @@ def auftrag_einbettung(
                 wert += f"\n{charakter}"
             zeilen.append(wert)
         embed.add_field(name="Zugegeteilt", value="\n\n".join(zeilen), inline=False)
+        zielbild = auftragszustand_text(auftrag, zugeteilte)
+        if zielbild:
+            embed.add_field(name="Ausgangslage und Ziel", value=zielbild, inline=False)
     betreuungszeit = betreuungszeit_text(aktiver_auftrag, auftrag, zugeteilte)
     if betreuungszeit:
         embed.add_field(name="Betreuungszeit", value=betreuungszeit, inline=False)
     embed.add_field(name="Belohnung", value=belohnung_text(auftrag), inline=False)
     return embed
+
+
+def auftragszustand_text(auftrag: AuftragDefinition, fabelwesen_liste: Sequence[Fabelwesen]) -> str:
+    ziele = auftrag.ziele
+    if ziele.get("fabling_ziele"):
+        zielzeilen = []
+        for ziel in ziele.get("fabling_ziele", []):
+            if not isinstance(ziel, dict):
+                continue
+            fabling = _passendes_fabling(fabelwesen_liste, ziel)
+            if fabling is None:
+                continue
+            zeile = _zustandsvergleich_für_fabling(fabling, ziel)
+            if zeile:
+                zielzeilen.append(zeile)
+        return "\n\n".join(zielzeilen)
+
+    if not fabelwesen_liste:
+        return ""
+    return _zustandsvergleich_für_fabling(fabelwesen_liste[0], ziele)
+
+
+def _passendes_fabling(fabelwesen_liste: Sequence[Fabelwesen], ziel: dict[str, object]) -> Fabelwesen | None:
+    art_id = ziel.get("art_id")
+    spitzname = ziel.get("spitzname")
+    for fabling in fabelwesen_liste:
+        if art_id is not None and fabling.art_id != str(art_id):
+            continue
+        if spitzname is not None and fabling.spitzname != str(spitzname):
+            continue
+        return fabling
+    return None
+
+
+def _zustandsvergleich_für_fabling(fabelwesen: Fabelwesen, ziele: dict[str, object]) -> str:
+    aktuelle_werte = dict(fabelwesen.zustand)
+    aktuelle_werte.update(_auftrags_ist_zustand(fabelwesen))
+    return _zielvergleich_text(fabelwesen.spitzname, aktuelle_werte, fabelwesen.wettbewerbswerte, ziele)
+
+
+def _zielvergleich_text(
+    name: str,
+    aktuelle_werte: dict[str, int],
+    wettbewerbswerte: dict[str, int],
+    ziele: dict[str, object],
+) -> str:
+    ist_teile: list[str] = []
+    ziel_teile: list[str] = []
+    for zielschlüssel, zustandsschlüssel, label, richtung in ZUSTANDSZIELE:
+        zielwert = ziele.get(zielschlüssel)
+        if zielwert is None:
+            continue
+        aktueller_wert = int(aktuelle_werte.get(zustandsschlüssel, 0))
+        ist_teile.append(f"{label} {zustandsstufe(zustandsschlüssel, aktueller_wert)}")
+        ziel_teile.append(f"{label} {zielstufe(zustandsschlüssel, int(zielwert), richtung)}")
+
+    wettbewerb = ziele.get("wettbewerb_mindestens")
+    if isinstance(wettbewerb, dict):
+        for schlüssel, zielwert in wettbewerb.items():
+            aktueller_wert = int(wettbewerbswerte.get(str(schlüssel), 0))
+            label = schlüssel_label(str(schlüssel))
+            ist_teile.append(f"{label} {trainingsstufe(aktueller_wert)}")
+            ziel_teile.append(f"{label} mindestens {trainingsstufe(int(zielwert))}")
+
+    if not ist_teile and not ziel_teile:
+        return ""
+
+    ist = "; ".join(ist_teile) or "keine besondere Abweichung"
+    soll = "; ".join(ziel_teile) or "stabil bleiben"
+    return f"**{name}**\nIst: {ist}.\nSoll: {soll}."
+
+
+def auftragsaushang_ziel_text(auftrag: AuftragDefinition) -> str:
+    if not auftrag.fabelwesen:
+        return ""
+    ziele = auftrag.ziele
+    if ziele.get("fabling_ziele"):
+        zeilen = []
+        for ziel in ziele.get("fabling_ziele", []):
+            if not isinstance(ziel, dict):
+                continue
+            definition = next((eintrag for eintrag in auftrag.fabelwesen if eintrag.spitzname == ziel.get("spitzname")), None)
+            if definition is None:
+                continue
+            zeilen.append(_zielvergleich_text(definition.spitzname, definition.start_zustand, {}, ziel))
+        return "\n\n".join(zeilen)
+    definition = auftrag.fabelwesen[0]
+    return _zielvergleich_text(definition.spitzname, definition.start_zustand, {}, ziele)
+
+
+ZUSTANDSZIELE = (
+    ("gesundheit_mindestens", "gesundheit", "Gesundheit", "mindestens"),
+    ("energie_mindestens", "energie", "Energie", "mindestens"),
+    ("stimmung_mindestens", "stimmung", "Stimmung", "mindestens"),
+    ("vertrauen_mindestens", "vertrauen", "Vertrauen", "mindestens"),
+    ("sicherheit_mindestens", "sicherheit", "Sicherheit", "mindestens"),
+    ("fellpflege_mindestens", "fellpflege", "Fellpflege", "mindestens"),
+    ("stress_höchstens", "stress", "Stress", "höchstens"),
+)
+
+
+def _auftrags_ist_zustand(fabelwesen: Fabelwesen) -> dict[str, int]:
+    zustand = fabelwesen.status.get("auftrag_start_zustand")
+    if not isinstance(zustand, dict):
+        return fabelwesen.zustand
+    return {str(schlüssel): int(wert) for schlüssel, wert in zustand.items() if isinstance(wert, int)}
+
+
+def zielstufe(schlüssel: str, wert: int, richtung: str) -> str:
+    stufe = zustandsstufe(schlüssel, wert)
+    if richtung == "höchstens":
+        return f"höchstens {stufe}"
+    return f"mindestens {stufe}"
+
+
+def zustandsstufe(schlüssel: str, wert: int) -> str:
+    if schlüssel == "stress":
+        if wert <= 20:
+            return "sehr ruhig"
+        if wert <= 35:
+            return "ruhig genug"
+        if wert <= 55:
+            return "angespannt"
+        return "deutlich gestresst"
+    if schlüssel == "fellpflege":
+        if wert >= 75:
+            return "sehr gepflegt"
+        if wert >= 55:
+            return "ordentlich"
+        if wert >= 40:
+            return "ungeordnet"
+        return "vernachlässigt"
+    if schlüssel == "energie":
+        if wert >= 75:
+            return "voll verfügbar"
+        if wert >= 55:
+            return "ausreichend wach"
+        if wert >= 40:
+            return "müde"
+        return "erschöpft"
+    if schlüssel == "stimmung":
+        if wert >= 75:
+            return "sehr offen"
+        if wert >= 55:
+            return "ausgeglichen"
+        if wert >= 40:
+            return "gedämpft"
+        return "verschlossen"
+    if schlüssel in {"vertrauen", "sicherheit"}:
+        if wert >= 75:
+            return "sehr gefestigt"
+        if wert >= 55:
+            return "verlässlich"
+        if wert >= 40:
+            return "unsicher"
+        return "brüchig"
+    if wert >= 80:
+        return "stabil"
+    if wert >= 60:
+        return "belastbar"
+    if wert >= 40:
+        return "angeschlagen"
+    return "kritisch"
+
+
+def trainingsstufe(wert: int) -> str:
+    if wert >= 75:
+        return "stark"
+    if wert >= 50:
+        return "solide"
+    if wert >= 35:
+        return "ausbaufähig"
+    return "schwach"
 
 
 def betreuungszeit_text(aktiver_auftrag: AktiverAuftrag, auftrag: AuftragDefinition, fabelwesen_liste: Sequence[Fabelwesen]) -> str:
@@ -130,7 +314,11 @@ def dauer_text(sekunden: int) -> str:
 def auftragswand_einbettung(aufträge: Sequence[AuftragDefinition]) -> discord.Embed:
     embed = discord.Embed(
         title="Auftragswand",
-        description="*Neu hier? Willst du mitmachen?*\nÜber `Los geht's!` beginnt die Einführung. Öffentliche Aufträge stehen offiziellen Mitgliedern offen.",
+        description=(
+            "Hier hängen öffentliche Aufträge aus. Jeder Auftrag wird einzeln veröffentlicht und kann direkt "
+            "angenommen werden. Über die Schaltflächen darunter erreichst du deinen laufenden Auftrag, deine "
+            "Fablinge und dein Inventar."
+        ),
         color=discord.Color.gold(),
     )
     if not aufträge:
@@ -139,23 +327,22 @@ def auftragswand_einbettung(aufträge: Sequence[AuftragDefinition]) -> discord.E
             value="Im Moment ist kein passender öffentlicher Auftrag verfügbar.",
             inline=False,
         )
-        return embed
+    return embed
 
-    for auftrag in aufträge:
-        fabelwesen_text = ", ".join(
-            f"{eintrag.spitzname} ({lesbarer_artname(eintrag.art_id)})"
-            for eintrag in auftrag.fabelwesen
-        ) or "wird bei Annahme zugeteilt"
-        embed.add_field(
-            name=auftrag.name,
-            value=(
-                f"{auftrag.beschreibung}\n"
-                f"**Leih-Fabling:** {fabelwesen_text}\n"
-                f"**Voraussetzung:** {voraussetzung_text(auftrag)}\n"
-                f"**Belohnung:** {belohnung_text(auftrag)}"
-            ),
-            inline=False,
-        )
+
+def auftragsaushang_einbettung(auftrag: AuftragDefinition) -> discord.Embed:
+    embed = discord.Embed(title=auftrag.name, description=auftrag.beschreibung or None, color=discord.Color.gold())
+    fabelwesen_text = ", ".join(
+        f"{eintrag.spitzname} ({lesbarer_artname(eintrag.art_id)})"
+        for eintrag in auftrag.fabelwesen
+    ) or "wird bei Annahme zugeteilt"
+    zieltext = auftragsaushang_ziel_text(auftrag)
+    embed.add_field(name="Leih-Fabling", value=fabelwesen_text, inline=False)
+    if zieltext:
+        embed.add_field(name="Ausgangslage und Ziel", value=zieltext, inline=False)
+    embed.add_field(name="Voraussetzung", value=voraussetzung_text(auftrag), inline=True)
+    embed.add_field(name="Belohnung", value=belohnung_text(auftrag), inline=True)
+    embed.set_footer(text=f"auftrag:{auftrag.auftrag_id}")
     return embed
 
 
@@ -165,7 +352,8 @@ def auftrag_abgabe_einbettung(ergebnis: AuftragAbgabeErgebnis) -> discord.Embed:
     embed.add_field(name="Fabling", value=ergebnis.fabelwesen.spitzname, inline=True)
     if ergebnis.erfolgreich:
         ruf = ", ".join(f"{schlüssel} +{wert}" for schlüssel, wert in ergebnis.ruf_erhalten.items())
-        embed.add_field(name="Belohnung", value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}", inline=False)
+        belohnung = f"Du erhältst {ergebnis.geld_erhalten} Bundsiegel."
+        embed.add_field(name="Belohnung", value=f"{belohnung}\n{ruf or 'Ruf unverändert'}", inline=False)
         if ergebnis.rückgabe_text:
             embed.add_field(name="Rückgabe", value=ergebnis.rückgabe_text, inline=False)
     embed.add_field(name="Einschätzung", value=ergebnis.hinweis, inline=False)
@@ -175,7 +363,7 @@ def auftrag_abgabe_einbettung(ergebnis: AuftragAbgabeErgebnis) -> discord.Embed:
 def belohnung_text(auftrag: AuftragDefinition) -> str:
     geld = int(auftrag.belohnungen.get("geld", 0))
     ruf = auftrag.belohnungen.get("ruf", {})
-    teile = [f"{geld} Credits"] if geld else []
+    teile = [siegel(geld)] if geld else []
     if isinstance(ruf, dict):
         teile.extend(f"{schlüssel} +{wert}" for schlüssel, wert in ruf.items())
     return "\n".join(teile) or "Keine feste Belohnung"
@@ -197,8 +385,8 @@ def voraussetzung_text(auftrag: AuftragDefinition) -> str:
 def kauf_einbettung(ergebnis: KaufErgebnis) -> discord.Embed:
     embed = discord.Embed(title="Einkauf abgeschlossen", color=discord.Color.green())
     embed.add_field(name="Gegenstand", value=f"{ergebnis.anzahl}x {ergebnis.name}", inline=True)
-    embed.add_field(name="Kosten", value=f"{ergebnis.kosten} Credits", inline=True)
-    embed.add_field(name="Geld", value=f"{ergebnis.spieler.geld} Credits übrig", inline=False)
+    embed.add_field(name="Kosten", value=siegel(ergebnis.kosten), inline=True)
+    embed.add_field(name="Kontostand", value=siegel_übrig(ergebnis.spieler.geld), inline=False)
     return embed
 
 
@@ -237,9 +425,10 @@ def aktivität_ergebnis_einbettung(ergebnis: AktivitätErgebnis) -> discord.Embe
         embed.add_field(name="Training", value=training, inline=False)
     if ergebnis.auftrag_abgeschlossen:
         ruf = ", ".join(f"{schlüssel} +{wert}" for schlüssel, wert in ergebnis.ruf_erhalten.items())
+        belohnung = f"Du erhältst {ergebnis.geld_erhalten} Bundsiegel."
         embed.add_field(
             name="Auftrag abgeschlossen",
-            value=f"+{ergebnis.geld_erhalten} Credits\n{ruf or 'Ruf unverändert'}",
+            value=f"{belohnung}\n{ruf or 'Ruf unverändert'}",
             inline=False,
         )
     return embed

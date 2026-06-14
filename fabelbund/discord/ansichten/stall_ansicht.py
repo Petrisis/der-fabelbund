@@ -6,7 +6,7 @@ import discord
 
 from fabelbund.dienste.spiel_dienst import MAXIMALE_FABLINGE_PRO_SPIELER, SpielDienst
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, unixzeit
+from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, siegel, unixzeit
 from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 from fabelbund.modelle.laufzeit import Fabelwesen
 
@@ -141,7 +141,7 @@ class StallAnsicht(discord.ui.View):
         spieler = self.spiel.spieler.holen(self.nutzer_id)
         läuft = spieler is not None and isinstance(spieler.tutorialpfad, str) and spieler.tutorialpfad.startswith("stallausbau:")
         button = discord.ui.Button(
-            label="Stall fertigstellen" if läuft else "Neuer Stall (180 Credits, 1m)",
+            label="Stall fertigstellen" if läuft else f"Neuer Stall ({siegel(180)}, 1m)",
             style=discord.ButtonStyle.success if läuft else discord.ButtonStyle.secondary,
             custom_id="stall:erweitern",
             row=min(index // 5, 4),
@@ -154,7 +154,7 @@ class StallAnsicht(discord.ui.View):
                     ergebnis = self.spiel.stallausbau_abholen(self.nutzer_id)
                 else:
                     embed = discord.Embed(title="Neuer Stall", color=discord.Color.green())
-                    embed.description = "Ein neuer neutraler Stall kostet 180 Credits und ist nach 1 Minute fertig."
+                    embed.description = f"Kosten: {siegel(180)}. Der neue neutrale Stall ist nach 1 Minute fertig."
                     await interaction.response.edit_message(
                         embed=embed,
                         view=StallausbauBestätigung(self.spiel, self.nutzer_id, self.kontext),
@@ -265,7 +265,7 @@ class StallAnsicht(discord.ui.View):
             dauer_sekunden = self.spiel.aktionsdauer_sekunden(self.nutzer_id, aktion.aktion_id)
             label = f"{aktion.name} ({dauer_kurz(dauer_sekunden)})"
             if aktion.kosten:
-                label = f"{aktion.name} ({dauer_kurz(dauer_sekunden)}, {aktion.kosten} Credits)"
+                label = f"{aktion.name} ({dauer_kurz(dauer_sekunden)}, {siegel(aktion.kosten)})"
             button = discord.ui.Button(
                 label=label,
                 style=discord.ButtonStyle.secondary,

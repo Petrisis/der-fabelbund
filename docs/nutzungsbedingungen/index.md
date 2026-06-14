@@ -40,7 +40,7 @@ Bei Missbrauch können Spielfunktionen eingeschränkt, Spielstände korrigiert o
 
 ## 5. Virtuelle Inhalte
 
-Fabelwesen, Gegenstände, Ruf, Geldwerte, Aufträge und andere Spielwerte sind rein virtuelle Inhalte innerhalb des Spiels. Sie haben keinen Geldwert und begründen keinen Anspruch auf Auszahlung, Übertragung außerhalb des Spiels oder Ersatz.
+Fabelwesen, Gegenstände, Ruf, Bundsiegel, Aufträge und andere Spielwerte sind rein virtuelle Inhalte innerhalb des Spiels. Sie haben keinen Geldwert und begründen keinen Anspruch auf Auszahlung, Übertragung außerhalb des Spiels oder Ersatz.
 
 ## 6. Verfügbarkeit und Änderungen
 

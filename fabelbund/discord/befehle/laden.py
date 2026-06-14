@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import kauf_einbettung
+from fabelbund.discord.darstellung import kauf_einbettung, siegel
 from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 
 
@@ -26,7 +26,7 @@ class LadenAnsicht(discord.ui.View):
         self.nutzer_id = nutzer_id
         for gegenstand in kontext.spiel.inhalte.gegenstände.values():
             button = discord.ui.Button(
-                label=f"{gegenstand.name} ({gegenstand.preis})",
+                label=f"{gegenstand.name} ({siegel(gegenstand.preis)})",
                 style=discord.ButtonStyle.secondary,
                 custom_id=f"laden:kaufen:{gegenstand.gegenstand_id}",
             )
@@ -94,7 +94,7 @@ class LadenAnsicht(discord.ui.View):
 def laden_einbettung(kontext: Anwendungskontext, nutzer_id: str) -> discord.Embed:
     spieler = kontext.spiel.stelle_spieler_sicher(nutzer_id)
     embed = discord.Embed(title="Fabelbund-Laden", color=discord.Color.green())
-    embed.add_field(name="Geld", value=f"{spieler.geld} Credits", inline=True)
+    embed.add_field(name="Bundsiegel", value=siegel(spieler.geld), inline=True)
     embed.add_field(name="Sortiment", value=sortiment_text(kontext), inline=False)
     return embed
 
@@ -102,5 +102,5 @@ def laden_einbettung(kontext: Anwendungskontext, nutzer_id: str) -> discord.Embe
 def sortiment_text(kontext: Anwendungskontext) -> str:
     zeilen = []
     for gegenstand in kontext.spiel.inhalte.gegenstände.values():
-        zeilen.append(f"{gegenstand.name}: {gegenstand.preis} Credits")
+        zeilen.append(f"{gegenstand.name}: {siegel(gegenstand.preis)}")
     return "\n".join(zeilen)

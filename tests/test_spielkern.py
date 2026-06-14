@@ -16,10 +16,16 @@ from fabelbund.dienste.auftrag_dienst import AuftragDienst
 from fabelbund.dienste.fabelwesen_fabrik import FabelwesenFabrik
 from fabelbund.dienste.pflege_dienst import PflegeDienst
 from fabelbund.dienste.spiel_dienst import SpielDienst
+from fabelbund.dienste.yaml_lader import YamlLader
 from fabelbund.anwendung import Anwendungskontext
+from fabelbund.discord.befehle.inventar import InventarAnsicht
+from fabelbund.discord.befehle.profil import ProfilAnsicht, profil_einbettung_mit_inventar
+from fabelbund.discord.auftragswand import AuftragsnavigationAnsicht, EinzelauftragAnsicht
 from fabelbund.discord.darstellung import (
     aktivität_ergebnis_einbettung,
     auftrag_einbettung,
+    auftragsaushang_einbettung,
+    auftragswand_einbettung,
     betreuungszeit_text,
     veränderung_text,
 )
@@ -172,7 +178,7 @@ def inhalts_katalog() -> InhaltsKatalog:
                 }
             ],
             "ziele": {"energie_mindestens": 49, "stress_höchstens": 32},
-            "belohnungen": {"geld": 80, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
+            "belohnungen": {"geld": 45, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
         }
     )
     tutorial_pflege = AuftragDefinition.model_validate(
@@ -191,7 +197,7 @@ def inhalts_katalog() -> InhaltsKatalog:
                 }
             ],
             "ziele": {"fellpflege_mindestens": 50},
-            "belohnungen": {"geld": 90, "ruf": {"pflege": 3, "zuverlässigkeit": 1}},
+            "belohnungen": {"geld": 180, "ruf": {"pflege": 3, "zuverlässigkeit": 1}},
         }
     )
     tutorial_aktiv_passiv = AuftragDefinition.model_validate(
@@ -210,7 +216,7 @@ def inhalts_katalog() -> InhaltsKatalog:
                     {"spitzname": "Miras Gluthase", "vertrauen_mindestens": 42, "stimmung_mindestens": 54},
                 ],
             },
-            "belohnungen": {"geld": 120, "ruf": {"pflege": 3, "zuverlässigkeit": 3}},
+            "belohnungen": {"geld": 25, "ruf": {"pflege": 3, "zuverlässigkeit": 3}},
         }
     )
     tutorial_futter = AuftragDefinition.model_validate(
@@ -223,7 +229,7 @@ def inhalts_katalog() -> InhaltsKatalog:
                 {"art_id": "moosluchs", "spitzname": "Jonnas Moosluchs", "lieblingsfutter": "kräuterheu", "starter_kandidat": True},
             ],
             "ziele": {"futter_priorität": "kräuterheu"},
-            "belohnungen": {"geld": 110, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
+            "belohnungen": {"geld": 20, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
         }
     )
     tutorial_betreuung = AuftragDefinition.model_validate(
@@ -244,7 +250,7 @@ def inhalts_katalog() -> InhaltsKatalog:
                 "betreuungsdauer_sekunden": 240,
                 "vertrauen_mindestens": 41,
             },
-            "belohnungen": {"geld": 160, "ruf": {"pflege": 3, "zuverlässigkeit": 4}},
+            "belohnungen": {"geld": 25, "ruf": {"pflege": 3, "zuverlässigkeit": 4}},
         }
     )
     tutorial_wettbewerb = AuftragDefinition.model_validate(
@@ -257,7 +263,7 @@ def inhalts_katalog() -> InhaltsKatalog:
                 {"art_id": "gluthase", "spitzname": "Branns Gluthase", "starter_kandidat": True},
             ],
             "ziele": {"wettbewerb_mindestens": {"ausdruck": 50}},
-            "belohnungen": {"geld": 200, "ruf": {"pflege": 4, "zuverlässigkeit": 5}},
+            "belohnungen": {"geld": 30, "ruf": {"pflege": 4, "zuverlässigkeit": 5}},
         }
     )
     futter = GegenstandDefinition.model_validate(
@@ -276,6 +282,26 @@ def inhalts_katalog() -> InhaltsKatalog:
             "kategorie": "futter",
             "preis": 7,
             "effekte": {"gesundheit": 1},
+        }
+    )
+    basisfutter = GegenstandDefinition.model_validate(
+        {
+            "gegenstand_id": "basisfutter",
+            "name": "Basisfutter",
+            "kategorie": "futter",
+            "preis": 6,
+            "effekte": {"energie": 1},
+            "markierungen": ["futter", "neutral", "normal"],
+        }
+    )
+    honigbeeren = GegenstandDefinition.model_validate(
+        {
+            "gegenstand_id": "honigbeeren",
+            "name": "Honigbeeren",
+            "kategorie": "futter",
+            "preis": 9,
+            "effekte": {"stimmung": 4, "energie": 1},
+            "markierungen": ["futter", "normal"],
         }
     )
     return InhaltsKatalog(
@@ -298,7 +324,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "tutorial_betreuung_005": tutorial_betreuung,
             "tutorial_wettbewerb_006": tutorial_wettbewerb,
         },
-        gegenstände={"apfelstücke": futter, "kräuterheu": kräuterheu},
+        gegenstände={"apfelstücke": futter, "kräuterheu": kräuterheu, "basisfutter": basisfutter, "honigbeeren": honigbeeren},
     )
 
 
@@ -334,6 +360,7 @@ class SpielDienstTests(unittest.TestCase):
     def speichere_offiziellen_spieler(self, spiel: SpielDienst, nutzer_id: str = "123") -> None:
         spieler = SpielerProfil(
             nutzer_id=nutzer_id,
+            geld=500,
             tutorialstatus="abgeschlossen",
             tutorialschritt="fertig",
             offizielles_mitglied=True,
@@ -362,7 +389,7 @@ class SpielDienstTests(unittest.TestCase):
             sammlung = spiel.sammlung("123")
             gestartet = spiel.tutorial_starten("123")
 
-        self.assertEqual(spieler.geld, 500)
+        self.assertEqual(spieler.geld, 0)
         self.assertEqual(spieler.tutorialstatus, "neu")
         self.assertEqual(spieler.tutorialschritt, "registrierung")
         self.assertEqual(kapazität, 1)
@@ -602,7 +629,7 @@ class SpielDienstTests(unittest.TestCase):
             except ValueError as fehler:
                 fehlertext = str(fehler)
 
-        self.assertEqual(fehlertext, "Dafür hast du nicht genug Geld.")
+        self.assertEqual(fehlertext, "Dafür hast du nicht genug Bundsiegel.")
 
     def test_laden_und_futter_verändern_inventar_und_fabling(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -636,7 +663,7 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(spieler.tutorialschritt, "ruhe_starten")
         self.assertEqual(auftrag.auftrag_id, "tutorial_ruhe_001")
         self.assertTrue(abgabe.erfolgreich)
-        self.assertEqual(abgabe.geld_erhalten, 80)
+        self.assertEqual(abgabe.geld_erhalten, 45)
         self.assertEqual(nächster_auftrag.auftrag_id, "tutorial_pflege_002")
         self.assertEqual(len(sammlung_nach_abgabe), 1)
         self.assertIsNotNone(aktualisierter_spieler)
@@ -839,6 +866,45 @@ class SpielDienstTests(unittest.TestCase):
         self.assertIn("Gesammelt: 0s von 4m.", text)
         self.assertIn("Früheste Abgabe", text)
         self.assertTrue(any(feld.name == "Betreuungszeit" for feld in embed.fields))
+        self.assertTrue(any(feld.name == "Ausgangslage und Ziel" for feld in embed.fields))
+
+    def test_öffentliche_standardaufträge_sind_zustandsbasiert(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        öffentliche_aufträge = [
+            auftrag
+            for auftrag in katalog.aufträge.values()
+            if auftrag.öffentlich and auftrag.art != "tutorial"
+        ]
+        einbettung = auftragswand_einbettung(öffentliche_aufträge[:3])
+        aushang = auftragsaushang_einbettung(öffentliche_aufträge[0])
+
+        self.assertGreaterEqual(len(öffentliche_aufträge), 4)
+        self.assertEqual(einbettung.fields, [])
+        self.assertTrue(any(feld.name == "Ausgangslage und Ziel" for feld in aushang.fields))
+        for auftrag in öffentliche_aufträge:
+            self.assertNotIn("abgeschlossene_aktion", auftrag.ziele, auftrag.auftrag_id)
+            self.assertNotIn("abgeschlossene_aktionen", auftrag.ziele, auftrag.auftrag_id)
+            self.assertNotIn("futter_priorität", auftrag.ziele, auftrag.auftrag_id)
+            self.assertNotIn("gefüttert", auftrag.ziele, auftrag.auftrag_id)
+            self.assertTrue(auftrag.fehlschlag.get("hinweis"), auftrag.auftrag_id)
+
+    def test_auftragswand_nutzt_navigation_und_einzelne_aushänge(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        auftrag = next(
+            auftrag
+            for auftrag in katalog.aufträge.values()
+            if auftrag.öffentlich and auftrag.art != "tutorial"
+        )
+        kontext = SimpleNamespace(spiel=SimpleNamespace(öffentliche_aufträge=lambda: [auftrag]))
+
+        navigation = AuftragsnavigationAnsicht(kontext)
+        aushang = auftragsaushang_einbettung(auftrag)
+        ansicht = EinzelauftragAnsicht(kontext, "guild_1", auftrag.auftrag_id)
+
+        self.assertEqual([kind.label for kind in navigation.children], ["Auftrag", "Fablinge", "Inventar"])
+        self.assertEqual(aushang.footer.text, f"auftrag:{auftrag.auftrag_id}")
+        self.assertEqual(len(ansicht.children), 1)
+        self.assertEqual(ansicht.children[0].custom_id, f"auftragswand:annehmen:{auftrag.auftrag_id}")
 
     def test_futterpriorität_steuert_bevorzugtes_futter(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -869,6 +935,58 @@ class SpielDienstTests(unittest.TestCase):
                 fehlertext = str(fehler)
 
         self.assertEqual(fehlertext, "Dieses Futter ist nicht in deinem Inventar.")
+
+    def test_profil_und_inventar_sind_per_buttons_verbunden(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.speichere_offiziellen_spieler(spiel)
+            spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=2)
+            kontext = SimpleNamespace(spiel=spiel)
+
+            profil = ProfilAnsicht(kontext, "123")
+            inventar = InventarAnsicht(kontext, "123")
+            embed = profil_einbettung_mit_inventar(kontext, "123")
+
+        self.assertTrue(any(kind.label == "Inventar" for kind in profil.children))
+        self.assertTrue(any(kind.label == "Profil" for kind in inventar.children))
+        self.assertFalse(any("geben" in str(kind.label).lower() for kind in inventar.children))
+        inventar_feld = next(feld for feld in embed.fields if feld.name == "Inventar")
+        self.assertIn("Apfelstücke", inventar_feld.value)
+
+    def test_fablinge_fressen_automatisch_bevorzugtes_futter(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=1)
+            fabling = spiel.sammlung("123")[0]
+            fabling.persönlichkeit["lieblingsfutter"] = "apfelstücke"
+            fabling.zustand["sättigung"] = 80
+            fabling.status["sättigung_geprüft_am"] = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            spiel.fabelwesen.speichern(fabling)
+
+            aktualisiert = spiel.sammlung("123")[0]
+            inventar = spiel.inventar("123")
+
+        self.assertEqual(aktualisiert.status["letztes_futter"], "apfelstücke")
+        self.assertEqual(aktualisiert.status["letztes_futter_art"], "bevorzugt")
+        self.assertNotIn("apfelstücke", inventar)
+        self.assertGreater(aktualisiert.zustand["sättigung"], 0)
+
+    def test_fablinge_fressen_neutrales_futter_als_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            spiel.gegenstand_kaufen("123", "basisfutter", anzahl=1)
+            fabling = spiel.sammlung("123")[0]
+            fabling.persönlichkeit["lieblingsfutter"] = "apfelstücke"
+            fabling.zustand["sättigung"] = 80
+            fabling.status["sättigung_geprüft_am"] = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            spiel.fabelwesen.speichern(fabling)
+
+            aktualisiert = spiel.sammlung("123")[0]
+
+        self.assertEqual(aktualisiert.status["letztes_futter"], "basisfutter")
+        self.assertEqual(aktualisiert.status["letztes_futter_art"], "neutral")
 
     def test_spielaktivität_spricht_nicht_von_pflegewirkung(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

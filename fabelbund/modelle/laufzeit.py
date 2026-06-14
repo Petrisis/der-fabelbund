@@ -8,7 +8,7 @@ from fabelbund.modelle.basis import standard_ruf
 
 class SpielerProfil(BaseModel):
     nutzer_id: str
-    geld: int = 500
+    geld: int = 0
     freigeschaltete_ställe: int = Field(default=1, ge=1)
     stalltypen: dict[str, int] = Field(default_factory=lambda: {"neutral": 1})
     inventar: dict[str, object] = Field(default_factory=dict)

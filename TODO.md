@@ -23,7 +23,7 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [x] Risiko-/Gesundheitswerte
   - [x] Charakter-/Eigenheitswerte
 - [x] Übersicht aller Spielerwerte erstellen
-  - [x] Geld
+  - [x] Bundsiegel
   - [x] Ruf
   - [x] Ställe
   - [x] Lizenzen
@@ -33,10 +33,11 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 - [x] Balancing-Grundlage in `planung/stat-übersicht.md` dokumentieren
 - [x] Auftragsschema in `planung/auftragsschema.md` dokumentieren
 - [ ] Auftragsschema technisch vollständig durchsetzen
-  - [ ] Aufträge prüfen grundsätzlich Zielzustände, nicht absolvierte Aktionen
-  - [ ] erlaubte Ausnahmen explizit halten, z.B. Betreuungszeit, passende Futterpräferenz oder spätere Sondermechaniken
-  - [ ] alte `abgeschlossene_aktion`-/`abgeschlossene_aktionen`-Ziele aus normalen Aufträgen migrieren oder als Übergang markieren
-  - [ ] Tests ergänzen, die neue Aufträge gegen reine Aktionsabschlussprüfung absichern
+  - [x] öffentliche Standardaufträge prüfen Zielzustände, nicht absolvierte Aktionen
+  - [x] erlaubte Ausnahmen explizit halten, z.B. Betreuungszeit, passende Futterpräferenz oder spätere Sondermechaniken
+  - [x] alte `abgeschlossene_aktion`-/`abgeschlossene_aktionen`-Ziele aus normalen Aufträgen migrieren
+  - [x] Tests ergänzen, die neue öffentliche Aufträge gegen reine Aktionsabschlussprüfung absichern
+  - [ ] technische Übergangsfelder `abgeschlossene_aktion` und `abgeschlossene_aktionen` später entfernen oder klar als Legacy markieren
 
 ## 3. Betreuung, Ställe und Content-Grundlage
 
@@ -86,25 +87,25 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 - [x] Spieler kann nach dem Schließen einer ephemeren Ansicht wieder ins Tutorial zurückfinden
 - [ ] Tutorial als spielbaren Qualitätsdurchlauf prüfen
   - [ ] frischen Durchlauf mit Spielerreset testen
-  - [ ] jeden Schritt einmal normal abschließen
+  - [x] jeden Schritt einmal normal abschließen
   - [ ] jeden Auftrag einmal absichtlich zu früh abgeben
-  - [ ] prüfen, ob NPC-Hinweis verständlich sagt, was noch nicht passt
+  - [x] prüfen, ob NPC-Hinweis grundsätzlich sagt, was noch nicht passt
   - [ ] prüfen, ob Buttons an jeder Stelle zum nächsten sinnvollen Menü führen
 - [ ] Tutorialziele vollständig zustandsbasiert machen
-  - [ ] keine Tutorialabgabe darf `abgeschlossene_aktion` oder `abgeschlossene_aktionen` prüfen
-  - [ ] Mehrfach-Fabling-Aufträge nutzen zielwertbasierte Einzelziele pro Fabling
-  - [ ] Zeitbedingungen bleiben erlaubt, wenn Zeit selbst Lernziel ist
+  - [x] keine Tutorialabgabe darf `abgeschlossene_aktion` oder `abgeschlossene_aktionen` prüfen
+  - [x] Mehrfach-Fabling-Aufträge nutzen zielwertbasierte Einzelziele pro Fabling
+  - [x] Zeitbedingungen bleiben erlaubt, wenn Zeit selbst Lernziel ist
   - [ ] Tests ergänzen, die fehlschlagen, wenn Tutorialaufträge wieder Aktionsabschluss prüfen
 - [ ] Tutorialtexte final glätten
-  - [ ] keine Slash-Command-Verweise
+  - [x] keine Slash-Command-Verweise in Tutorial-Auftragstexten
   - [ ] keine redundanten "danach abholen/abgeben"-Erklärungen
   - [ ] Aufgabenblock beschreibt Zielzustand statt Klickanweisung
-  - [ ] NPC-Texte aktiv formulieren
-  - [ ] Tätigkeiten funktional erklären, z.B. müde -> Ruhe, Fell vernachlässigt -> Pflege, Vertrauen -> aktive Betreuung
+  - [x] NPC-Texte aktiv formulieren
+  - [x] Tätigkeiten funktional erklären, z.B. müde -> Ruhe, Fell vernachlässigt -> Pflege, Vertrauen -> aktive Betreuung
 - [ ] Tutorial-Fablinge eindeutig benennen
-  - [ ] Besitzer-Spitznamen durchgehend verwenden
-  - [ ] Rückgabetexte bei einem und mehreren Fablingen prüfen
-  - [ ] Auftragsanzeige und Fablingübersicht mit diesen Namen testen
+  - [x] Besitzer-Spitznamen in Tutorialaufträgen durchgehend verwenden
+  - [x] Rückgabetexte bei einem und mehreren Fablingen per Test absichern
+  - [ ] Auftragsanzeige und Fablingübersicht mit diesen Namen im Discord-Flow testen
 - [x] Nach Starterwahl Chronikmeldung vorbereiten
 
 ## 5. Nächster Spielfluss nach dem Tutorial
@@ -116,12 +117,19 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 - [x] Tutorialabgabe bietet direkten Button für den nächsten Auftrag
 - [x] Fabling-Detailansicht zeigt zuerst Aktivitätskategorien und danach konkrete Aktionen
 - [ ] NPC-Fehlschlagantworten systematisch einführen
-  - [ ] jeder Auftrag bekommt `fehlschlag.hinweis`
-  - [ ] Text nennt allgemein, was am Fabling noch nicht passt
-  - [ ] keine internen Zahlenwerte im Spielertext
-  - [ ] keine exakte Klicklösung verraten
-- [ ] Mehrere einfache Pflegeaufträge ergänzen
-- [ ] Erste Auswahl zwischen Aufträgen ermöglichen
+  - [x] jeder Tutorialauftrag bekommt `fehlschlag.hinweis`
+  - [x] Tutorialtexte nennen allgemein, was am Fabling noch nicht passt
+  - [x] normale öffentliche Aufträge bekommen `fehlschlag.hinweis`
+  - [x] Text nennt allgemein, was am Fabling noch nicht passt
+  - [x] keine internen Zahlenwerte im Spielertext
+  - [x] keine exakte Klicklösung verraten
+- [x] Mehrere einfache Standardaufträge ergänzen
+  - [x] Pflegeauftrag mit IST-/SOLL-Zustand
+  - [x] Ruheauftrag mit IST-/SOLL-Zustand
+  - [x] Babysitting-Auftrag mit Betreuungszeit und Stabilitätsziel
+  - [x] Trainingsauftrag mit Wettbewerbsziel
+  - [x] Futterzuweisung bleibt auf das Tutorial beschränkt
+- [x] Erste Auswahl zwischen Aufträgen ermöglichen
 - [ ] Belohnungen und Ruf sauberer staffeln
 - [ ] Prüfen, ob der Spieler nach dem Tutorial sinnvoll weiß, was er als Nächstes tun kann
 
@@ -129,14 +137,20 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
 
 - [ ] Dauerhafte Grundbedürfnisse modellieren
   - [ ] Pflegezustand der Fablinge lässt graduell nach, damit regelmäßig Pflegebedarf entsteht
-  - [ ] Futter wird über Zeit verdaut/verbraucht
-  - [ ] Fablinge speichern einen internen Magen-/Sättigungszustand aus aufgenommenem Futter
-  - [ ] Sättigung leert sich über Zeit
-  - [ ] Hunger wird in Zustandstexten sichtbar, sobald der Magen-/Sättigungszustand niedrig ist
-- [ ] Lieblingsfutter-Mechanik für MVP umsetzen
-  - [ ] Solange Lieblingsfutter im Magen ist, werden positive Effekte wirksamer
-  - [ ] Solange Lieblingsfutter im Magen ist, fallen negative Effekte schwächer aus
-  - [ ] Stärke und Dauer des Lieblingsfutter-Bonus balancen
+  - [x] Futter wird über Zeit verbraucht
+  - [x] Fablinge speichern einen internen Sättigungszustand
+  - [x] Sättigung leert sich über Zeit
+  - [x] Fablinge fressen automatisch aus dem Inventar
+  - [x] Futterreihenfolge: bevorzugtes Futter, neutrales Futter, sonstiges Futter
+  - [x] Lieblingsfutter gibt keinen Nährwertbonus
+  - [ ] niedrige Sättigung deutlicher in Zustandstexten sichtbar machen
+  - [ ] kritische Hungerereignisse in die Chronik posten
+  - [ ] Entzug durch den Fabelbund bei kritischer Gesundheit modellieren
+  - [ ] Ruf-/Rangverlust bei Entzug modellieren
+- [ ] Futterökonomie balancen
+  - [x] neutrales Basisfutter ergänzen
+  - [x] Richtwert vorbereiten: etwa fünf normale Futtereinheiten pro Fabling und Tag
+  - [ ] Preise nach erstem Playtest auf moderate tägliche Deflation prüfen
 - [ ] Wettbewerbe ausarbeiten
 - [ ] Zucht vorbereiten
 - [ ] Handel und Markt vorbereiten

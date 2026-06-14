@@ -19,7 +19,7 @@ Aktuell umgesetzt:
 - YAML-Inhaltsdaten für Arten, Aktionen, Gegenstände und Aufträge
 - Pydantic-Validierung der Inhaltsdaten
 - SQLite-Persistenz
-- Spielerprofil mit Geld, Ruf, Lizenzen, Ställen und Tutorialstatus
+- Spielerprofil mit Bundsiegeln, Ruf, Lizenzen, Ställen und Tutorialstatus
 - Fabling- und Stallübersicht über `/fablinge`
 - Fabling-Detailansicht mit Stallpriorität, Futterpräferenz und Aktivitätsauswahl
 - Pflege, Ruhe, Spiel, Training und Checks als erste Betreuungsaktivitäten
@@ -127,6 +127,8 @@ python -m compileall fabelbund fabelbund_bot tests
 - [planung/projektstand.md](planung/projektstand.md) hält Projektregeln, aktuellen Stand und nächste Blöcke fest.
 - [planung/stat-übersicht.md](planung/stat-übersicht.md) beschreibt interne Werte und Balancing-Grundlagen.
 - [planung/auftragsschema.md](planung/auftragsschema.md) ist die verbindliche Regel für neue Aufträge.
+- [planung/lore-und-narrativer-stil.md](planung/lore-und-narrativer-stil.md) beschreibt Setting, Begriffe und Erzählstil.
+- [planung/fabling-generierung.md](planung/fabling-generierung.md) erklärt die Erzeugung neuer Fablinge und ihre Wertebereiche.
 - [docs/issue-workflow.md](docs/issue-workflow.md) beschreibt, wie GitHub-Issues bearbeitet und geschlossen werden.
 
 ## GitHub Pages

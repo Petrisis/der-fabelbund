@@ -58,7 +58,7 @@ Grundregel: Zahlen bleiben intern. Spieler sehen nur dort Zahlen, wo sie Spielö
 
 | Wert | Bedeutung | Sichtbarkeit | Steigt durch | Sinkt durch | Verwendet von |
 | --- | --- | --- | --- | --- | --- |
-| Geld | Allgemeine Spielwährung. | Direkt sichtbar | Aufträge, Wettbewerbe, Handel | Käufe, Behandlung, Stallerweiterung | Ökonomie |
+| Bundsiegel | Allgemeine Spielwährung. | Direkt sichtbar | Aufträge, Wettbewerbe, Handel | Käufe, Behandlung, Stallerweiterung | Ökonomie |
 | Ruf | Bereichsbezogene Reputation, aktuell z.B. Pflege und Zuverlässigkeit. | Direkt oder als Rang sichtbar | erfüllte Aufträge, gute Betreuung, faire Verträge | abgebrochene Zusagen, Fehlschläge, Missbrauch | Aufträge, Freischaltungen, Vertragslogik |
 | Freigeschaltete Ställe | Anzahl nutzbarer Stallplätze. | Direkt sichtbar | Kauf, Tutorial, Meilensteine | normalerweise nicht sinkend | Besitzgrenze, Fabling-Annahme |
 | Stalltypen | Gebaute Stallarten nach Element oder neutral. | Direkt in Stallübersicht sichtbar | Kauf, Ausbau, Questbelohnungen | normalerweise nicht sinkend | automatische Belegung, Komfort, spätere Boni |
@@ -83,7 +83,7 @@ Diese Liste ist ein Vorschlag und muss gemeinsam entschieden werden.
 - Muskelkater
 - Verletzungsrisiko
 - Trainingswerte
-- Geld
+- Bundsiegel
 - Ruf
 - Freigeschaltete Ställe
 - Stalltypen

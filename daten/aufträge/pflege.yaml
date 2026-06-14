@@ -4,7 +4,7 @@ aufträge:
     art: "tutorial"
     öffentlich: false
     npc: "Mira"
-    beschreibung: "Mira sagt: „Betreuer verdienen ihr Geld zunächst mit fremden Fablingen. Mein Gluthase ist völlig erschöpft und steht noch unter Strom. Ein müder Fabling trainiert schlecht, hört schlechter zu und verletzt sich leichter. Wenn du Erschöpfung oder Unruhe bemerkst, ist Ruhe die richtige Antwort. Für ihn reicht jetzt eine angeleitete Ruhephase.“"
+    beschreibung: "Mira sagt: „Betreuer verdienen Bundsiegel zunächst mit fremden Fablingen. Mein Gluthase ist völlig erschöpft und steht noch unter Strom. Ein müder Fabling trainiert schlecht, hört schlechter zu und verletzt sich leichter. Wenn du Erschöpfung oder Unruhe bemerkst, ist Ruhe die richtige Antwort. Für ihn reicht jetzt eine angeleitete Ruhephase.“"
     dauer_tage: 1
     fabelwesen:
       - art_id: "gluthase"
@@ -22,7 +22,7 @@ aufträge:
       energie_mindestens: 49
       stress_höchstens: 32
     belohnungen:
-      geld: 80
+      geld: 45
       ruf:
         pflege: 2
         zuverlässigkeit: 2
@@ -93,7 +93,7 @@ aufträge:
           vertrauen_mindestens: 45
           stimmung_mindestens: 54
     belohnungen:
-      geld: 120
+      geld: 25
       ruf:
         pflege: 3
         zuverlässigkeit: 3
@@ -120,7 +120,7 @@ aufträge:
     ziele:
       futter_priorität: "kräuterheu"
     belohnungen:
-      geld: 110
+      geld: 20
       ruf:
         pflege: 2
         zuverlässigkeit: 2
@@ -150,7 +150,7 @@ aufträge:
       betreuungsdauer_sekunden: 240
       vertrauen_mindestens: 41
     belohnungen:
-      geld: 160
+      geld: 25
       ruf:
         pflege: 3
         zuverlässigkeit: 4
@@ -179,7 +179,7 @@ aufträge:
       wettbewerb_mindestens:
         ausdruck: 50
     belohnungen:
-      geld: 200
+      geld: 30
       ruf:
         pflege: 4
         zuverlässigkeit: 5
@@ -187,20 +187,25 @@ aufträge:
       hinweis: "Brann sagt: „Für einen Probewettbewerb ist sein Ausdruck noch zu schwach. Er braucht mehr Präsenz, ohne dabei hektisch zu werden.“"
 
   - auftrag_id: "pflege_einfach_001"
-    name: "Grundpflegeauftrag"
+    name: "Moosluchs in Ordnung bringen"
     art: "pflege"
     öffentlich: true
     aushang_gewicht: 100
     mindestens_offizielles_mitglied: true
-    npc: "Fabelbund-Auftragsstelle"
-    beschreibung: "Ein Fabling wird dir für eine einfache Pflegeeinschätzung übergeben. Sorge für einen stabilen Eindruck und gib ihn danach wieder beim Fabelbund ab."
+    npc: "Mira"
+    beschreibung: "Mira sagt: „Mein Moosluchs kommt zerzaust und gereizt aus einer unruhigen Nacht. Ich brauche ihn wieder so, dass Fell und Haltung gepflegt wirken und er sich nicht mehr so unter Druck zeigt.“"
     dauer_tage: 3
     fabelwesen:
       - art_id: "moosluchs"
-        spitzname: "Moosluchs"
-        charakter: "stolz und pflegeempfindlich"
+        spitzname: "Miras Moosluchs"
+        charakter: "zerzaust und gereizt"
         lieblingsfutter: "kräuterheu"
         starter_kandidat: false
+        start_zustand:
+          gesundheit: 82
+          stimmung: 46
+          stress: 34
+          fellpflege: 38
     voraussetzungen:
       mindest_lizenz: null
       mindest_ruf:
@@ -216,100 +221,125 @@ aufträge:
         pflege: 12
         zuverlässigkeit: 5
     fehlschlag:
+      hinweis: "Mira sagt: „So nehme ich ihn noch nicht zurück. Er wirkt noch zu angespannt oder nicht gepflegt genug.“"
       geld_multiplikator: 0.3
       ruf_verlust:
         zuverlässigkeit: 3
 
   - auftrag_id: "ruhe_einfach_001"
-    name: "Unruhiger Gluthase"
+    name: "Gluthase runterfahren"
     art: "pflege"
     öffentlich: true
     aushang_gewicht: 90
     mindestens_offizielles_mitglied: true
-    npc: "Fabelbund-Auftragsstelle"
-    beschreibung: "Ein Gluthase war den ganzen Morgen aufgeregt. Gib ihm einen verlässlichen ruhigen Rahmen und bring ihn danach zurück."
+    npc: "Brann"
+    beschreibung: "Brann sagt: „Mein Gluthase ist zu wach, zu geladen und reagiert auf jede Kleinigkeit. Bring ihn in einen ruhigen Zustand, ohne ihn zusätzlich aufzudrehen.“"
     dauer_tage: 2
     fabelwesen:
       - art_id: "gluthase"
-        spitzname: "Glutfunke"
+        spitzname: "Branns Glutfunke"
         charakter: "neugierig und schnell überreizt"
         lieblingsfutter: "honigbeeren"
         starter_kandidat: false
+        start_zustand:
+          energie: 42
+          stimmung: 50
+          stress: 44
     voraussetzungen:
       mindest_lizenz: null
       mindest_ruf:
         pflege: 0
     ziele:
-      abgeschlossene_aktion: "kontrollierte_ruhe"
-      stress_höchstens: 35
+      energie_mindestens: 55
+      stress_höchstens: 32
     belohnungen:
       geld: 240
       ruf:
         pflege: 8
         zuverlässigkeit: 6
     fehlschlag:
+      hinweis: "Brann sagt: „Er ist noch zu unruhig. Ich will ihn wacher, aber deutlich gelassener zurück.“"
       geld_multiplikator: 0.3
       ruf_verlust:
         zuverlässigkeit: 3
 
-  - auftrag_id: "pflege_futter_001"
-    name: "Futtervorliebe prüfen"
+  - auftrag_id: "betreuung_einfach_001"
+    name: "Nachmittagsbetreuung"
     art: "pflege"
     öffentlich: true
     aushang_gewicht: 80
     mindestens_offizielles_mitglied: true
-    npc: "Mira"
-    beschreibung: "Ein Moosluchs soll kurz betreut und passend gefüttert werden. Achte darauf, ob seine Vorlieben erkennbar sind."
+    npc: "Jonna"
+    beschreibung: "Jonna sagt: „Ich brauche für kurze Zeit verlässliche Betreuung. Mein Quellfink muss nicht trainieren und nicht glänzen; er soll nach der Betreuung einfach stabil, ruhig und nicht schlechter dastehen als vorher.“"
     dauer_tage: 2
     fabelwesen:
-      - art_id: "moosluchs"
-        spitzname: "Moosblick"
-        charakter: "vorsichtig und wählerisch"
-        lieblingsfutter: "kräuterheu"
+      - art_id: "quellfink"
+        spitzname: "Jonnas Quellfink"
+        charakter: "vorsichtig und aufmerksam"
+        lieblingsfutter: "apfelstücke"
         starter_kandidat: false
+        start_zustand:
+          gesundheit: 82
+          energie: 58
+          stimmung: 50
+          stress: 28
+          fellpflege: 55
     voraussetzungen:
       mindest_lizenz: null
       mindest_ruf:
         pflege: 0
     ziele:
-      gefüttert: true
+      betreuungsdauer_sekunden: 900
+      gesundheit_mindestens: 82
+      energie_mindestens: 58
+      stimmung_mindestens: 50
+      stress_höchstens: 28
+      fellpflege_mindestens: 55
     belohnungen:
-      geld: 180
+      geld: 210
       ruf:
-        pflege: 6
-        zuverlässigkeit: 3
+        pflege: 5
+        zuverlässigkeit: 7
     fehlschlag:
+      hinweis: "Jonna sagt: „Die Betreuungszeit oder sein Zustand passt noch nicht. Er soll ruhig, stabil und nicht schlechter als bei der Übergabe wirken.“"
       geld_multiplikator: 0.3
       ruf_verlust:
         zuverlässigkeit: 2
 
   - auftrag_id: "training_ausdruck_001"
-    name: "Kurze Ausdrucksübung"
+    name: "Ausdruck vor der Sichtung"
     art: "training"
     öffentlich: true
     aushang_gewicht: 70
     mindestens_offizielles_mitglied: true
     npc: "Brann"
-    beschreibung: "Ein Fabling soll vor einem kleinen Sichtungstermin eine ruhige Ausdrucksübung absolvieren."
+    beschreibung: "Brann sagt: „Funkenlauf hat genug Energie, aber sein Auftreten ist noch fahrig. Ich will keinen erschöpften Sieger, sondern einen Fabling, der für die Sichtung sichtbar mehr Präsenz hat und dabei nicht ausfranst.“"
     dauer_tage: 3
     fabelwesen:
       - art_id: "gluthase"
-        spitzname: "Funkenlauf"
+        spitzname: "Branns Funkenlauf"
         charakter: "lebhaft und schnell abgelenkt"
         lieblingsfutter: "honigbeeren"
         starter_kandidat: false
+        start_zustand:
+          energie: 68
+          stress: 24
     voraussetzungen:
       mindest_lizenz: null
       mindest_ruf:
         pflege: 0
     ziele:
-      abgeschlossene_aktion: "ausdruck_üben"
+      energie_mindestens: 45
+      stress_höchstens: 36
+      wettbewerb_mindestens:
+        ausdruck: 50
     belohnungen:
       geld: 260
       ruf:
         pflege: 6
         zuverlässigkeit: 4
     fehlschlag:
+      hinweis: "Brann sagt: „Für die Sichtung reicht das noch nicht. Sein Ausdruck muss stärker werden, ohne dass er zu erschöpft oder hektisch wirkt.“"
       geld_multiplikator: 0.3
       ruf_verlust:
         zuverlässigkeit: 2

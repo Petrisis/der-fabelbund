@@ -24,6 +24,7 @@ ZUSTAND_SCHLÜSSEL = {
     "gesundheit",
     "stimmung",
     "energie",
+    "sättigung",
     "stress",
     "vertrauen",
     "sicherheit",

@@ -219,22 +219,20 @@ class TutorialZwischenschrittAnsicht(discord.ui.View):
 
 
 def auftragsziel_text(ziele: dict[str, object]) -> str:
-    if ziele.get("energie_mindestens") is not None and ziele.get("stress_höchstens") is not None:
-        return "Ruhe: Angeleitete Ruhe. Der Fabling soll danach ausgeruht genug und deutlich ruhiger wirken."
-    if ziele.get("abgeschlossene_aktion") == "kontrollierte_ruhe":
-        return "Kontrollierte Ruhe. Der Fabling soll danach wieder ausgeruht genug wirken."
-    if ziele.get("abgeschlossene_aktion") == "sanfte_fellpflege":
-        return "Moosbürste kaufen. Danach: Pflege: Sanfte Fellpflege."
-    if ziele.get("abgeschlossene_aktion") == "ausdruck_üben":
-        return "Training: Ausdruck üben."
-    if ziele.get("fellpflege_mindestens") is not None:
-        return "Moosbürste kaufen. Danach soll das Fell sichtbar gepflegt wirken."
-    if ziele.get("fabling_ziele"):
-        return "Miras Quellfink soll ausgeruhter und ruhiger wirken. Miras Gluthase soll zutraulicher und merklich besser gestimmt wirken."
     if ziele.get("betreuungsdauer_sekunden") and ziele.get("vertrauen_mindestens"):
         return "Baue Vertrauen auf: Gemeinsames Spiel hilft dabei. Erreiche insgesamt 4 Minuten Betreuungszeit; sinnvolle Pausen zählen dazu."
+    if ziele.get("betreuungsdauer_sekunden"):
+        return "Betreue den Fabling über die geforderte Zeit, ohne seinen Zustand zu verschlechtern."
     if ziele.get("wettbewerb_mindestens"):
-        return "Bereite den Fabling so vor, dass sein Ausdruck für den Probewettbewerb reicht."
+        return "Bereite den Fabling so vor, dass der geforderte Wettbewerbswert tragfähig wird."
+    if ziele.get("fellpflege_mindestens") is not None and ziele.get("stress_höchstens") is not None:
+        return "Der Fabling soll gepflegter, stabiler und deutlich ruhiger wirken."
+    if ziele.get("energie_mindestens") is not None and ziele.get("stress_höchstens") is not None:
+        return "Der Fabling soll wacher und deutlich ruhiger wirken."
+    if ziele.get("fellpflege_mindestens") is not None:
+        return "Der Fabling soll sichtbar gepflegt wirken."
+    if ziele.get("fabling_ziele"):
+        return "Miras Quellfink soll ausgeruhter und ruhiger wirken. Miras Gluthase soll zutraulicher und merklich besser gestimmt wirken."
     if ziele.get("abgeschlossene_aktionen"):
         aktionen = ziele.get("abgeschlossene_aktionen")
         if aktionen == ["kontrollierte_ruhe", "gemeinsames_spiel"]:
@@ -243,11 +241,9 @@ def auftragsziel_text(ziele: dict[str, object]) -> str:
             return "Gemeinsames Spiel und Kurze Pause. Bedingung: insgesamt 4 Minuten Betreuungszeit."
         return "Erfülle die genannten Betreuungen bei den zugeteilten Fablingen."
     if ziele.get("gefüttert"):
-        return "Gib dem zugeteilten Fabling passendes Futter und gib den Auftrag danach ab."
+        return "Versorge den zugeteilten Fabling passend."
     if ziele.get("futter_priorität"):
         return "Setze die passende Futterpräferenz beim zugeteilten Fabling."
-    if ziele.get("betreuungsdauer_sekunden"):
-        return "Betreue den Fabling über die geforderte Zeit und achte auf sinnvolle Pausen."
 
     teile: list[str] = []
     if ziele.get("gesundheit_mindestens") is not None:
@@ -258,7 +254,7 @@ def auftragsziel_text(ziele: dict[str, object]) -> str:
         teile.append("Der Fabling soll nicht zu gestresst wirken.")
     if ziele.get("fellpflege_mindestens") is not None:
         teile.append("Das Fell soll ordentlich gepflegt sein.")
-    return "\n".join(teile) or "Erfülle die Auftragsbedingungen und gib den Auftrag danach ab."
+    return "\n".join(teile) or "Erfülle die Auftragsbedingungen."
 
 
 class StarterEinleitungAnsicht(discord.ui.View):

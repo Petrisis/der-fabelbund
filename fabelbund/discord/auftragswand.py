@@ -5,10 +5,12 @@ import logging
 import discord
 
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import auftrag_einbettung, auftragswand_einbettung, tutorial_hinweis_text
+from fabelbund.discord.darstellung import auftrag_einbettung, auftragsaushang_einbettung, auftragswand_einbettung, tutorial_hinweis_text
 
 
 log = logging.getLogger(__name__)
+MAXIMALE_AUFTRAGSAUSHÄNGE = 3
+AUFTRAGSAUSHANG_SCAN_LIMIT = 50
 
 
 class TutorialEinstiegAnsicht(discord.ui.View):
@@ -41,7 +43,7 @@ class TutorialEinstiegAnsicht(discord.ui.View):
             title="Neu beim Fabelbund",
             description=(
                 "Der Fabelbund sucht verlässliche Betreuer. Am Anfang arbeitest du mit Fablingen, "
-                "die dir für konkrete Aufträge anvertraut werden. So verdienst du Geld, baust Ruf auf "
+                "die dir für konkrete Aufträge anvertraut werden. So verdienst du Bundsiegel, baust Ruf auf "
                 "und lernst, worauf unterschiedliche Fabelwesen reagieren, bevor du deine eigene Zucht aufbaust."
             ),
             color=discord.Color.green(),
@@ -58,7 +60,7 @@ class TutorialEinstiegAnsicht(discord.ui.View):
             title="Fortschritt zurücksetzen",
             description=(
                 "Das entfernt dein Spielerprofil, alle Fablinge, aktive und abgeschlossene Aufträge, "
-                "laufende Aktivitäten, Inventar, Geld, Ruf, Lizenzen und Stallausbau."
+                "laufende Aktivitäten, Inventar, Bundsiegel, Ruf, Lizenzen und Stallausbau."
             ),
             color=discord.Color.red(),
         )
@@ -251,7 +253,79 @@ class AuftragswandAnsicht(discord.ui.View):
             interaction.guild,
             f"{interaction.user.mention} hat **{auftrag.name}** angenommen.",
         )
+        if interaction.message is not None:
+            embed = auftragsaushang_einbettung(auftrag)
+            embed.title = f"{auftrag.name} - vergeben"
+            embed.color = discord.Color.dark_grey()
+            embed.add_field(name="Status", value=f"Angenommen von {interaction.user.mention}.", inline=False)
+            embed.set_footer(text=f"vergeben:{auftrag.auftrag_id}")
+            await interaction.message.edit(embed=embed, view=None)
         await auftragswand_aktualisieren(self.kontext, interaction.guild)
+
+
+class AuftragsnavigationAnsicht(discord.ui.View):
+    def __init__(self, kontext: Anwendungskontext) -> None:
+        super().__init__(timeout=None)
+        self.kontext = kontext
+        auftrag = discord.ui.Button(label="Auftrag", style=discord.ButtonStyle.primary, custom_id="auftragswand:navigation:auftrag")
+        auftrag.callback = self._auftrag_öffnen
+        self.add_item(auftrag)
+        fablinge = discord.ui.Button(label="Fablinge", style=discord.ButtonStyle.primary, custom_id="auftragswand:navigation:fablinge")
+        fablinge.callback = self._fablinge_öffnen
+        self.add_item(fablinge)
+        inventar = discord.ui.Button(label="Inventar", style=discord.ButtonStyle.primary, custom_id="auftragswand:navigation:inventar")
+        inventar.callback = self._inventar_öffnen
+        self.add_item(inventar)
+
+    async def _auftrag_öffnen(self, interaction: discord.Interaction) -> None:
+        from fabelbund.discord.befehle.auftrag import AuftragAnsicht, auftragsziel_text
+
+        nutzer_id = str(interaction.user.id)
+        aktiver_auftrag = self.kontext.spiel.aktiver_auftrag(nutzer_id)
+        if aktiver_auftrag is None:
+            await interaction.response.send_message("Du hast gerade keinen aktiven Auftrag.", ephemeral=True)
+            return
+        auftrag = self.kontext.spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
+        fabelwesen = self.kontext.spiel.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
+        embed = auftrag_einbettung(aktiver_auftrag, auftrag, fabelwesen, self.kontext.spiel.auftrag_fablinge(aktiver_auftrag))
+        embed.add_field(name="Aufgabe", value=auftragsziel_text(auftrag.ziele), inline=False)
+        await interaction.response.send_message(embed=embed, view=AuftragAnsicht(self.kontext, nutzer_id), ephemeral=True)
+
+    async def _fablinge_öffnen(self, interaction: discord.Interaction) -> None:
+        from fabelbund.discord.ansichten.stall_ansicht import StallAnsicht, stallübersicht_einbettung
+
+        nutzer_id = str(interaction.user.id)
+        fabelwesen = self.kontext.spiel.sammlung(nutzer_id)
+        kapazität = self.kontext.spiel.stall_kapazität(nutzer_id)
+        await interaction.response.send_message(
+            embed=stallübersicht_einbettung(self.kontext.spiel, nutzer_id, fabelwesen, kapazität),
+            view=StallAnsicht(self.kontext.spiel, nutzer_id, fabelwesen, kapazität, kontext=self.kontext),
+            ephemeral=True,
+        )
+
+    async def _inventar_öffnen(self, interaction: discord.Interaction) -> None:
+        from fabelbund.discord.befehle.inventar import InventarAnsicht, inventar_einbettung
+
+        nutzer_id = str(interaction.user.id)
+        await interaction.response.send_message(
+            embed=inventar_einbettung(self.kontext, nutzer_id),
+            view=InventarAnsicht(self.kontext, nutzer_id),
+            ephemeral=True,
+        )
+
+
+class EinzelauftragAnsicht(discord.ui.View):
+    def __init__(self, kontext: Anwendungskontext, guild_id: str, auftrag_id: str) -> None:
+        super().__init__(timeout=None)
+        self.kontext = kontext
+        self.guild_id = guild_id
+        button = discord.ui.Button(
+            label="Auftrag annehmen",
+            style=discord.ButtonStyle.success,
+            custom_id=f"auftragswand:annehmen:{auftrag_id}",
+        )
+        button.callback = AuftragswandAnsicht(kontext, guild_id)._annehmen
+        self.add_item(button)
 
 
 class TutorialStartAnsicht(discord.ui.View):
@@ -340,8 +414,9 @@ async def auftragswand_erstellen_oder_aktualisieren(kontext: Anwendungskontext, 
     else:
         await einstieg_nachricht.edit(embed=einstieg_embed, view=TutorialEinstiegAnsicht(kontext))
 
-    embed = auftragswand_einbettung(kontext.spiel.öffentliche_aufträge())
-    view = AuftragswandAnsicht(kontext, str(guild.id))
+    öffentliche_aufträge = kontext.spiel.öffentliche_aufträge(limit=MAXIMALE_AUFTRAGSAUSHÄNGE)
+    embed = auftragswand_einbettung(öffentliche_aufträge)
+    view = AuftragsnavigationAnsicht(kontext)
     nachricht = None
     if konfiguration.auftragswand_nachricht_id:
         try:
@@ -357,6 +432,16 @@ async def auftragswand_erstellen_oder_aktualisieren(kontext: Anwendungskontext, 
     else:
         await nachricht.edit(embed=embed, view=view)
 
+    vorhandene_aushänge = await _auftragsaushang_ids_im_kanal(kanal)
+    for auftrag in öffentliche_aufträge:
+        if auftrag.auftrag_id in vorhandene_aushänge:
+            continue
+        await kanal.send(
+            embed=auftragsaushang_einbettung(auftrag),
+            view=EinzelauftragAnsicht(kontext, str(guild.id), auftrag.auftrag_id),
+        )
+        vorhandene_aushänge.add(auftrag.auftrag_id)
+
     kontext.server.speichern(
         konfiguration.model_copy(
             update={
@@ -366,6 +451,19 @@ async def auftragswand_erstellen_oder_aktualisieren(kontext: Anwendungskontext, 
         )
     )
     return nachricht
+
+
+async def _auftragsaushang_ids_im_kanal(kanal: discord.TextChannel) -> set[str]:
+    ids: set[str] = set()
+    bot_mitglied = kanal.guild.me
+    async for nachricht in kanal.history(limit=AUFTRAGSAUSHANG_SCAN_LIMIT):
+        if bot_mitglied is not None and nachricht.author.id != bot_mitglied.id:
+            continue
+        for embed in nachricht.embeds:
+            footer = embed.footer.text or ""
+            if footer.startswith("auftrag:"):
+                ids.add(footer.split(":", 1)[1])
+    return ids
 
 
 async def auftragswand_aktualisieren(kontext: Anwendungskontext, guild: discord.Guild | None) -> None:

@@ -5,7 +5,6 @@ from discord import app_commands
 from discord.ext import commands
 
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import fütterung_einbettung
 from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 
 
@@ -24,18 +23,7 @@ class InventarAnsicht(discord.ui.View):
         super().__init__(timeout=EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN)
         self.kontext = kontext
         self.nutzer_id = nutzer_id
-        inventar = kontext.spiel.inventar(nutzer_id)
-        for gegenstand_id, eintrag in inventar.items():
-            gegenstand = kontext.spiel.inhalte.gegenstände.get(gegenstand_id)
-            if gegenstand is None or gegenstand.kategorie != "futter":
-                continue
-            button = discord.ui.Button(
-                label=f"{gegenstand.name} geben ({inventar_anzahl(eintrag)})",
-                style=discord.ButtonStyle.success,
-                custom_id=f"inventar:futter:{gegenstand_id}",
-            )
-            button.callback = self._füttern_callback(gegenstand_id)
-            self.add_item(button)
+        self.add_item(self._navigation_button("Profil", "inventar:profil", self._profil_öffnen))
         self.add_item(self._navigation_button("Fablinge", "inventar:fablinge", self._fablinge_öffnen))
         self.add_item(self._navigation_button("Laden", "inventar:laden", self._laden_öffnen))
         self.add_item(self._navigation_button("Aufträge", "inventar:aufträge", self._aufträge_öffnen))
@@ -46,21 +34,18 @@ class InventarAnsicht(discord.ui.View):
         await interaction.response.send_message("Dieses Inventar gehört einem anderen Spieler.", ephemeral=True)
         return False
 
-    def _füttern_callback(self, gegenstand_id: str):
-        async def callback(interaction: discord.Interaction) -> None:
-            try:
-                ergebnis = self.kontext.spiel.futter_geben(self.nutzer_id, gegenstand_id)
-            except ValueError as fehler:
-                await interaction.response.send_message(str(fehler), ephemeral=True)
-                return
-            await interaction.response.edit_message(embed=fütterung_einbettung(ergebnis), view=InventarAnsicht(self.kontext, self.nutzer_id))
-
-        return callback
-
     def _navigation_button(self, label: str, custom_id: str, callback) -> discord.ui.Button:
         button = discord.ui.Button(label=label, style=discord.ButtonStyle.primary, custom_id=custom_id, row=4)
         button.callback = callback
         return button
+
+    async def _profil_öffnen(self, interaction: discord.Interaction) -> None:
+        from fabelbund.discord.befehle.profil import ProfilAnsicht, profil_einbettung_mit_inventar
+
+        await interaction.response.edit_message(
+            embed=profil_einbettung_mit_inventar(self.kontext, self.nutzer_id),
+            view=ProfilAnsicht(self.kontext, self.nutzer_id),
+        )
 
     async def _fablinge_öffnen(self, interaction: discord.Interaction) -> None:
         from fabelbund.discord.ansichten.stall_ansicht import StallAnsicht, stallübersicht_einbettung
@@ -99,7 +84,7 @@ def inventar_einbettung(kontext: Anwendungskontext, nutzer_id: str) -> discord.E
     inventar = kontext.spiel.inventar(nutzer_id)
     embed = discord.Embed(title="Inventar", color=discord.Color.green())
     if inventar:
-        embed.description = inventar_text(kontext, inventar)
+        embed.description = f"{inventar_text(kontext, inventar)}\n\nFutter wird von deinen Fablingen automatisch aus dem Vorrat genommen."
     else:
         embed.description = "Dein Inventar ist leer."
     return embed

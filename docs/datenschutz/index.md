@@ -20,7 +20,7 @@ Der Fabelbund verarbeitet nur Daten, die für den Spielbetrieb nötig sind. Dazu
 
 - Discord-Nutzer-ID
 - Discord-Server-ID, sofern serverbezogene Spielfunktionen genutzt werden
-- Spielprofil, Geldwerte, Rufwerte und Lizenzen
+- Spielprofil, Bundsiegelwerte, Rufwerte und Lizenzen
 - Fabelwesen-Daten, Aufträge, Inventare und Zustandswerte
 - Zeitpunkte von Aktionen, Abklingzeiten und Auftragsfortschritt
 - technische Fehler- und Betriebsdaten, soweit sie für Wartung und Sicherheit nötig sind

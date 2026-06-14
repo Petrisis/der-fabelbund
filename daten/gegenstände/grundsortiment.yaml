@@ -1,4 +1,13 @@
 gegenstände:
+  basisfutter:
+    name: "Basisfutter"
+    kategorie: "futter"
+    preis: 6
+    beschreibung: "Schlichtes neutrales Futter, das fast alle Fablinge zuverlässig fressen."
+    effekte:
+      energie: 1
+    markierungen: ["futter", "neutral", "normal"]
+
   apfelstücke:
     name: "Apfelstücke"
     kategorie: "futter"

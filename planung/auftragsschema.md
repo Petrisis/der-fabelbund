@@ -2,6 +2,16 @@
 
 Dieses Schema gilt für alle künftigen Aufträge, Tutorialaufgaben und normalen Aushänge.
 
+## Umsetzungsstatus
+
+Das Schema ist die Zielarchitektur. Neue Inhalte sollen ihm direkt folgen. Ältere oder schnell gewachsene Inhalte können noch Übergangsfelder wie `abgeschlossene_aktion` enthalten und müssen schrittweise migriert werden.
+
+Eine Abgabe darf nur dann nicht zustandsbasiert sein, wenn der geprüfte Punkt selbst das Lern- oder Auftragsziel ist. Zulässige Ausnahmen sind aktuell:
+
+- eine tatsächliche Betreuungsdauer
+- eine gesetzte Futterpräferenz
+- spätere explizite Sondermechaniken
+
 ## Grundsatz
 
 Aufträge prüfen bei der Abgabe Zielzustände, nicht absolvierte Aktionen.
@@ -27,6 +37,8 @@ Aufträge dürfen direkt prüfen:
 - Auswahlentscheidungen wie passende Futterpräferenz, wenn der Auftrag Beobachtung oder Zuordnung trainiert
 
 Abgeschlossene Aktionen dürfen nicht als normale Abgabebedingung verwendet werden. Felder wie `abgeschlossene_aktion` oder `abgeschlossene_aktionen` sind nur für alte Inhalte oder technische Übergänge erlaubt und sollen nicht für neue Aufträge verwendet werden.
+
+Wenn ein Auftrag eine bestimmte Aktion empfiehlt, muss trotzdem ein passender Zielzustand geprüft werden. Beispiel: Ein Tutorial darf `Angeleitete Ruhe` nennen, die Abgabe prüft aber Energie und Stress.
 
 ## Mehrere Fablinge
 

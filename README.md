@@ -8,30 +8,39 @@ Spieler übernehmen die Rolle von Betreuern: Sie pflegen Fabelwesen, nehmen Auft
 
 ## Status
 
-Früher MVP. Der spielbare Kern ist bewusst klein gehalten, damit Datenmodell, Persistenz und Discord-Interaktion sauber wachsen können.
+Tutorial-MVP. Der aktuelle Stand ist auf einen spielbaren Einstieg, eine stabile Testumgebung und saubere Grundlagen für weitere Aufträge ausgerichtet.
 
 Aktuell umgesetzt:
 
-- Discord-Bot-Start mit Slash-Befehlen
-- YAML-Inhaltsdaten für Arten, Pflegeaktionen und Aufträge
-- Pydantic-Validierung der YAML-Daten
+- Discord-Bot-Start mit serverbezogener Slash-Command-Synchronisierung
+- öffentliche Auftragswand mit dauerhaftem Tutorial-Einstieg
+- Pflicht-Tutorial mit Probe-Fablingen, Auftragsabgabe und Starterwahl
+- Chronik- und Auftragskanäle mit automatischer Servereinrichtung
+- YAML-Inhaltsdaten für Arten, Aktionen, Gegenstände und Aufträge
+- Pydantic-Validierung der Inhaltsdaten
 - SQLite-Persistenz
-- Spielerprofil mit Geld, Ruf und Lizenzen
-- Starter-Fabelwesen
-- `/profil`, `/sammlung`, `/auftrag`, `/fablinge`
-- einfache Pflegeaktion per Button
-- einfacher Pflegeauftrag mit Geld- und Rufbelohnung
+- Spielerprofil mit Geld, Ruf, Lizenzen, Ställen und Tutorialstatus
+- Fabling- und Stallübersicht über `/fablinge`
+- Fabling-Detailansicht mit Stallpriorität, Futterpräferenz und Aktivitätsauswahl
+- Pflege, Ruhe, Spiel, Training und Checks als erste Betreuungsaktivitäten
+- aktive und passive Aktivitäten mit Abholen, Abbrechen und Zeitfaktor
+- Laden, Inventar, Futter und erste Ausrüstung
+- zustandsbasierte Auftragsziele als Zielarchitektur
 - GitHub-Pages-Vorbereitung für Rechtstexte
+- Windows-Skripte zum Starten und Beenden des Testbots
 
-Noch nicht umgesetzt:
+Noch nicht umgesetzt oder noch nicht final:
 
+- vollständige Migration aller Auftragsprüfungen auf Zielzustände
+- systematische NPC-Hinweise bei nicht erfüllten Aufträgen
+- freie Auftragsauswahl nach dem Tutorial
 - Wettbewerbe
 - Zucht
 - Eier und Vererbung
 - Vertragslogik für fremde Fabelwesen
-- Sportwettkämpfe
 - Handel und Markt
 - Events und Saisons
+- dauerhaftes Grundbedürfnis- und Lieblingsfutter-System
 
 ## Lore-Sprache
 
@@ -49,7 +58,9 @@ fabelbund/
 fabelbund_bot/   Bot-Start und Konfiguration
 daten/           YAML-Inhalte
 docs/            GitHub-Pages-Quelle
+planung/         Balancing, Schemas und Projektstand
 rechtliches/     Rechtliche Markdown-Entwürfe
+scripts/         lokale Betriebs- und Testskripte
 tests/           Automatisierte Tests
 ```
 
@@ -83,6 +94,14 @@ Alternativ kann der Bot unter Windows manuell über die Projektskripte gestartet
 
 Wenn bereits eine Bot-Instanz läuft, startet `start-bot.ps1` keine zweite Instanz. `stop-bot.ps1` beendet alle laufenden `fabelbund_bot.bot`-Prozesse. Unter Windows können dabei ein Hauptprozess und ein zugehöriger Python-Kindprozess angezeigt werden; das ist kein zweiter Bot.
 
+Für einen vollständigen Reset der Spielerdaten auf dem Testserver:
+
+```powershell
+.\scripts\spieler-reset.ps1 -Bestätigen
+```
+
+Das Skript löscht Spieler, Fablinge, aktive Aufträge und Aktivitäten. Server-Konfigurationen bleiben erhalten.
+
 Für die erste Befehlsregistrierung während der Entwicklung:
 
 ```powershell
@@ -99,7 +118,16 @@ Für schnelle Tests kann `FABELBUND_ZEITFAKTOR` gesetzt werden. Der Faktor wirkt
 
 ```powershell
 python -m pytest
+python -m compileall fabelbund fabelbund_bot tests
 ```
+
+## Planung
+
+- [TODO.md](TODO.md) ist die laufende Arbeitsliste.
+- [planung/projektstand.md](planung/projektstand.md) hält Projektregeln, aktuellen Stand und nächste Blöcke fest.
+- [planung/stat-übersicht.md](planung/stat-übersicht.md) beschreibt interne Werte und Balancing-Grundlagen.
+- [planung/auftragsschema.md](planung/auftragsschema.md) ist die verbindliche Regel für neue Aufträge.
+- [docs/issue-workflow.md](docs/issue-workflow.md) beschreibt, wie GitHub-Issues bearbeitet und geschlossen werden.
 
 ## GitHub Pages
 
@@ -127,4 +155,4 @@ Empfohlener Ablauf:
 - jede Änderung wird mit Tests abgesichert
 - Inhalte bleiben datengetrieben in YAML
 - persistente Spielstände gehören in die Datenbank, nicht in YAML
-
+- neue Aufträge prüfen Zielzustände, nicht bloß abgeschlossene Aktionen

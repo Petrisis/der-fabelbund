@@ -335,5 +335,10 @@ class StarterWahlAnsicht(discord.ui.View):
                 color=discord.Color.green(),
             )
             await interaction.response.edit_message(embed=embed, view=None)
+            await chronik_senden(
+                self.kontext,
+                interaction.guild,
+                f"{interaction.user.mention} ist jetzt offizielles Mitglied des Fabelbunds und beginnt mit **{starter.spitzname}**.",
+            )
 
         return callback

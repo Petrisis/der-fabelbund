@@ -263,8 +263,11 @@ class StallAnsicht(discord.ui.View):
             if aktion.gesperrt or aktion.kategorie != kategorie:
                 continue
             dauer_sekunden = self.spiel.aktionsdauer_sekunden(self.nutzer_id, aktion.aktion_id)
+            label = f"{aktion.name} ({dauer_kurz(dauer_sekunden)})"
+            if aktion.kosten:
+                label = f"{aktion.name} ({dauer_kurz(dauer_sekunden)}, {aktion.kosten} Credits)"
             button = discord.ui.Button(
-                label=f"{aktion.name} ({dauer_kurz(dauer_sekunden)})",
+                label=label,
                 style=discord.ButtonStyle.secondary,
                 custom_id=f"stall:aktion:{aktion.aktion_id}",
                 row=2,

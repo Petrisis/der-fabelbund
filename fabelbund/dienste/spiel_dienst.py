@@ -24,6 +24,8 @@ TUTORIAL_DAUER_OVERRIDES_SEKUNDEN = {
     ("tutorial_pflege_002", "sanfte_fellpflege"): 120,
     ("tutorial_aktiv_passiv_003", "kontrollierte_ruhe"): 180,
     ("tutorial_aktiv_passiv_003", "gemeinsames_spiel"): 180,
+    ("tutorial_betreuung_005", "gemeinsames_spiel"): 120,
+    ("tutorial_betreuung_005", "kurze_pause"): 120,
 }
 
 
@@ -710,7 +712,7 @@ class SpielDienst:
         return self.aktivitäten.laufende_für_fabelwesen_holen(fabelwesen_id)
 
     def pflegeaktivität_starten(self, nutzer_id: str, aktion_id: str, fabelwesen_id: str | None = None) -> Aktivität:
-        self.stelle_spieler_sicher(nutzer_id)
+        spieler = self.stelle_spieler_sicher(nutzer_id)
         if fabelwesen_id is None:
             aktiver_auftrag = self.pflegeauftrag_starten(nutzer_id)
             fabelwesen_id = aktiver_auftrag.fabelwesen_id
@@ -721,7 +723,7 @@ class SpielDienst:
         aktion = self.inhalte.pflegeaktionen[aktion_id]
         if aktion.gesperrt:
             raise ValueError("Diese Aktion ist noch nicht freigeschaltet.")
-        if aktion.benötigter_gegenstand and self._inventar_anzahl(self.stelle_spieler_sicher(nutzer_id).inventar.get(aktion.benötigter_gegenstand)) <= 0:
+        if aktion.benötigter_gegenstand and self._inventar_anzahl(spieler.inventar.get(aktion.benötigter_gegenstand)) <= 0:
             gegenstand = self.inhalte.gegenstände.get(aktion.benötigter_gegenstand)
             name = gegenstand.name if gegenstand else aktion.benötigter_gegenstand
             raise ValueError(f"Für diese Aktion brauchst du: {name}.")
@@ -733,6 +735,12 @@ class SpielDienst:
         laufend = self.aktivitäten.laufende_für_fabelwesen_holen(fabelwesen.id)
         if laufend is not None:
             return laufend
+        if aktion.kosten:
+            if spieler.geld < aktion.kosten:
+                raise ValueError("Dafür hast du nicht genug Geld.")
+            aktualisierter_spieler = spieler.model_copy(deep=True)
+            aktualisierter_spieler.geld -= aktion.kosten
+            self.spieler.speichern(aktualisierter_spieler)
 
         jetzt = datetime.now(timezone.utc)
         dauer_sekunden = self._aktionsdauer_für_spieler(nutzer_id, aktion_id, aktion.dauer_sekunden)

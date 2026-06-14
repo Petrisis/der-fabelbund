@@ -58,7 +58,7 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [x] Ruhe abbrechen senkt Vertrauen und Sicherheit
   - [x] Schlaf abbrechen stärker
   - [x] Training abbrechen gibt Belastung, aber wenig Fortschritt
-- [ ] Doktorbesuch freischalten und Kostenmodell ergänzen
+- [x] Doktorbesuch freischalten und Kostenmodell ergänzen
 - [x] Stall- und Betreuungsansicht zusammenführen
   - [x] `/stall` und `/betreuung` durch `/fablinge` ersetzen
   - [x] Fabling-Auswahl für bis zu 25 Fablinge
@@ -87,7 +87,7 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [ ] jeden Auftrag einmal absichtlich zu früh abgeben
   - [ ] prüfen, ob NPC-Hinweis verständlich sagt, was noch nicht passt
   - [ ] prüfen, ob Buttons an jeder Stelle zum nächsten sinnvollen Menü führen
-  - [ ] prüfen, ob der Spieler nach dem Schließen einer ephemeren Ansicht wieder ins Tutorial zurückfindet
+  - [x] prüfen, ob der Spieler nach dem Schließen einer ephemeren Ansicht wieder ins Tutorial zurückfindet
 - [x] Erster Tutorialauftrag: Ruhe herstellen und Auftrag abgeben
 - [x] Weitere Tutorialschritte ergänzen
   - [x] Pflege und Ausrüstung
@@ -106,8 +106,8 @@ Diese Liste ist unser gemeinsamer Arbeitsplan. Abgeschlossene Punkte bleiben kur
   - [ ] Tests ergänzen, die fehlschlagen, wenn Tutorialaufträge wieder Aktionsabschluss prüfen
 - [ ] Tutorialzeiten spaßfähig halten
   - [ ] alle Tutorialaktivitäten auf ca. 2-5 Minuten Spielzeit bringen
-  - [ ] Betreuungszeit-Auftrag auf 2-5 Minuten Gesamtzeit senken
-  - [ ] keine 30-Minuten-Bedingung in der Einführung verwenden
+  - [x] Betreuungszeit-Auftrag auf 2-5 Minuten Gesamtzeit senken
+  - [x] keine 30-Minuten-Bedingung in der Einführung verwenden
   - [ ] prüfen, ob Zeitfaktor 5x im Testserver daraus angenehme reale Wartezeiten macht
 - [ ] Tutorialtexte auf erwachsenen, knappen Stil prüfen
   - [ ] keine Slash-Command-Verweise

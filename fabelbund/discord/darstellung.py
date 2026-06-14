@@ -35,7 +35,7 @@ def tutorial_hinweis_text(spieler: SpielerProfil) -> str:
         "stall_ausbauen": "Gehe zu deinen Fablingen und erweitere deinen Stall.",
         "aktiv_passiv": "Nimm den nächsten Auftrag an und kombiniere passive Ruhe mit aktiver Betreuung.",
         "futterauftrag": "Nimm den nächsten Auftrag an und setze die passende Futterpräferenz.",
-        "betreuungszeit": "Nimm den nächsten Auftrag an und betreue den Fabling über längere Zeit.",
+        "betreuungszeit": "Nimm den nächsten Auftrag an und betreue den Fabling einige Minuten.",
         "wettbewerb_vorbereitung": "Nimm den nächsten Auftrag an und bereite einen Fabling auf einen Wettbewerb vor.",
         "starter_wählen": "Wähle deinen ersten eigenen Fabling.",
     }.get(spieler.tutorialschritt, "")

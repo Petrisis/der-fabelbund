@@ -5,7 +5,7 @@ import logging
 import discord
 
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import auftrag_einbettung, auftragswand_einbettung
+from fabelbund.discord.darstellung import auftrag_einbettung, auftragswand_einbettung, tutorial_hinweis_text
 
 
 log = logging.getLogger(__name__)
@@ -24,6 +24,12 @@ class TutorialEinstiegAnsicht(discord.ui.View):
         self.add_item(einstieg)
 
     async def _einstieg(self, interaction: discord.Interaction) -> None:
+        nutzer_id = str(interaction.user.id)
+        spieler = self.kontext.spiel.stelle_spieler_sicher(nutzer_id)
+        if spieler.tutorialstatus != "neu":
+            await tutorial_fortsetzen_senden(interaction, self.kontext, nutzer_id)
+            return
+
         embed = discord.Embed(
             title="Neu beim Fabelbund",
             description=(
@@ -38,6 +44,96 @@ class TutorialEinstiegAnsicht(discord.ui.View):
             view=TutorialStartAnsicht(self.kontext),
             ephemeral=True,
         )
+
+
+async def tutorial_fortsetzen_senden(
+    interaction: discord.Interaction,
+    kontext: Anwendungskontext,
+    nutzer_id: str,
+) -> None:
+    spieler = kontext.spiel.stelle_spieler_sicher(nutzer_id)
+    aktiver_auftrag = kontext.spiel.aktiver_auftrag(nutzer_id)
+    if aktiver_auftrag is not None:
+        from fabelbund.discord.befehle.auftrag import AuftragAnsicht, auftragsziel_text
+
+        auftrag = kontext.spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
+        fabelwesen = kontext.spiel.fabelwesen.holen(aktiver_auftrag.fabelwesen_id)
+        embed = auftrag_einbettung(aktiver_auftrag, auftrag, fabelwesen, kontext.spiel.auftrag_fablinge(aktiver_auftrag))
+        embed.add_field(name="Aufgabe", value=auftragsziel_text(auftrag.ziele), inline=False)
+        await interaction.response.send_message(
+            embed=embed,
+            view=AuftragAnsicht(kontext, nutzer_id),
+            ephemeral=True,
+        )
+        return
+
+    if spieler.tutorialstatus == "abgeschlossen" or spieler.offizielles_mitglied:
+        embed = discord.Embed(
+            title="Einführung abgeschlossen",
+            description="Du bist offizielles Mitglied. Öffentliche Aufträge findest du an der Auftragswand.",
+            color=discord.Color.green(),
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+
+    if spieler.tutorialschritt == "ruhe_starten":
+        embed = discord.Embed(
+            title="Einführung fortsetzen",
+            description="Mira wartet mit deinem ersten Probeauftrag. Wenn du bereit bist, nimm ihn direkt hier an.",
+            color=discord.Color.green(),
+        )
+        await interaction.response.send_message(
+            embed=embed,
+            view=TutorialErsterAuftragAnsicht(kontext, nutzer_id),
+            ephemeral=True,
+        )
+        return
+
+    if spieler.tutorialschritt == "stall_ausbauen":
+        from fabelbund.discord.ansichten.stall_ansicht import StallAnsicht, stallübersicht_einbettung
+
+        fabelwesen = kontext.spiel.sammlung(nutzer_id)
+        kapazität = kontext.spiel.stall_kapazität(nutzer_id)
+        embed = stallübersicht_einbettung(kontext.spiel, nutzer_id, fabelwesen, kapazität)
+        embed.description = (
+            "Mira sagt: „Wenn du später mehrere Fablinge gleichzeitig betreust, brauchst du genug Stallplätze. "
+            "Baue einen weiteren neutralen Platz aus.“"
+        )
+        await interaction.response.send_message(
+            embed=embed,
+            view=StallAnsicht(kontext.spiel, nutzer_id, fabelwesen, kapazität, kontext=kontext),
+            ephemeral=True,
+        )
+        return
+
+    if spieler.tutorialschritt == "starter_wählen":
+        from fabelbund.discord.befehle.auftrag import StarterWahlAnsicht
+
+        embed = discord.Embed(
+            title="Starterwahl",
+            description="Mira, Brann und Jonna bieten dir je einen Fabling aus ihrer Zucht an.",
+            color=discord.Color.green(),
+        )
+        await interaction.response.send_message(
+            embed=embed,
+            view=StarterWahlAnsicht(kontext, nutzer_id),
+            ephemeral=True,
+        )
+        return
+
+    from fabelbund.discord.befehle.auftrag import NächsterAuftragAnsicht
+
+    hinweis = tutorial_hinweis_text(spieler) or "Der nächste Probeauftrag ist bereit."
+    embed = discord.Embed(
+        title="Einführung fortsetzen",
+        description=hinweis,
+        color=discord.Color.green(),
+    )
+    await interaction.response.send_message(
+        embed=embed,
+        view=NächsterAuftragAnsicht(kontext, nutzer_id),
+        ephemeral=True,
+    )
 
 
 class AuftragswandAnsicht(discord.ui.View):

@@ -147,7 +147,7 @@ aufträge:
     voraussetzungen:
       tutorialschritt: "betreuungszeit"
     ziele:
-      betreuungsdauer_sekunden: 1800
+      betreuungsdauer_sekunden: 240
       vertrauen_mindestens: 41
     belohnungen:
       geld: 160

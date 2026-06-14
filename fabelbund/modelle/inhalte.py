@@ -37,6 +37,7 @@ class PflegeaktionDefinition(BaseModel):
     sport_effekte: dict[str, int] = Field(default_factory=dict)
     abbruch_effekte: dict[str, int] = Field(default_factory=dict)
     dauer_sekunden: int = Field(default=180, ge=0)
+    kosten: int = Field(default=0, ge=0)
     braucht_spieler: bool = True
     abbrechbar: bool = True
     gesperrt: bool = False

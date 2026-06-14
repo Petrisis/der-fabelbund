@@ -232,7 +232,7 @@ def auftragsziel_text(ziele: dict[str, object]) -> str:
     if ziele.get("fabling_ziele"):
         return "Miras Quellfink soll ausgeruhter und ruhiger wirken. Miras Gluthase soll zutraulicher und merklich besser gestimmt wirken."
     if ziele.get("betreuungsdauer_sekunden") and ziele.get("vertrauen_mindestens"):
-        return "Baue Vertrauen auf und erreiche insgesamt 30 Minuten Betreuungszeit. Sinnvolle Pausen zählen dazu."
+        return "Baue Vertrauen auf und erreiche insgesamt 4 Minuten Betreuungszeit. Sinnvolle Pausen zählen dazu."
     if ziele.get("wettbewerb_mindestens"):
         return "Bereite den Fabling so vor, dass sein Ausdruck für den Probewettbewerb reicht."
     if ziele.get("abgeschlossene_aktionen"):
@@ -240,7 +240,7 @@ def auftragsziel_text(ziele: dict[str, object]) -> str:
         if aktionen == ["kontrollierte_ruhe", "gemeinsames_spiel"]:
             return "Quellfink: Kontrollierte Ruhe. Gluthase: Gemeinsames Spiel."
         if aktionen == ["gemeinsames_spiel", "kurze_pause"]:
-            return "Gemeinsames Spiel und Kurze Pause. Bedingung: insgesamt 30 Minuten Betreuungszeit."
+            return "Gemeinsames Spiel und Kurze Pause. Bedingung: insgesamt 4 Minuten Betreuungszeit."
         return "Erfülle die genannten Betreuungen bei den zugeteilten Fablingen."
     if ziele.get("gefüttert"):
         return "Gib dem zugeteilten Fabling passendes Futter und gib den Auftrag danach ab."

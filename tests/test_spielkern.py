@@ -112,6 +112,18 @@ def inhalts_katalog() -> InhaltsKatalog:
             "effekte": {},
         }
     )
+    doktorbesuch = PflegeaktionDefinition.model_validate(
+        {
+            "aktion_id": "doktorbesuch",
+            "name": "Doktorbesuch",
+            "kategorie": "check",
+            "dauer_sekunden": 900,
+            "kosten": 60,
+            "braucht_spieler": False,
+            "abbrechbar": False,
+            "effekte": {},
+        }
+    )
     auftrag = AuftragDefinition.model_validate(
         {
             "auftrag_id": "pflege_einfach_001",
@@ -223,7 +235,7 @@ def inhalts_katalog() -> InhaltsKatalog:
                 },
             ],
             "ziele": {
-                "betreuungsdauer_sekunden": 1800,
+                "betreuungsdauer_sekunden": 240,
                 "vertrauen_mindestens": 41,
             },
             "belohnungen": {"geld": 160, "ruf": {"pflege": 3, "zuverlässigkeit": 4}},
@@ -269,6 +281,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "kurze_pause": pause,
             "ausdruck_üben": training,
             "kurzer_blick": check,
+            "doktorbesuch": doktorbesuch,
         },
         aufträge={
             "pflege_einfach_001": auftrag,
@@ -551,6 +564,40 @@ class SpielDienstTests(unittest.TestCase):
         self.assertGreater(ergebnis.fabelwesen.wettbewerbswerte["ausdruck"], vorher)
         self.assertEqual(ergebnis.wettbewerb_änderungen["ausdruck"], 5)
 
+    def test_doktorbesuch_kostet_geld_und_bucht_nicht_doppelt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            vorher = spiel.spieler.holen("123")
+            assert vorher is not None
+
+            erste_aktivität = spiel.pflegeaktivität_starten("123", "doktorbesuch")
+            zweite_aktivität = spiel.pflegeaktivität_starten("123", "doktorbesuch")
+            nachher = spiel.spieler.holen("123")
+
+        self.assertEqual(erste_aktivität.id, zweite_aktivität.id)
+        self.assertFalse(erste_aktivität.abbrechbar)
+        self.assertFalse(erste_aktivität.braucht_spieler)
+        self.assertIsNotNone(nachher)
+        assert nachher is not None
+        self.assertEqual(nachher.geld, vorher.geld - 60)
+
+    def test_doktorbesuch_braucht_genug_geld(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            spieler = spiel.spieler.holen("123")
+            assert spieler is not None
+            spiel.spieler.speichern(spieler.model_copy(update={"geld": 20}))
+            fehlertext = None
+
+            try:
+                spiel.pflegeaktivität_starten("123", "doktorbesuch")
+            except ValueError as fehler:
+                fehlertext = str(fehler)
+
+        self.assertEqual(fehlertext, "Dafür hast du nicht genug Geld.")
+
     def test_laden_und_futter_verändern_inventar_und_fabling(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
@@ -617,6 +664,22 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(aktiv_passiv.auftrag_id, "tutorial_aktiv_passiv_003")
         self.assertEqual(round((ruhe.endet_am - ruhe.gestartet_am).total_seconds()), 180)
         self.assertEqual(round((spiel_aktivität.endet_am - spiel_aktivität.gestartet_am).total_seconds()), 180)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            spieler = spiel.tutorial_starten("123").model_copy(
+                update={"tutorialschritt": "betreuungszeit"}
+            )
+            spiel.spieler.speichern(spieler)
+            betreuungsauftrag = spiel.pflegeauftrag_starten("123")
+            fabling = spiel.sammlung("123")[0]
+            spiel_aktivität = spiel.pflegeaktivität_starten("123", "gemeinsames_spiel", fabling.id)
+            self.schließe_aktivität_ab(spiel, spiel_aktivität)
+            pause = spiel.pflegeaktivität_starten("123", "kurze_pause", fabling.id)
+
+        self.assertEqual(betreuungsauftrag.auftrag_id, "tutorial_betreuung_005")
+        self.assertEqual(round((spiel_aktivität.endet_am - spiel_aktivität.gestartet_am).total_seconds()), 120)
+        self.assertEqual(round((pause.endet_am - pause.gestartet_am).total_seconds()), 120)
 
     def test_tutorial_führt_bis_zur_offiziellen_mitgliedschaft(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

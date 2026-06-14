@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from pathlib import Path
+import sys
 
 import discord
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.auftragswand import auftragswand_erstellen_oder_aktualisieren

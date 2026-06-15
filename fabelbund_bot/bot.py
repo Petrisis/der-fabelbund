@@ -14,6 +14,7 @@ from fabelbund.discord.befehle.laden import LadenBefehle
 from fabelbund.discord.befehle.profil import ProfilBefehle
 from fabelbund.discord.befehle.sammlung import SammlungBefehle
 from fabelbund.discord.befehle.stall import StallBefehle
+from fabelbund.discord.betriebsstatus import betriebsstatus_senden
 from fabelbund.discord.eventmarkt import eventmarkt_ansichten, eventmarkt_aktualisieren
 from fabelbund.discord.server_einrichtung import ServerEinrichtungDienst, guild_ids_für_nachholeinrichtung
 from fabelbund_bot.konfiguration import lade_konfiguration
@@ -71,6 +72,7 @@ class FabelbundBot(commands.Bot):
             else:
                 await auftragswand_aktualisieren(self.kontext, guild)
                 await eventmarkt_aktualisieren(self.kontext, guild)
+            await betriebsstatus_senden(self.kontext, guild, "Der Fabelbund ist wieder erreichbar.")
         if self.auftragswand_task is None or self.auftragswand_task.done():
             self.auftragswand_task = asyncio.create_task(self._auftragswand_regelmäßig_aktualisieren())
         if self.eventmarkt_task is None or self.eventmarkt_task.done():

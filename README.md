@@ -86,10 +86,16 @@ Alternativ kann der Bot unter Windows manuell über die Projektskripte gestartet
 .\scripts\stop-bot.ps1
 ```
 
-`start-bot.ps1` startet den Bot im Hintergrund und schreibt nach `bot.log` und `bot.err`. Im aktuellen Entwicklungsstand setzt das Skript automatisch `FABELBUND_BEFEHLE_SYNCHRONISIEREN=1` und `FABELBUND_ZEITFAKTOR=10.0`, damit der Bot auf dem konfigurierten Testserver mit zehnfachem Spieltempo läuft. Für einen sichtbaren Vordergrundstart:
+`start-bot.ps1` startet den Bot im Hintergrund und schreibt nach `bot.log` und `bot.err`. Das Skript setzt automatisch `FABELBUND_BEFEHLE_SYNCHRONISIEREN=1` und startet standardmäßig mit normalem Spieltempo (`1.0x`). Für einen sichtbaren Vordergrundstart:
 
 ```powershell
 .\scripts\start-bot.ps1 -Vordergrund
+```
+
+Für gezielte Tests kann ein anderer Zeitfaktor angegeben werden:
+
+```powershell
+.\scripts\start-bot.ps1 -Zeitfaktor 10.0
 ```
 
 Wenn bereits eine Bot-Instanz läuft, startet `start-bot.ps1` keine zweite Instanz. `stop-bot.ps1` beendet alle laufenden `fabelbund_bot.bot`-Prozesse. Unter Windows können dabei ein Hauptprozess und ein zugehöriger Python-Kindprozess angezeigt werden; das ist kein zweiter Bot.

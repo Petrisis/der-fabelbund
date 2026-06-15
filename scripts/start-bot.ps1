@@ -1,5 +1,6 @@
 param(
-    [switch]$Vordergrund
+    [switch]$Vordergrund,
+    [double]$Zeitfaktor = 1.0
 )
 
 $FehlerAktionVorher = $ErrorActionPreference
@@ -37,7 +38,7 @@ try {
     if ($Vordergrund) {
         Set-Location $Projektpfad
         $env:FABELBUND_BEFEHLE_SYNCHRONISIEREN = "1"
-        $env:FABELBUND_ZEITFAKTOR = "10.0"
+        $env:FABELBUND_ZEITFAKTOR = [string]$Zeitfaktor
         & $Python -m fabelbund_bot.bot
         exit $LASTEXITCODE
     }
@@ -45,7 +46,7 @@ try {
     $AusgabeLog = Join-Path $Projektpfad "bot.log"
     $FehlerLog = Join-Path $Projektpfad "bot.err"
     $env:FABELBUND_BEFEHLE_SYNCHRONISIEREN = "1"
-    $env:FABELBUND_ZEITFAKTOR = "10.0"
+    $env:FABELBUND_ZEITFAKTOR = [string]$Zeitfaktor
     Start-Process -FilePath $Python `
         -ArgumentList "-m fabelbund_bot.bot" `
         -WorkingDirectory $Projektpfad `
@@ -53,7 +54,7 @@ try {
         -RedirectStandardOutput $AusgabeLog `
         -RedirectStandardError $FehlerLog
 
-    Write-Host "Bot gestartet: Testserver, Zeitfaktor 10.0x. Logs: bot.log, bot.err"
+    Write-Host "Bot gestartet: Zeitfaktor $($Zeitfaktor)x. Logs: bot.log, bot.err"
 }
 finally {
     $ErrorActionPreference = $FehlerAktionVorher

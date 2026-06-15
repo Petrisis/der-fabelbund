@@ -13,6 +13,14 @@ try {
         exit 0
     }
 
+    $Projektpfad = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    $Python = Join-Path $Projektpfad ".venv\Scripts\python.exe"
+    if (-not (Test-Path $Python)) {
+        $Python = "python"
+    }
+    $StatusProgramm = Join-Path $Projektpfad "scripts\betriebsstatus_senden.py"
+    & $Python $StatusProgramm "Der Fabelbund geht jetzt offline."
+
     $AlleIds = @($Prozesse | ForEach-Object { $_.ProcessId })
     $HauptIds = @(
         $Prozesse |

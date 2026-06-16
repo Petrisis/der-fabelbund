@@ -25,6 +25,8 @@ class AuftragDienst:
             and self._mindestens(fabelwesen, "stimmung", ziele.get("stimmung_mindestens"))
             and self._mindestens(fabelwesen, "energie", ziele.get("energie_mindestens"))
             and self._mindestens(fabelwesen, "vertrauen", ziele.get("vertrauen_mindestens"))
+            and self._mindestens(fabelwesen, "sicherheit", ziele.get("sicherheit_mindestens"))
+            and self._mindestens(fabelwesen, "sättigung", ziele.get("sättigung_mindestens"))
             and self._höchstens(fabelwesen, "stress", ziele.get("stress_höchstens"))
             and self._mindestens(fabelwesen, "fellpflege", ziele.get("fellpflege_mindestens"))
             and self._aktion_abgeschlossen(fabelwesen, ziele.get("abgeschlossene_aktion"))
@@ -181,6 +183,7 @@ class AuftragDienst:
             "energie_mindestens": ("zustand", "energie", "mindestens"),
             "vertrauen_mindestens": ("zustand", "vertrauen", "mindestens"),
             "sicherheit_mindestens": ("zustand", "sicherheit", "mindestens"),
+            "sättigung_mindestens": ("zustand", "sättigung", "mindestens"),
             "fellpflege_mindestens": ("zustand", "fellpflege", "mindestens"),
             "stress_höchstens": ("zustand", "stress", "höchstens"),
         }

@@ -78,6 +78,38 @@ Beispielton:
 
 > „Futter ist nicht nur Vorrat. Manche Fablinge nehmen bestimmtes Futter bereitwilliger an. Beobachte, was ihnen liegt, aber rechne nicht damit, dass Vorliebe Nährwert ersetzt.“
 
+### Tamo
+
+Tamo ist Stallwart und arbeitet knapp, ruhig und sehr zuverlässig. Er achtet auf Sicherheit, saubere Wiederholung und darauf, dass ein Fabling nicht durch Tempo oder Druck verloren geht.
+
+Beispielton:
+
+> „Ein Fabling, der jeden Schritt prüft, braucht keine Ansprache. Er braucht eine Umgebung, die jedes Mal gleich verlässlich bleibt.“
+
+### Liora
+
+Liora kommt aus dem Wettbewerbsbereich. Sie ist präzise, beobachtet Haltung und Wirkung sehr genau und unterscheidet klar zwischen echter Präsenz und bloßer Aufregung.
+
+Beispielton:
+
+> „Ein guter Auftritt beginnt nicht im großen Moment. Er beginnt dort, wo eine Übung sauber endet und der Fabling danach noch bei dir bleibt.“
+
+### Anke
+
+Anke betreut vor allem sensible Wasser- und Dämmerungs-Fablinge. Sie spricht leise, fachlich und geduldig; ihr Schwerpunkt liegt auf Rhythmus, Umgebung und Überreizung.
+
+Beispielton:
+
+> „Manche Fablinge verweigern nicht. Sie sortieren zu viel auf einmal. Nimm Lärm heraus, dann siehst du, was sie wirklich verstanden haben.“
+
+### Edda
+
+Edda ist Züchterin und Versorgerin mit Blick für Vorrat, Pflege und körperliche Verfassung. Sie wirkt warm, aber nicht weich; Mangel, Unruhe und schlechte Vorbereitung benennt sie direkt.
+
+Beispielton:
+
+> „Ein leerer Fabling arbeitet nicht schlechter, weil er stur ist. Er spart Kraft. Erst Versorgung, dann Anspruch.“
+
 Weitere NPCs dürfen später regionale Sprache, Fachgebiet oder persönliche Eigenheiten haben, sollen aber weiterhin klar und erwachsen formulieren.
 
 ## Statussprache

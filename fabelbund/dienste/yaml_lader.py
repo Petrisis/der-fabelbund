@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -46,13 +47,71 @@ class YamlLader:
         roh = self._lies_yaml(pfad)
         aufträge: dict[str, AuftragDefinition] = {}
         for nutzlast in roh.get("aufträge", []):
-            definition = AuftragDefinition.model_validate(nutzlast)
-            if definition.auftrag_id in aufträge:
-                raise ValueError(f"Doppelte auftrag_id: {definition.auftrag_id}")
-            aufträge[definition.auftrag_id] = definition
+            for variante in self._auftragsvarianten(nutzlast):
+                definition = AuftragDefinition.model_validate(variante)
+                if definition.auftrag_id in aufträge:
+                    raise ValueError(f"Doppelte auftrag_id: {definition.auftrag_id}")
+                aufträge[definition.auftrag_id] = definition
         if not aufträge:
             raise ValueError(f"Keine Aufträge gefunden in {pfad}")
         return aufträge
+
+    @classmethod
+    def _auftragsvarianten(cls, nutzlast: dict[str, Any]) -> list[dict[str, Any]]:
+        if not nutzlast.get("öffentlich") or nutzlast.get("art") == "tutorial":
+            return [nutzlast]
+        varianten = []
+        for stunden, suffix, ziel_delta, belohnungsfaktor, gewicht_delta in (
+            (1, "", 0, 1.0, 0),
+            (3, "_3h", 5, 1.6, -1),
+            (5, "_5h", 9, 2.1, -2),
+        ):
+            variante = deepcopy(nutzlast)
+            basis_id = str(variante["auftrag_id"])
+            variante["auftrag_id"] = f"{basis_id}{suffix}"
+            variante["name"] = f"{variante['name']} ({stunden}h)"
+            variante["dauer_stunden"] = stunden
+            variante["aushang_gewicht"] = max(1, int(variante.get("aushang_gewicht", 0)) + gewicht_delta)
+            variante["ziele"] = cls._ziele_skalieren(variante.get("ziele", {}), ziel_delta, stunden)
+            variante["ziele"]["betreuungsdauer_sekunden"] = stunden * 3600
+            variante["belohnungen"] = cls._belohnungen_skalieren(variante.get("belohnungen", {}), belohnungsfaktor)
+            varianten.append(variante)
+        return varianten
+
+    @classmethod
+    def _ziele_skalieren(cls, ziele: dict[str, Any], ziel_delta: int, stunden: int) -> dict[str, Any]:
+        skaliert = deepcopy(ziele)
+        if ziel_delta <= 0:
+            return skaliert
+        for schlüssel, wert in list(skaliert.items()):
+            if schlüssel == "fabling_ziele" and isinstance(wert, list):
+                skaliert[schlüssel] = [
+                    cls._ziele_skalieren(eintrag, ziel_delta, stunden) if isinstance(eintrag, dict) else eintrag
+                    for eintrag in wert
+                ]
+            elif schlüssel == "wettbewerb_mindestens" and isinstance(wert, dict):
+                skaliert[schlüssel] = {
+                    ziel: min(100, int(anforderung) + ziel_delta)
+                    for ziel, anforderung in wert.items()
+                }
+            elif schlüssel.endswith("_mindestens") and isinstance(wert, int):
+                skaliert[schlüssel] = min(100, wert + ziel_delta)
+            elif schlüssel.endswith("_höchstens") and isinstance(wert, int):
+                skaliert[schlüssel] = max(0, wert - max(2, ziel_delta // 2))
+        return skaliert
+
+    @staticmethod
+    def _belohnungen_skalieren(belohnungen: dict[str, Any], faktor: float) -> dict[str, Any]:
+        skaliert = deepcopy(belohnungen)
+        if "geld" in skaliert:
+            skaliert["geld"] = int(round(int(skaliert["geld"]) * faktor))
+        ruf = skaliert.get("ruf")
+        if isinstance(ruf, dict):
+            skaliert["ruf"] = {
+                schlüssel: max(int(wert), int(round(int(wert) * (1 + (faktor - 1) * 0.5))))
+                for schlüssel, wert in ruf.items()
+            }
+        return skaliert
 
     def lade_gegenstände(self) -> dict[str, GegenstandDefinition]:
         ordner = self.daten_ordner / "gegenstände"

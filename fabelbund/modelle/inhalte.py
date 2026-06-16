@@ -85,6 +85,7 @@ class AuftragDefinition(BaseModel):
     beschreibung: str = ""
     npc: str = ""
     dauer_tage: int = Field(gt=0)
+    dauer_stunden: int | None = Field(default=None, gt=0)
     öffentlich: bool = False
     aushang_gewicht: int = 0
     mindestens_offizielles_mitglied: bool = False

@@ -344,3 +344,360 @@ aufträge:
       ruf_verlust:
         zuverlässigkeit: 2
 
+  - auftrag_id: "sicherheit_farnwidder_001"
+    name: "Farnwidder ankommen lassen"
+    art: "pflege"
+    öffentlich: true
+    aushang_gewicht: 62
+    mindestens_offizielles_mitglied: true
+    npc: "Tamo"
+    beschreibung: "Tamo sagt: „Wurzeltritt ist nicht schwierig, aber er prüft jede Bewegung. Ich brauche keinen schnellen Fortschritt. Ich brauche einen Farnwidder, der sich sicher genug fühlt, um ruhig mitzugehen.“"
+    dauer_tage: 3
+    fabelwesen:
+      - art_id: "farnwidder"
+        spitzname: "Tamos Wurzeltritt"
+        charakter: "standfest, aber misstrauisch bei Wechseln"
+        lieblingsfutter: "farnspitzen"
+        starter_kandidat: false
+        start_zustand:
+          sicherheit: 36
+          stress: 34
+          stimmung: 48
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      sicherheit_mindestens: 55
+      stress_höchstens: 28
+      stimmung_mindestens: 50
+    belohnungen:
+      geld: 38
+      ruf:
+        pflege: 7
+        zuverlässigkeit: 7
+    fehlschlag:
+      hinweis: "Tamo sagt: „Er steht noch nicht sicher genug bei dir. Gib ihm ruhigere Wiederholung, nicht mehr Druck.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "disziplin_aschmarder_001"
+    name: "Aschmarder bei der Sache halten"
+    art: "training"
+    öffentlich: true
+    aushang_gewicht: 58
+    mindestens_offizielles_mitglied: true
+    npc: "Liora"
+    beschreibung: "Liora sagt: „Funkenpfad versteht schnell, aber er springt gedanklich noch vor jedem zweiten Signal weg. Ich will keinen gebrochenen Willen, sondern genug Disziplin, damit eine Übung sauber endet.“"
+    dauer_tage: 3
+    fabelwesen:
+      - art_id: "aschmarder"
+        spitzname: "Lioras Funkenpfad"
+        charakter: "hellwach und schwer bei einer Sache zu halten"
+        lieblingsfutter: "geröstete_nüsse"
+        starter_kandidat: false
+        start_zustand:
+          energie: 66
+          stress: 24
+          sicherheit: 43
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      energie_mindestens: 42
+      stress_höchstens: 38
+      wettbewerb_mindestens:
+        disziplin: 34
+    belohnungen:
+      geld: 42
+      ruf:
+        training: 7
+        zuverlässigkeit: 4
+    fehlschlag:
+      hinweis: "Liora sagt: „Er zeigt Ansätze, aber die Wiederholung trägt noch nicht. Mehr Struktur, weniger Tempo.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "sattigung_kohligel_001"
+    name: "Kohligel aus der Reserve holen"
+    art: "pflege"
+    öffentlich: true
+    aushang_gewicht: 54
+    mindestens_offizielles_mitglied: true
+    npc: "Edda"
+    beschreibung: "Edda sagt: „Glutmulde rollt sich nicht aus Sturheit ein. Er ist leer, reizbar und spart Kraft. Sorge für Vorrat, Ruhe und einen Zustand, in dem er nicht mehr aus Mangel heraus dichtmacht.“"
+    dauer_tage: 2
+    fabelwesen:
+      - art_id: "kohligel"
+        spitzname: "Eddas Glutmulde"
+        charakter: "still, hungrig und schnell geschlossen"
+        lieblingsfutter: "geröstete_wurzeln"
+        starter_kandidat: false
+        start_zustand:
+          sättigung: 48
+          stimmung: 44
+          stress: 32
+          gesundheit: 84
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      sättigung_mindestens: 70
+      gesundheit_mindestens: 80
+      stress_höchstens: 30
+    belohnungen:
+      geld: 34
+      ruf:
+        pflege: 6
+        zuverlässigkeit: 6
+    fehlschlag:
+      hinweis: "Edda sagt: „Er wirkt noch zu leer oder zu angespannt. Vorrat allein reicht nicht, wenn er danach nicht zur Ruhe kommt.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "intelligenz_rindenfuchs_001"
+    name: "Rindenfuchs sauber vorbereiten"
+    art: "training"
+    öffentlich: true
+    aushang_gewicht: 50
+    mindestens_offizielles_mitglied: true
+    npc: "Narek"
+    beschreibung: "Narek sagt: „Blattspur sieht jedes Detail, aber noch nicht die Aufgabe dahinter. Ich brauche ihn aufmerksam, belastbar und klar genug, damit seine Intelligenz nicht in reiner Vorsicht steckenbleibt.“"
+    dauer_tage: 3
+    fabelwesen:
+      - art_id: "rindenfuchs"
+        spitzname: "Nareks Blattspur"
+        charakter: "klug, vorsichtig und sehr umgebungsbewusst"
+        lieblingsfutter: "waldbeeren"
+        starter_kandidat: false
+        start_zustand:
+          energie: 64
+          stress: 26
+          sicherheit: 42
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      energie_mindestens: 42
+      stress_höchstens: 38
+      wettbewerb_mindestens:
+        intelligenz: 60
+    belohnungen:
+      geld: 44
+      ruf:
+        training: 8
+        zuverlässigkeit: 4
+    fehlschlag:
+      hinweis: "Narek sagt: „Er denkt mit, aber noch nicht ruhig genug. Erst wenn seine Aufmerksamkeit trägt, ist die Aufgabe erfüllt.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "harmonie_tropfenmolch_001"
+    name: "Tropfenmolch in den Rhythmus bringen"
+    art: "training"
+    öffentlich: true
+    aushang_gewicht: 46
+    mindestens_offizielles_mitglied: true
+    npc: "Anke"
+    beschreibung: "Anke sagt: „Leisewelle folgt gut, solange der Ablauf weich bleibt. Er braucht genug Versorgung und dann Übungen, die ihn nicht aus dem Rhythmus reißen. Am Ende soll er mit dir zusammenarbeiten, nicht nur reagieren.“"
+    dauer_tage: 3
+    fabelwesen:
+      - art_id: "tropfenmolch"
+        spitzname: "Ankes Leisewelle"
+        charakter: "aufmerksam, aber bei trockener Hektik schnell weg"
+        lieblingsfutter: "weiche_algen"
+        starter_kandidat: false
+        start_zustand:
+          sättigung: 52
+          energie: 62
+          stress: 24
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      sättigung_mindestens: 70
+      energie_mindestens: 40
+      stress_höchstens: 38
+      wettbewerb_mindestens:
+        harmonie: 56
+    belohnungen:
+      geld: 46
+      ruf:
+        training: 8
+        zuverlässigkeit: 4
+    fehlschlag:
+      hinweis: "Anke sagt: „Er ist noch nicht im gemeinsamen Rhythmus. Achte darauf, dass Versorgung und Ruhe vor dem Training stimmen.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "eleganz_dornenkatze_001"
+    name: "Dornenkatze ohne Druck führen"
+    art: "training"
+    öffentlich: true
+    aushang_gewicht: 24
+    mindestens_offizielles_mitglied: true
+    npc: "Liora"
+    beschreibung: "Liora sagt: „Schattenranke hat Eleganz, aber sie zeigt sie nur, wenn sie nicht gedrängt wird. Arbeite vorsichtig. Ich will eine klare Linie sehen, ohne dass sie sich verschließt.“"
+    dauer_tage: 4
+    fabelwesen:
+      - art_id: "dornenkatze"
+        spitzname: "Lioras Schattenranke"
+        charakter: "stolz, wachsam und schnell auf Abstand"
+        lieblingsfutter: "herbe_beeren"
+        starter_kandidat: false
+        start_zustand:
+          energie: 66
+          stress: 28
+          sicherheit: 38
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      energie_mindestens: 40
+      stress_höchstens: 38
+      sicherheit_mindestens: 45
+      wettbewerb_mindestens:
+        eleganz: 62
+    belohnungen:
+      geld: 50
+      ruf:
+        training: 9
+        zuverlässigkeit: 4
+    fehlschlag:
+      hinweis: "Liora sagt: „Sie bewegt sich schön, aber noch nicht frei genug. Weniger Drängen, mehr Sicherheit.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "charme_funkenkraehe_001"
+    name: "Funkenkrähe freundlicher auftreten lassen"
+    art: "training"
+    öffentlich: true
+    aushang_gewicht: 22
+    mindestens_offizielles_mitglied: true
+    npc: "Narek"
+    beschreibung: "Narek sagt: „Kupferblick hat genug Präsenz, aber sie wirkt noch wie eine Prüfung für alle im Raum. Ich brauche mehr Charme: ansprechbar, wach und ohne dieses dauernde Ausweichen nach oben.“"
+    dauer_tage: 4
+    fabelwesen:
+      - art_id: "funkenkraehe"
+        spitzname: "Nareks Kupferblick"
+        charakter: "klug, stolz und schnell über den Dingen"
+        lieblingsfutter: "glanzkörner"
+        starter_kandidat: false
+        start_zustand:
+          energie: 68
+          stress: 26
+          stimmung: 48
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      energie_mindestens: 40
+      stress_höchstens: 38
+      stimmung_mindestens: 50
+      wettbewerb_mindestens:
+        charme: 48
+    belohnungen:
+      geld: 48
+      ruf:
+        training: 8
+        zuverlässigkeit: 5
+    fehlschlag:
+      hinweis: "Narek sagt: „Sie fällt auf, ja. Aber Charme ist mehr als Aufmerksamkeit. Sie soll zugänglicher wirken.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "intelligenz_nebelkauz_001"
+    name: "Nebelkauz konzentriert halten"
+    art: "training"
+    öffentlich: true
+    aushang_gewicht: 20
+    mindestens_offizielles_mitglied: true
+    npc: "Anke"
+    beschreibung: "Anke sagt: „Dämmerflug ist nicht unaufmerksam. Er nimmt nur zu viel gleichzeitig wahr. Halte die Umgebung ruhig und stärke seine Konzentration, ohne seine Harmonie zu verlieren.“"
+    dauer_tage: 4
+    fabelwesen:
+      - art_id: "nebelkauz"
+        spitzname: "Ankes Dämmerflug"
+        charakter: "leise, hellwach und empfindlich für Unruhe"
+        lieblingsfutter: "nachtkörner"
+        starter_kandidat: false
+        start_zustand:
+          energie: 64
+          stress: 30
+          sicherheit: 40
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      energie_mindestens: 40
+      stress_höchstens: 36
+      wettbewerb_mindestens:
+        intelligenz: 64
+        harmonie: 62
+    belohnungen:
+      geld: 50
+      ruf:
+        training: 9
+        zuverlässigkeit: 5
+    fehlschlag:
+      hinweis: "Anke sagt: „Er ist noch zu abgelenkt oder aus dem Gleichgewicht. Ruhe ist hier Teil des Trainings.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+
+  - auftrag_id: "schoenheit_schilfhirsch_001"
+    name: "Schilfhirsch für die Schau vorbereiten"
+    art: "training"
+    öffentlich: true
+    aushang_gewicht: 18
+    mindestens_offizielles_mitglied: true
+    npc: "Edda"
+    beschreibung: "Edda sagt: „Spiegelhalm darf nicht gehetzt werden. Seine Schönheit liegt in ruhiger Haltung, sauberem Fell und gleichmäßiger Bewegung. Bereite ihn so vor, dass er glänzt, ohne angespannt zu wirken.“"
+    dauer_tage: 4
+    fabelwesen:
+      - art_id: "schilfhirsch"
+        spitzname: "Eddas Spiegelhalm"
+        charakter: "vorsichtig, anmutig und sehr aufmerksam auf Fluchtwege"
+        lieblingsfutter: "wasserkräuter"
+        starter_kandidat: false
+        start_zustand:
+          energie: 66
+          stress: 26
+          fellpflege: 46
+    voraussetzungen:
+      mindest_lizenz: null
+      mindest_ruf:
+        pflege: 0
+    ziele:
+      energie_mindestens: 40
+      stress_höchstens: 36
+      fellpflege_mindestens: 56
+      wettbewerb_mindestens:
+        schönheit: 64
+        eleganz: 66
+    belohnungen:
+      geld: 50
+      ruf:
+        training: 8
+        schönheit: 4
+        zuverlässigkeit: 4
+    fehlschlag:
+      hinweis: "Edda sagt: „Er hat Anlage, aber noch keinen ruhigen Auftritt. Pflege, Erholung und Training müssen zusammenpassen.“"
+      geld_multiplikator: 0.3
+      ruf_verlust:
+        zuverlässigkeit: 2
+

@@ -67,6 +67,8 @@ def auftrag_einbettung(
 ) -> discord.Embed:
     embed = discord.Embed(title=auftrag.name, description=auftrag.beschreibung or None, color=discord.Color.gold())
     embed.add_field(name="Status", value=aktiver_auftrag.status, inline=True)
+    if auftrag.dauer_stunden:
+        embed.add_field(name="Mindestbetreuung", value=f"{auftrag.dauer_stunden}h", inline=True)
     if auftrag.npc:
         embed.add_field(name="Ansprechpartner", value=auftrag.npc, inline=True)
     zugeteilte = list(fabelwesen_liste or ([fabelwesen] if fabelwesen is not None else []))
@@ -112,6 +114,25 @@ def auftragszustand_text(auftrag: AuftragDefinition, fabelwesen_liste: Sequence[
     return _zustandsvergleich_für_fabling(fabelwesen_liste[0], ziele)
 
 
+def auftragsfortschritt_text(auftrag: AuftragDefinition, fabelwesen_liste: Sequence[Fabelwesen]) -> str:
+    ziele = auftrag.ziele
+    if ziele.get("fabling_ziele"):
+        zeilen = []
+        for ziel in ziele.get("fabling_ziele", []):
+            if not isinstance(ziel, dict):
+                continue
+            fabling = _passendes_fabling(fabelwesen_liste, ziel)
+            if fabling is None:
+                continue
+            text = _auftragsfortschritt_für_fabling(fabling, ziel)
+            if text:
+                zeilen.append(text)
+        return "\n\n".join(zeilen)
+    if not fabelwesen_liste:
+        return ""
+    return _auftragsfortschritt_für_fabling(fabelwesen_liste[0], ziele)
+
+
 def _passendes_fabling(fabelwesen_liste: Sequence[Fabelwesen], ziel: dict[str, object]) -> Fabelwesen | None:
     art_id = ziel.get("art_id")
     spitzname = ziel.get("spitzname")
@@ -128,6 +149,40 @@ def _zustandsvergleich_für_fabling(fabelwesen: Fabelwesen, ziele: dict[str, obj
     aktuelle_werte = dict(fabelwesen.zustand)
     aktuelle_werte.update(_auftrags_ist_zustand(fabelwesen))
     return _zielvergleich_text(fabelwesen.spitzname, aktuelle_werte, fabelwesen.wettbewerbswerte, ziele)
+
+
+def _auftragsfortschritt_für_fabling(fabelwesen: Fabelwesen, ziele: dict[str, object]) -> str:
+    aktuelle_werte = dict(fabelwesen.zustand)
+    zeilen: list[str] = []
+    for zielschlüssel, zustandsschlüssel, label, richtung in ZUSTANDSZIELE:
+        zielwert = ziele.get(zielschlüssel)
+        if zielwert is None:
+            continue
+        aktuell = int(aktuelle_werte.get(zustandsschlüssel, 0))
+        ziel = int(zielwert)
+        erfüllt = aktuell <= ziel if richtung == "höchstens" else aktuell >= ziel
+        differenz = ziel - aktuell if richtung == "mindestens" else aktuell - ziel
+        zeilen.append(f"{label} {_auftragsbalken(erfüllt, differenz)}")
+
+    wettbewerb = ziele.get("wettbewerb_mindestens")
+    if isinstance(wettbewerb, dict):
+        for schlüssel, zielwert in wettbewerb.items():
+            aktuell = int(fabelwesen.wettbewerbswerte.get(str(schlüssel), 0))
+            ziel = int(zielwert)
+            erfüllt = aktuell >= ziel
+            zeilen.append(f"{schlüssel_label(str(schlüssel))} {_auftragsbalken(erfüllt, ziel - aktuell)}")
+
+    if not zeilen:
+        return ""
+    return f"**{fabelwesen.spitzname}**\n" + "\n".join(zeilen)
+
+
+def _auftragsbalken(erfüllt: bool, differenz: int) -> str:
+    abstand = abs(differenz)
+    anzahl = 1 + min(4, abstand // 10)
+    if erfüllt:
+        return "🟩" * anzahl
+    return "🟥" * anzahl
 
 
 def _zielvergleich_text(
@@ -186,6 +241,7 @@ ZUSTANDSZIELE = (
     ("stimmung_mindestens", "stimmung", "Stimmung", "mindestens"),
     ("vertrauen_mindestens", "vertrauen", "Vertrauen", "mindestens"),
     ("sicherheit_mindestens", "sicherheit", "Sicherheit", "mindestens"),
+    ("sättigung_mindestens", "sättigung", "Sättigung", "mindestens"),
     ("fellpflege_mindestens", "fellpflege", "Fellpflege", "mindestens"),
     ("stress_höchstens", "stress", "Stress", "höchstens"),
 )
@@ -246,6 +302,14 @@ def zustandsstufe(schlüssel: str, wert: int) -> str:
         if wert >= 40:
             return "unsicher"
         return "brüchig"
+    if schlüssel == "sättigung":
+        if wert >= 75:
+            return "gut versorgt"
+        if wert >= 55:
+            return "ausreichend versorgt"
+        if wert >= 35:
+            return "hungrig"
+        return "deutlich unterversorgt"
     if wert >= 80:
         return "stabil"
     if wert >= 60:
@@ -340,9 +404,12 @@ def auftragsaushang_einbettung(auftrag: AuftragDefinition) -> discord.Embed:
     embed.add_field(name="Leih-Fabling", value=fabelwesen_text, inline=False)
     if zieltext:
         embed.add_field(name="Ausgangslage und Ziel", value=zieltext, inline=False)
-    embed.add_field(name="Voraussetzung", value=voraussetzung_text(auftrag), inline=True)
+    if auftrag.dauer_stunden:
+        embed.add_field(name="Mindestbetreuung", value=f"{auftrag.dauer_stunden}h", inline=True)
+    voraussetzung = voraussetzung_text(auftrag)
+    if voraussetzung:
+        embed.add_field(name="Voraussetzung", value=voraussetzung, inline=True)
     embed.add_field(name="Belohnung", value=belohnung_text(auftrag), inline=True)
-    embed.set_footer(text=f"auftrag:{auftrag.auftrag_id}")
     return embed
 
 
@@ -371,15 +438,13 @@ def belohnung_text(auftrag: AuftragDefinition) -> str:
 
 def voraussetzung_text(auftrag: AuftragDefinition) -> str:
     teile: list[str] = []
-    if auftrag.mindestens_offizielles_mitglied:
-        teile.append("offizielles Mitglied")
     mindest_ruf = auftrag.voraussetzungen.get("mindest_ruf")
     if isinstance(mindest_ruf, dict):
         teile.extend(f"{schlüssel_label(str(schlüssel))} {wert}+" for schlüssel, wert in mindest_ruf.items())
     mindest_lizenz = auftrag.voraussetzungen.get("mindest_lizenz")
     if mindest_lizenz:
         teile.append(f"Lizenz {mindest_lizenz}")
-    return ", ".join(teile) or "keine besondere Voraussetzung"
+    return ", ".join(teile)
 
 
 def kauf_einbettung(ergebnis: KaufErgebnis) -> discord.Embed:
@@ -435,7 +500,6 @@ def aktivität_ergebnis_einbettung(ergebnis: AktivitätErgebnis) -> discord.Embe
 
 
 def zustand_text(fabelwesen: Fabelwesen) -> str:
-    return "\n".join(statuszeilen(fabelwesen))
     zustand = fabelwesen.zustand
     einsetzungen = Zustandseinsetzungen.aus_zustand(fabelwesen.spitzname, zustand)
     vorlagen = (
@@ -488,6 +552,8 @@ def selbstbeschäftigung_text(ergebnis: AktivitätErgebnis) -> str:
 
 
 def check_text(ergebnis: AktivitätErgebnis) -> str:
+    if ergebnis.aktivität.aktion_id == "genauer_check":
+        return "\n".join(statuszeilen(ergebnis.fabelwesen))
     return zustand_text(ergebnis.fabelwesen)
 
 
@@ -499,7 +565,8 @@ def statuszeilen(fabelwesen: Fabelwesen) -> list[str]:
     zeilen: list[str] = []
     for schlüssel in ("gesundheit", "stimmung", "energie", "stress", "fellpflege", "sättigung", "vertrauen"):
         if schlüssel in fabelwesen.zustand:
-            zeilen.append(f"{schlüssel_label(schlüssel)} {wertebalken(int(fabelwesen.zustand.get(schlüssel, 0)))}")
+            balken = sättigungsbalken(int(fabelwesen.zustand.get(schlüssel, 0))) if schlüssel == "sättigung" else wertebalken(int(fabelwesen.zustand.get(schlüssel, 0)))
+            zeilen.append(f"{schlüssel_label(schlüssel)} {balken}")
     for schlüssel in ("schönheit", "eleganz", "charme", "intelligenz", "ausdruck", "disziplin", "harmonie"):
         if schlüssel in fabelwesen.wettbewerbswerte:
             zeilen.append(f"{schlüssel_label(schlüssel)} {wertebalken(int(fabelwesen.wettbewerbswerte.get(schlüssel, 0)))}")
@@ -523,22 +590,28 @@ def wertebalken(wert: int) -> str:
     teile: list[str] = []
     for index in range(5):
         if index < position:
-            teile.append(":blue_square:")
+            teile.append("🟦")
         elif index == position:
-            teile.append(":orange_square:")
+            teile.append("🟧")
         else:
-            teile.append(":black_large_square:")
+            teile.append("⬛")
     return "".join(teile)
+
+
+def sättigungsbalken(wert: int) -> str:
+    gefüllt = max(0, min(5, (wert + 19) // 20))
+    leer = 5 - gefüllt
+    return "🍖" * gefüllt + "🦴" * leer
 
 
 def änderungsbalken(schlüssel: str, wert: int) -> str:
     anzahl = änderungsstufe(abs(wert))
     if anzahl <= 0:
-        return ":black_large_square:"
+        return "⬛"
     positiv = wert > 0
     if schlüssel in {"stress", "muskelkater", "verletzungsrisiko"}:
         positiv = wert < 0
-    emoji = ":green_square:" if positiv else ":red_square:"
+    emoji = "🟩" if positiv else "🟥"
     return emoji * anzahl
 
 

@@ -254,12 +254,10 @@ class AuftragswandAnsicht(discord.ui.View):
             f"{interaction.user.mention} hat **{auftrag.name}** angenommen.",
         )
         if interaction.message is not None:
-            embed = auftragsaushang_einbettung(auftrag)
-            embed.title = f"{auftrag.name} - vergeben"
-            embed.color = discord.Color.dark_grey()
-            embed.add_field(name="Status", value=f"Angenommen von {interaction.user.mention}.", inline=False)
-            embed.set_footer(text=f"vergeben:{auftrag.auftrag_id}")
-            await interaction.message.edit(embed=embed, view=None)
+            try:
+                await interaction.message.delete()
+            except (discord.Forbidden, discord.NotFound):
+                log.warning("Angenommenen Auftragsaushang konnte nicht gelöscht werden: %s", auftrag.auftrag_id)
         await auftragswand_aktualisieren(self.kontext, interaction.guild)
 
 
@@ -459,6 +457,11 @@ async def _auftragsaushang_ids_im_kanal(kanal: discord.TextChannel) -> set[str]:
     async for nachricht in kanal.history(limit=AUFTRAGSAUSHANG_SCAN_LIMIT):
         if bot_mitglied is not None and nachricht.author.id != bot_mitglied.id:
             continue
+        for zeile in nachricht.components:
+            for komponente in getattr(zeile, "children", []):
+                custom_id = getattr(komponente, "custom_id", "") or ""
+                if custom_id.startswith("auftragswand:annehmen:"):
+                    ids.add(custom_id.rsplit(":", 1)[1])
         for embed in nachricht.embeds:
             footer = embed.footer.text or ""
             if footer.startswith("auftrag:"):

@@ -27,9 +27,11 @@ from fabelbund.discord.ansichten.stall_ansicht import StallAnsicht
 from fabelbund.discord.darstellung import (
     aktivität_ergebnis_einbettung,
     auftrag_einbettung,
+    auftragsfortschritt_text,
     auftragsaushang_einbettung,
     auftragswand_einbettung,
     betreuungszeit_text,
+    statuszeilen,
     veränderung_text,
     zustand_text,
 )
@@ -438,7 +440,7 @@ class SpielDienstTests(unittest.TestCase):
             öffentliche_belohnungen = [
                 int(auftrag.belohnungen.get("geld", 0))
                 for auftrag in getattr(katalog, "aufträge").values()
-                if getattr(auftrag, "öffentlich")
+                if getattr(auftrag, "öffentlich") and auftrag.dauer_stunden == 1
             ]
             gewöhnlicher_preis = spiel.fabelwesen_preis("gluthase")
             seltener_preis = spiel.fabelwesen_preis("moosluchs")
@@ -997,6 +999,95 @@ class SpielDienstTests(unittest.TestCase):
             self.assertNotIn("gefüttert", auftrag.ziele, auftrag.auftrag_id)
             self.assertTrue(auftrag.fehlschlag.get("hinweis"), auftrag.auftrag_id)
 
+    def test_öffentliche_aufträge_haben_drei_zeitvarianten_mit_sublinearer_belohnung(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        öffentliche_aufträge = [
+            auftrag
+            for auftrag in katalog.aufträge.values()
+            if auftrag.öffentlich and auftrag.art != "tutorial"
+        ]
+        gruppen: dict[str, dict[int, AuftragDefinition]] = {}
+        for auftrag in öffentliche_aufträge:
+            basis_id = auftrag.auftrag_id.removesuffix("_3h").removesuffix("_5h")
+            gruppen.setdefault(basis_id, {})[int(auftrag.dauer_stunden or 0)] = auftrag
+
+        self.assertEqual(len(öffentliche_aufträge), len(gruppen) * 3)
+        for varianten in gruppen.values():
+            self.assertEqual(set(varianten), {1, 3, 5})
+            for stunden, auftrag in varianten.items():
+                self.assertEqual(auftrag.ziele.get("betreuungsdauer_sekunden"), stunden * 3600)
+            geld_1h = int(varianten[1].belohnungen.get("geld", 0))
+            geld_3h = int(varianten[3].belohnungen.get("geld", 0))
+            geld_5h = int(varianten[5].belohnungen.get("geld", 0))
+            self.assertGreater(geld_3h, geld_1h)
+            self.assertGreater(geld_5h, geld_3h)
+            self.assertLess(geld_3h, geld_1h * 3)
+            self.assertLess(geld_5h, geld_1h * 5)
+
+    def test_öffentliche_aufträge_decken_neue_arten_und_fehlende_stats_ab(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        öffentliche_aufträge = [
+            auftrag
+            for auftrag in katalog.aufträge.values()
+            if auftrag.öffentlich and auftrag.art != "tutorial"
+        ]
+        neue_arten = {
+            "aschmarder",
+            "dornenkatze",
+            "farnwidder",
+            "funkenkraehe",
+            "kohligel",
+            "nebelkauz",
+            "rindenfuchs",
+            "schilfhirsch",
+            "tropfenmolch",
+        }
+        genutzte_arten = {
+            fabling.art_id
+            for auftrag in öffentliche_aufträge
+            for fabling in auftrag.fabelwesen
+        }
+        zielwerte: set[str] = set()
+        for auftrag in öffentliche_aufträge:
+            if auftrag.ziele.get("sicherheit_mindestens") is not None:
+                zielwerte.add("sicherheit")
+            if auftrag.ziele.get("sättigung_mindestens") is not None:
+                zielwerte.add("sättigung")
+            wettbewerb = auftrag.ziele.get("wettbewerb_mindestens")
+            if isinstance(wettbewerb, dict):
+                zielwerte.update(str(schlüssel) for schlüssel in wettbewerb)
+
+        self.assertTrue(neue_arten <= genutzte_arten)
+        self.assertTrue(
+            {"sicherheit", "sättigung", "schönheit", "eleganz", "charme", "intelligenz", "disziplin", "harmonie"}
+            <= zielwerte
+        )
+        for auftrag in öffentliche_aufträge:
+            seltenheiten = [katalog.arten[fabling.art_id].grundseltenheit for fabling in auftrag.fabelwesen]
+            if "selten" in seltenheiten and not auftrag.auftrag_id.startswith("pflege_einfach_001"):
+                self.assertLessEqual(auftrag.aushang_gewicht, 25, auftrag.auftrag_id)
+
+    def test_auftrag_dienst_prüft_sicherheit_und_sättigung_als_zielwerte(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        definition = katalog.aufträge["sattigung_kohligel_001"]
+        definition = definition.model_copy(
+            deep=True,
+            update={"ziele": {schlüssel: wert for schlüssel, wert in definition.ziele.items() if schlüssel != "betreuungsdauer_sekunden"}},
+        )
+        zugeteilt = definition.fabelwesen[0]
+        fabling = FabelwesenFabrik().erzeuge_starter("123", katalog.arten[zugeteilt.art_id])
+        for schlüssel, wert in zugeteilt.start_zustand.items():
+            fabling.zustand[schlüssel] = wert
+
+        frühe_abgabe = AuftragDienst().ziele_erfüllt(definition, fabling, [fabling])
+        fabling.zustand["sättigung"] = 75
+        fabling.zustand["gesundheit"] = 85
+        fabling.zustand["stress"] = 20
+        spätere_abgabe = AuftragDienst().ziele_erfüllt(definition, fabling, [fabling])
+
+        self.assertFalse(frühe_abgabe)
+        self.assertTrue(spätere_abgabe)
+
     def test_auftragswand_nutzt_navigation_und_einzelne_aushänge(self) -> None:
         katalog = YamlLader(Path("daten")).lade_alle()
         auftrag = next(
@@ -1008,10 +1099,15 @@ class SpielDienstTests(unittest.TestCase):
 
         navigation = AuftragsnavigationAnsicht(kontext)
         aushang = auftragsaushang_einbettung(auftrag)
+        aktiver_auftrag = AuftragDienst().erstelle_aktiven_auftrag("123", auftrag, "fw_1")
+        detail = auftrag_einbettung(aktiver_auftrag, auftrag)
         ansicht = EinzelauftragAnsicht(kontext, "guild_1", auftrag.auftrag_id)
 
         self.assertEqual([kind.label for kind in navigation.children], ["Auftrag", "Fablinge", "Inventar"])
-        self.assertEqual(aushang.footer.text, f"auftrag:{auftrag.auftrag_id}")
+        self.assertFalse(aushang.footer.text)
+        self.assertFalse(any(feld.name == "Voraussetzung" and "offizielles Mitglied" in feld.value for feld in aushang.fields))
+        self.assertTrue(any(feld.name == "Mindestbetreuung" for feld in aushang.fields))
+        self.assertTrue(any(feld.name == "Mindestbetreuung" for feld in detail.fields))
         self.assertEqual(len(ansicht.children), 1)
         self.assertEqual(ansicht.children[0].custom_id, f"auftragswand:annehmen:{auftrag.auftrag_id}")
 
@@ -1111,10 +1207,10 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertNotIn("Pflege", text)
         self.assertNotIn("Fell", text)
-        self.assertIn("Stimmung :green_square:", text)
-        self.assertIn("Energie :red_square:", text)
+        self.assertIn("Stimmung 🟩", text)
+        self.assertIn("Energie 🟥", text)
 
-    def test_status_nutzt_fünfer_emoji_balken(self) -> None:
+    def test_kostenlose_einschätzung_bleibt_narrativ_und_statuscheck_nutzt_balken(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             self.erzeuge_starter(spiel)
@@ -1122,10 +1218,37 @@ class SpielDienstTests(unittest.TestCase):
             fabling.wettbewerbswerte["ausdruck"] = 45
             spiel.fabelwesen.speichern(fabling)
 
-            text = zustand_text(spiel.sammlung("123")[0])
+            fabling = spiel.sammlung("123")[0]
+            einschätzung = zustand_text(fabling)
+            balken = "\n".join(statuszeilen(fabling))
 
-        self.assertIn("Energie :blue_square::blue_square::blue_square::orange_square::black_large_square:", text)
-        self.assertIn("Ausdruck :blue_square::blue_square::orange_square::black_large_square::black_large_square:", text)
+        self.assertNotIn("🟦", einschätzung)
+        self.assertTrue("wirkt" in einschätzung or "Eindruck" in einschätzung)
+        self.assertIn("Energie 🟦🟦🟦🟧⬛", balken)
+        self.assertIn("Sättigung 🍖🍖🍖🍖🦴", balken)
+        self.assertIn("Ausdruck 🟦🟦🟧⬛⬛", balken)
+        self.assertLessEqual(len(balken), 1024)
+
+    def test_offener_auftrag_zeigt_bedingungen_als_rot_grün_balken(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.speichere_offiziellen_spieler(spiel)
+            aktiver_auftrag = spiel.pflegeauftrag_starten("123")
+            auftrag = spiel.inhalte.aufträge[aktiver_auftrag.auftrag_id]
+            fabling = spiel.sammlung("123")[0]
+            fabling.zustand["gesundheit"] = 90
+            fabling.zustand["stimmung"] = 40
+            fabling.zustand["stress"] = 50
+            fabling.zustand["fellpflege"] = 70
+            spiel.fabelwesen.speichern(fabling)
+
+            text = auftragsfortschritt_text(auftrag, spiel.auftrag_fablinge(aktiver_auftrag))
+
+        self.assertIn("Gesundheit 🟩", text)
+        self.assertIn("Stimmung 🟥", text)
+        self.assertIn("Stress 🟥", text)
+        self.assertIn("Fellpflege 🟩", text)
+        self.assertNotIn("wirkt", text)
 
     def test_serverkonfiguration_wird_gespeichert(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

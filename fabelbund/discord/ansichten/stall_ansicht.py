@@ -6,7 +6,7 @@ import discord
 
 from fabelbund.dienste.spiel_dienst import MAXIMALE_FABLINGE_PRO_SPIELER, SpielDienst
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, siegel, unixzeit
+from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, siegel, schlüssel_label, unixzeit
 from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 from fabelbund.modelle.laufzeit import Fabelwesen
 
@@ -259,9 +259,19 @@ class StallAnsicht(discord.ui.View):
         )
 
     def _aktions_buttons_anlegen(self, kategorie: str, fabelwesen_id: str) -> None:
-        for aktion in self.spiel.inhalte.pflegeaktionen.values():
-            if aktion.gesperrt or aktion.kategorie != kategorie:
-                continue
+        if kategorie == "training":
+            self._training_wert_buttons_anlegen()
+            return
+        if kategorie.startswith("training:"):
+            self._training_stufen_buttons_anlegen(kategorie.split(":", 1)[1], fabelwesen_id)
+            return
+        aktionen = [
+            aktion
+            for aktion in self.spiel.inhalte.pflegeaktionen.values()
+            if not aktion.gesperrt and aktion.kategorie == kategorie
+            and not (kategorie == "check" and aktion.aktion_id == "kurzer_blick")
+        ]
+        for index, aktion in enumerate(aktionen):
             dauer_sekunden = self.spiel.aktionsdauer_sekunden(self.nutzer_id, aktion.aktion_id)
             label = f"{aktion.name} ({dauer_kurz(dauer_sekunden)})"
             if aktion.kosten:
@@ -270,7 +280,41 @@ class StallAnsicht(discord.ui.View):
                 label=label,
                 style=discord.ButtonStyle.secondary,
                 custom_id=f"stall:aktion:{aktion.aktion_id}",
-                row=2,
+                row=1 + min(index // 5, 2),
+            )
+            button.callback = self._aktion_callback(aktion.aktion_id, fabelwesen_id)
+            self.add_item(button)
+
+    def _training_wert_buttons_anlegen(self) -> None:
+        werte = ("schönheit", "eleganz", "charme", "intelligenz", "ausdruck", "disziplin", "harmonie")
+        for index, wert in enumerate(werte):
+            button = discord.ui.Button(
+                label=schlüssel_label(wert),
+                style=discord.ButtonStyle.secondary,
+                custom_id=f"stall:training:{wert}",
+                row=1 + index // 5,
+            )
+            button.callback = self._kategorie_callback(f"training:{wert}")
+            self.add_item(button)
+
+    def _training_stufen_buttons_anlegen(self, wert: str, fabelwesen_id: str) -> None:
+        reihenfolge = {"kurz": 0, "gründlich": 1, "ausgiebig": 2}
+        aktionen = sorted(
+            [
+                aktion
+                for aktion in self.spiel.inhalte.pflegeaktionen.values()
+                if not aktion.gesperrt and aktion.kategorie == "training" and wert in aktion.markierungen
+            ],
+            key=lambda aktion: reihenfolge.get(aktion.intensität, 99),
+        )
+        for index, aktion in enumerate(aktionen):
+            dauer_sekunden = self.spiel.aktionsdauer_sekunden(self.nutzer_id, aktion.aktion_id)
+            label = f"{schlüssel_label(aktion.intensität)} ({dauer_kurz(dauer_sekunden)})"
+            button = discord.ui.Button(
+                label=label,
+                style=discord.ButtonStyle.danger if aktion.intensität == "ausgiebig" else discord.ButtonStyle.secondary,
+                custom_id=f"stall:aktion:{aktion.aktion_id}",
+                row=1,
             )
             button.callback = self._aktion_callback(aktion.aktion_id, fabelwesen_id)
             self.add_item(button)
@@ -319,6 +363,14 @@ class StallAnsicht(discord.ui.View):
         async def callback(interaction: discord.Interaction) -> None:
             fabelwesen = self.spiel.sammlung(self.nutzer_id)
             kapazität = self.spiel.stall_kapazität(self.nutzer_id)
+            if self.kategorie is not None and self.kategorie.startswith("training:"):
+                ausgewählt = self.fabelwesen_nach_id.get(self.ausgewählt_id or "")
+                embed = fabelwesen_detail_einbettung(self.spiel, ausgewählt) if ausgewählt else discord.Embed(title="Fabling")
+                await interaction.response.edit_message(
+                    embed=embed,
+                    view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen, kapazität, self.ausgewählt_id, "training", kontext=self.kontext),
+                )
+                return
             if self.kategorie is not None:
                 ausgewählt = self.fabelwesen_nach_id.get(self.ausgewählt_id or "")
                 embed = fabelwesen_detail_einbettung(self.spiel, ausgewählt) if ausgewählt else discord.Embed(title="Fabling")

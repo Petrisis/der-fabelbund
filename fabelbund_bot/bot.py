@@ -16,6 +16,7 @@ from fabelbund.discord.befehle.sammlung import SammlungBefehle
 from fabelbund.discord.befehle.stall import StallBefehle
 from fabelbund.discord.betriebsstatus import betriebsstatus_senden
 from fabelbund.discord.eventmarkt import eventmarkt_ansichten, eventmarkt_aktualisieren
+from fabelbund.discord.wettbewerb import wettbewerb_ansichten, wettbewerb_aktualisieren, wettbewerbe_prüfen
 from fabelbund.discord.server_einrichtung import ServerEinrichtungDienst, guild_ids_für_nachholeinrichtung
 from fabelbund_bot.konfiguration import lade_konfiguration
 
@@ -34,9 +35,12 @@ class FabelbundBot(commands.Bot):
         self.server_einrichtung_geprüft = False
         self.auftragswand_task: asyncio.Task[None] | None = None
         self.eventmarkt_task: asyncio.Task[None] | None = None
+        self.wettbewerb_task: asyncio.Task[None] | None = None
 
     async def setup_hook(self) -> None:
         for ansicht in eventmarkt_ansichten(self.kontext):
+            self.add_view(ansicht)
+        for ansicht in wettbewerb_ansichten(self.kontext):
             self.add_view(ansicht)
         for server in self.kontext.server.auflisten():
             if server.eingerichtet:
@@ -67,16 +71,34 @@ class FabelbundBot(commands.Bot):
         self.server_einrichtung_geprüft = True
         nachzuholen = guild_ids_für_nachholeinrichtung(self.kontext.server, list(self.guilds))
         for guild in self.guilds:
-            if str(guild.id) in nachzuholen:
+            if str(guild.id) not in nachzuholen:
+                continue
+            try:
                 await self.server_einrichtung.guild_sicherstellen(guild)
-            else:
+            except Exception:
+                log.exception("Server konnte nicht eingerichtet werden: %s (%s)", guild.name, guild.id)
+
+        for guild in self.guilds:
+            try:
+                await betriebsstatus_senden(self.kontext, guild, "Der Fabelbund ist wieder erreichbar.")
+            except Exception:
+                log.exception("Betriebsstatus konnte nicht gesendet werden: %s (%s)", guild.name, guild.id)
+
+        for guild in self.guilds:
+            if str(guild.id) in nachzuholen:
+                continue
+            try:
                 await auftragswand_aktualisieren(self.kontext, guild)
+                await wettbewerb_aktualisieren(self.kontext, guild)
                 await eventmarkt_aktualisieren(self.kontext, guild)
-            await betriebsstatus_senden(self.kontext, guild, "Der Fabelbund ist wieder erreichbar.")
+            except Exception:
+                log.exception("Servernachrichten konnten nicht aktualisiert werden: %s (%s)", guild.name, guild.id)
         if self.auftragswand_task is None or self.auftragswand_task.done():
             self.auftragswand_task = asyncio.create_task(self._auftragswand_regelmäßig_aktualisieren())
         if self.eventmarkt_task is None or self.eventmarkt_task.done():
             self.eventmarkt_task = asyncio.create_task(self._eventmarkt_regelmäßig_aktualisieren())
+        if self.wettbewerb_task is None or self.wettbewerb_task.done():
+            self.wettbewerb_task = asyncio.create_task(self._wettbewerbe_regelmäßig_prüfen())
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         await self.server_einrichtung.guild_sicherstellen(guild)
@@ -98,6 +120,14 @@ class FabelbundBot(commands.Bot):
                     await eventmarkt_aktualisieren(self.kontext, guild)
                 except Exception:
                     log.exception("Eventmarkt konnte nicht automatisch aktualisiert werden: %s (%s)", guild.name, guild.id)
+
+    async def _wettbewerbe_regelmäßig_prüfen(self) -> None:
+        while not self.is_closed():
+            await asyncio.sleep(60)
+            try:
+                await wettbewerbe_prüfen(self.kontext, list(self.guilds))
+            except Exception:
+                log.exception("Wettbewerbe konnten nicht automatisch geprüft werden.")
 
 
 def main() -> None:

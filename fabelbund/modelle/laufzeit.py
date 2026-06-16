@@ -84,3 +84,23 @@ class ServerKonfiguration(BaseModel):
     auftragswand_nachricht_id: str | None = None
     eingerichtet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     aktualisiert_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class Wettbewerb(BaseModel):
+    id: str
+    guild_id: str
+    status: str = "offen"
+    wert: str
+    beginnt_am: datetime
+    anmeldeschluss_am: datetime
+    preisgeld: int = 300
+    nachricht_id: str | None = None
+    discord_event_id: str | None = None
+    erstellt_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class WettbewerbAnmeldung(BaseModel):
+    wettbewerb_id: str
+    spieler_id: str
+    fabelwesen_id: str
+    angemeldet_am: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

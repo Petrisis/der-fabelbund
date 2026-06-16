@@ -9,6 +9,7 @@ import discord
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.auftragswand import AuftragswandAnsicht, auftragswand_erstellen_oder_aktualisieren
 from fabelbund.discord.eventmarkt import eventmarkt_aktualisieren
+from fabelbund.discord.wettbewerb import WettbewerbAnsicht, wettbewerb_aktualisieren
 from fabelbund.datenbank.speicher.server_speicher import ServerSpeicher
 from fabelbund.modelle.laufzeit import ServerKonfiguration
 
@@ -55,8 +56,12 @@ class ServerEinrichtungDienst:
             )
             self.kontext.server.speichern(konfiguration)
             nachricht = await auftragswand_erstellen_oder_aktualisieren(self.kontext, guild)
+            await wettbewerb_aktualisieren(self.kontext, guild)
             await eventmarkt_aktualisieren(self.kontext, guild)
             self.bot.add_view(AuftragswandAnsicht(self.kontext, str(guild.id)))
+            wettbewerb = self.kontext.wettbewerbe.nächster_offener_für_guild(str(guild.id))
+            if wettbewerb is not None:
+                self.bot.add_view(WettbewerbAnsicht(self.kontext, wettbewerb.id))
             log.info(
                 "Server eingerichtet: %s (%s), Auftragswand-Nachricht: %s",
                 guild.name,

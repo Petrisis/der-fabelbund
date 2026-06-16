@@ -435,6 +435,7 @@ def aktivität_ergebnis_einbettung(ergebnis: AktivitätErgebnis) -> discord.Embe
 
 
 def zustand_text(fabelwesen: Fabelwesen) -> str:
+    return "\n".join(statuszeilen(fabelwesen))
     zustand = fabelwesen.zustand
     einsetzungen = Zustandseinsetzungen.aus_zustand(fabelwesen.spitzname, zustand)
     vorlagen = (
@@ -453,6 +454,7 @@ def zustand_text(fabelwesen: Fabelwesen) -> str:
 def veränderung_text(ergebnis: AktivitätErgebnis) -> str:
     if ergebnis.aktivität.kategorie == "check":
         return check_text(ergebnis)
+    return änderungszeilen_text(ergebnis)
     if ergebnis.aktivität.aktion_id == "selbstbeschäftigung":
         return selbstbeschäftigung_text(ergebnis)
 
@@ -475,6 +477,7 @@ def veränderung_text(ergebnis: AktivitätErgebnis) -> str:
 
 
 def selbstbeschäftigung_text(ergebnis: AktivitätErgebnis) -> str:
+    return änderungszeilen_text(ergebnis)
     name = ergebnis.fabelwesen.spitzname
     varianten = (
         f"{name} hat sich eine ruhige Ecke gesucht und die Umgebung aufmerksam beobachtet. {zustand_text(ergebnis.fabelwesen)}",
@@ -485,26 +488,76 @@ def selbstbeschäftigung_text(ergebnis: AktivitätErgebnis) -> str:
 
 
 def check_text(ergebnis: AktivitätErgebnis) -> str:
-    name = ergebnis.fabelwesen.spitzname
-    if ergebnis.aktivität.aktion_id == "genauer_check":
-        return f"Du hast mit {name} gespielt und dabei Pfoten, Kopf und Zähne genauer angeschaut. {zustand_text(ergebnis.fabelwesen)}"
     return zustand_text(ergebnis.fabelwesen)
 
 
 def trainingsfortschritt_text(ergebnis: AktivitätErgebnis) -> str:
+    return ""
+
+
+def statuszeilen(fabelwesen: Fabelwesen) -> list[str]:
     zeilen: list[str] = []
-    for schlüssel in ergebnis.wettbewerb_änderungen:
-        wert = int(ergebnis.fabelwesen.wettbewerbswerte.get(schlüssel, 0))
-        zeilen.append(f"{schlüssel_label(schlüssel)} {fortschrittsbalken(wert)}")
-    for schlüssel in ergebnis.sport_änderungen:
-        wert = int(ergebnis.fabelwesen.sportwerte.get(schlüssel, 0))
-        zeilen.append(f"{schlüssel_label(schlüssel)} {fortschrittsbalken(wert)}")
-    return "\n".join(zeilen)
+    for schlüssel in ("gesundheit", "stimmung", "energie", "stress", "fellpflege", "sättigung", "vertrauen"):
+        if schlüssel in fabelwesen.zustand:
+            zeilen.append(f"{schlüssel_label(schlüssel)} {wertebalken(int(fabelwesen.zustand.get(schlüssel, 0)))}")
+    for schlüssel in ("schönheit", "eleganz", "charme", "intelligenz", "ausdruck", "disziplin", "harmonie"):
+        if schlüssel in fabelwesen.wettbewerbswerte:
+            zeilen.append(f"{schlüssel_label(schlüssel)} {wertebalken(int(fabelwesen.wettbewerbswerte.get(schlüssel, 0)))}")
+    return zeilen
+
+
+def änderungszeilen_text(ergebnis: AktivitätErgebnis) -> str:
+    zeilen: list[str] = []
+    for schlüssel, wert in ergebnis.wettbewerb_änderungen.items():
+        zeilen.append(f"{schlüssel_label(schlüssel)} {änderungsbalken(schlüssel, int(wert))}")
+    for schlüssel, wert in ergebnis.sport_änderungen.items():
+        zeilen.append(f"{schlüssel_label(schlüssel)} {änderungsbalken(schlüssel, int(wert))}")
+    for schlüssel, wert in ergebnis.änderungen.items():
+        if int(wert) != 0:
+            zeilen.append(f"{schlüssel_label(schlüssel)} {änderungsbalken(schlüssel, int(wert))}")
+    return "\n".join(zeilen) if zeilen else "Keine deutliche Veränderung."
+
+
+def wertebalken(wert: int) -> str:
+    position = max(0, min(4, wert // 20))
+    teile: list[str] = []
+    for index in range(5):
+        if index < position:
+            teile.append(":blue_square:")
+        elif index == position:
+            teile.append(":orange_square:")
+        else:
+            teile.append(":black_large_square:")
+    return "".join(teile)
+
+
+def änderungsbalken(schlüssel: str, wert: int) -> str:
+    anzahl = änderungsstufe(abs(wert))
+    if anzahl <= 0:
+        return ":black_large_square:"
+    positiv = wert > 0
+    if schlüssel in {"stress", "muskelkater", "verletzungsrisiko"}:
+        positiv = wert < 0
+    emoji = ":green_square:" if positiv else ":red_square:"
+    return emoji * anzahl
+
+
+def änderungsstufe(wert: int) -> int:
+    if wert <= 0:
+        return 0
+    if wert <= 2:
+        return 1
+    if wert <= 4:
+        return 2
+    if wert <= 8:
+        return 3
+    if wert <= 14:
+        return 4
+    return 5
 
 
 def fortschrittsbalken(wert: int) -> str:
-    gefüllt = max(0, min(5, round(wert / 20)))
-    return "■" * gefüllt + "□" * (5 - gefüllt)
+    return wertebalken(wert)
 
 
 def schlüssel_label(schlüssel: str) -> str:

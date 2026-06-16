@@ -95,6 +95,28 @@ class Datenbank:
                     eingerichtet_am TEXT NOT NULL,
                     aktualisiert_am TEXT NOT NULL
                 );
+
+                CREATE TABLE IF NOT EXISTS wettbewerbe (
+                    id TEXT PRIMARY KEY,
+                    guild_id TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    wert TEXT NOT NULL,
+                    beginnt_am TEXT NOT NULL,
+                    anmeldeschluss_am TEXT NOT NULL,
+                    preisgeld INTEGER NOT NULL,
+                    nachricht_id TEXT,
+                    discord_event_id TEXT,
+                    erstellt_am TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS wettbewerb_anmeldungen (
+                    wettbewerb_id TEXT NOT NULL,
+                    spieler_id TEXT NOT NULL,
+                    fabelwesen_id TEXT NOT NULL,
+                    angemeldet_am TEXT NOT NULL,
+                    PRIMARY KEY (wettbewerb_id, spieler_id),
+                    FOREIGN KEY (wettbewerb_id) REFERENCES wettbewerbe(id) ON DELETE CASCADE
+                );
                 """
             )
             spalten = {

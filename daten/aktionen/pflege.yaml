@@ -29,7 +29,7 @@ pflegeaktionen:
     markierungen: ["tutorial", "erholung", "kurz"]
 
   genauer_check:
-    name: "Genauer Check"
+    name: "Gründlicher Check"
     beschreibung: "Du spielst mit dem Fabling, um dir Pfoten, Kopf und Zähne genauer anschauen zu können."
     kategorie: "check"
     intensität: "mittel"
@@ -43,7 +43,7 @@ pflegeaktionen:
     markierungen: ["check", "genau"]
 
   doktorbesuch:
-    name: "Doktorbesuch"
+    name: "Ärztlicher Check"
     beschreibung: "Eine fachliche Untersuchung, die Risiken und Zustand genauer einschätzt."
     kategorie: "check"
     intensität: "hoch"
@@ -70,7 +70,7 @@ pflegeaktionen:
     abbruch_effekte:
       vertrauen: -1
       sicherheit: -1
-    folgeaktionen: ["kontrollierte_ruhe", "gemeinsames_spiel", "ausdruck_üben"]
+    folgeaktionen: ["kontrollierte_ruhe", "gemeinsames_spiel", "schönheit_trainieren"]
     markierungen: ["schönheit", "geringes_risiko"]
 
   gründliche_fellpflege:
@@ -105,7 +105,7 @@ pflegeaktionen:
     abbruch_effekte:
       vertrauen: -1
       sicherheit: -1
-    folgeaktionen: ["sanfte_fellpflege", "gemeinsames_spiel", "ausdruck_üben"]
+    folgeaktionen: ["sanfte_fellpflege", "gemeinsames_spiel", "schönheit_trainieren"]
     markierungen: ["erholung", "kurz"]
 
   kontrollierte_ruhe:
@@ -177,48 +177,278 @@ pflegeaktionen:
     abbruch_effekte:
       vertrauen: -2
       sicherheit: -1
-    folgeaktionen: ["kurze_pause", "sanfte_fellpflege", "ausdruck_üben"]
+    folgeaktionen: ["kurze_pause", "sanfte_fellpflege", "charme_trainieren"]
     markierungen: ["bindung", "stimmung"]
 
-  ausdruck_üben:
-    name: "Ausdruck üben"
-    beschreibung: "Ein leichtes Wettbewerbstraining für Präsenz und Ausdruck."
+  schönheit_kurz_trainieren:
+    name: "Schönheit trainieren"
+    beschreibung: "Kurzes Wettbewerbstraining für ein gepflegtes, stimmiges Erscheinungsbild."
     kategorie: "training"
-    intensität: "mittel"
-    dauer_sekunden: 900
+    intensität: "kurz"
+    dauer_sekunden: 600
     braucht_spieler: true
-    effekte:
-      energie: -9
-      stress: 4
-      muskelkater: 2
-    wettbewerb_effekte:
-      ausdruck: 5
-      charme: 2
-      disziplin: 1
-    abbruch_effekte:
-      vertrauen: -1
-      sicherheit: -1
-    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick", "harmonie_üben"]
+    effekte: {energie: -4, stress: 1, fellpflege: 3}
+    wettbewerb_effekte: {schönheit: 2, eleganz: 1}
+    abbruch_effekte: {vertrauen: -1, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "schönheit"]
+
+  schönheit_trainieren:
+    name: "Schönheit trainieren"
+    beschreibung: "Gründliches Wettbewerbstraining für ein gepflegtes, stimmiges Erscheinungsbild."
+    kategorie: "training"
+    intensität: "gründlich"
+    dauer_sekunden: 3600
+    braucht_spieler: true
+    effekte: {energie: -12, stress: 6, fellpflege: 8, stimmung: 1, muskelkater: 2}
+    wettbewerb_effekte: {schönheit: 5, eleganz: 1, ausdruck: 1}
+    abbruch_effekte: {vertrauen: -2, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "schönheit"]
+
+  schönheit_ausgiebig_trainieren:
+    name: "Schönheit trainieren"
+    beschreibung: "Ausgiebiges Wettbewerbstraining mit hohem Risiko und starker Nachbelastung."
+    kategorie: "training"
+    intensität: "ausgiebig"
+    dauer_sekunden: 7200
+    braucht_spieler: true
+    effekte: {energie: -65, stress: 55, gesundheit: -18, muskelkater: 35, verletzungsrisiko: 25, fellpflege: 12}
+    wettbewerb_effekte: {schönheit: 10, eleganz: 3, ausdruck: 2}
+    abbruch_effekte: {vertrauen: -4, sicherheit: -3}
+    folgeaktionen: ["langer_schlaf", "doktorbesuch", "kurzer_blick"]
+    markierungen: ["wettbewerb", "schönheit"]
+
+  eleganz_kurz_trainieren:
+    name: "Eleganz trainieren"
+    beschreibung: "Kurzes Wettbewerbstraining für Haltung, Linien und ruhige Bewegung."
+    kategorie: "training"
+    intensität: "kurz"
+    dauer_sekunden: 600
+    braucht_spieler: true
+    effekte: {energie: -5, stress: 1, muskelkater: 1}
+    wettbewerb_effekte: {eleganz: 2, schönheit: 1}
+    abbruch_effekte: {vertrauen: -1, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "eleganz"]
+
+  eleganz_trainieren:
+    name: "Eleganz trainieren"
+    beschreibung: "Gründliches Wettbewerbstraining für Haltung, Linien und ruhige Bewegung."
+    kategorie: "training"
+    intensität: "gründlich"
+    dauer_sekunden: 3600
+    braucht_spieler: true
+    effekte: {energie: -14, stress: 7, muskelkater: 5}
+    wettbewerb_effekte: {eleganz: 5, schönheit: 1, harmonie: 1}
+    abbruch_effekte: {vertrauen: -2, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "eleganz"]
+
+  eleganz_ausgiebig_trainieren:
+    name: "Eleganz trainieren"
+    beschreibung: "Ausgiebiges Wettbewerbstraining mit hohem Risiko und starker Nachbelastung."
+    kategorie: "training"
+    intensität: "ausgiebig"
+    dauer_sekunden: 7200
+    braucht_spieler: true
+    effekte: {energie: -65, stress: 55, gesundheit: -18, muskelkater: 35, verletzungsrisiko: 25}
+    wettbewerb_effekte: {eleganz: 10, schönheit: 3, harmonie: 2}
+    abbruch_effekte: {vertrauen: -4, sicherheit: -3}
+    folgeaktionen: ["langer_schlaf", "doktorbesuch", "kurzer_blick"]
+    markierungen: ["wettbewerb", "eleganz"]
+
+  charme_kurz_trainieren:
+    name: "Charme trainieren"
+    beschreibung: "Kurzes Wettbewerbstraining für freundliche Präsenz."
+    kategorie: "training"
+    intensität: "kurz"
+    dauer_sekunden: 600
+    braucht_spieler: true
+    effekte: {energie: -4, stress: 1, stimmung: 1}
+    wettbewerb_effekte: {charme: 2, ausdruck: 1}
+    abbruch_effekte: {vertrauen: -1, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "charme"]
+
+  charme_trainieren:
+    name: "Charme trainieren"
+    beschreibung: "Gründliches Wettbewerbstraining für freundliche Präsenz und positive Reaktion."
+    kategorie: "training"
+    intensität: "gründlich"
+    dauer_sekunden: 3600
+    braucht_spieler: true
+    effekte: {energie: -12, stress: 6, stimmung: 2, vertrauen: 1, muskelkater: 2}
+    wettbewerb_effekte: {charme: 5, ausdruck: 2, harmonie: 1}
+    abbruch_effekte: {vertrauen: -2, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "charme"]
+
+  charme_ausgiebig_trainieren:
+    name: "Charme trainieren"
+    beschreibung: "Ausgiebiges Wettbewerbstraining mit hohem Risiko und starker Nachbelastung."
+    kategorie: "training"
+    intensität: "ausgiebig"
+    dauer_sekunden: 7200
+    braucht_spieler: true
+    effekte: {energie: -65, stress: 55, gesundheit: -18, muskelkater: 35, verletzungsrisiko: 25, stimmung: -8}
+    wettbewerb_effekte: {charme: 10, ausdruck: 4, harmonie: 2}
+    abbruch_effekte: {vertrauen: -4, sicherheit: -3}
+    folgeaktionen: ["langer_schlaf", "doktorbesuch", "kurzer_blick"]
+    markierungen: ["wettbewerb", "charme"]
+
+  intelligenz_kurz_trainieren:
+    name: "Intelligenz trainieren"
+    beschreibung: "Kurzes Wettbewerbstraining für Aufmerksamkeit und Verständnis."
+    kategorie: "training"
+    intensität: "kurz"
+    dauer_sekunden: 600
+    braucht_spieler: true
+    effekte: {energie: -3, stress: 2}
+    wettbewerb_effekte: {intelligenz: 2, disziplin: 1}
+    abbruch_effekte: {vertrauen: -1, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "intelligenz"]
+
+  intelligenz_trainieren:
+    name: "Intelligenz trainieren"
+    beschreibung: "Gründliches Wettbewerbstraining für Aufmerksamkeit, Verständnis und Problemlösen."
+    kategorie: "training"
+    intensität: "gründlich"
+    dauer_sekunden: 3600
+    braucht_spieler: true
+    effekte: {energie: -10, stress: 9, stimmung: -1, muskelkater: 1}
+    wettbewerb_effekte: {intelligenz: 5, disziplin: 1, harmonie: 1}
+    abbruch_effekte: {vertrauen: -2, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "intelligenz"]
+
+  intelligenz_ausgiebig_trainieren:
+    name: "Intelligenz trainieren"
+    beschreibung: "Ausgiebiges Wettbewerbstraining mit hohem Risiko und starker Nachbelastung."
+    kategorie: "training"
+    intensität: "ausgiebig"
+    dauer_sekunden: 7200
+    braucht_spieler: true
+    effekte: {energie: -65, stress: 55, gesundheit: -18, muskelkater: 30, verletzungsrisiko: 25, stimmung: -10}
+    wettbewerb_effekte: {intelligenz: 10, disziplin: 3, harmonie: 2}
+    abbruch_effekte: {vertrauen: -4, sicherheit: -3}
+    folgeaktionen: ["langer_schlaf", "doktorbesuch", "kurzer_blick"]
+    markierungen: ["wettbewerb", "intelligenz"]
+
+  ausdruck_kurz_trainieren:
+    name: "Ausdruck trainieren"
+    beschreibung: "Kurzes Wettbewerbstraining für Präsenz und Ausdruck."
+    kategorie: "training"
+    intensität: "kurz"
+    dauer_sekunden: 600
+    braucht_spieler: true
+    effekte: {energie: -5, stress: 2, muskelkater: 1}
+    wettbewerb_effekte: {ausdruck: 2, charme: 1}
+    abbruch_effekte: {vertrauen: -1, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
     markierungen: ["wettbewerb", "ausdruck"]
 
-  harmonie_üben:
-    name: "Harmonie üben"
-    beschreibung: "Ruhiges Wettbewerbstraining für Zusammenspiel und Kontrolle."
+  ausdruck_üben:
+    name: "Ausdruck trainieren"
+    beschreibung: "Gründliches Wettbewerbstraining für Präsenz und Ausdruck."
     kategorie: "training"
-    intensität: "mittel"
-    dauer_sekunden: 1200
+    intensität: "gründlich"
+    dauer_sekunden: 3600
     braucht_spieler: true
-    effekte:
-      energie: -10
-      stress: 3
-      muskelkater: 2
-      vertrauen: 2
-    wettbewerb_effekte:
-      harmonie: 5
-      disziplin: 2
-      eleganz: 1
-    abbruch_effekte:
-      vertrauen: -2
-      sicherheit: -1
-    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick", "ruhige_nähe"]
+    effekte: {energie: -14, stress: 9, muskelkater: 6}
+    wettbewerb_effekte: {ausdruck: 5, charme: 2, disziplin: 1}
+    abbruch_effekte: {vertrauen: -2, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "ausdruck"]
+
+  ausdruck_ausgiebig_trainieren:
+    name: "Ausdruck trainieren"
+    beschreibung: "Ausgiebiges Wettbewerbstraining mit hohem Risiko und starker Nachbelastung."
+    kategorie: "training"
+    intensität: "ausgiebig"
+    dauer_sekunden: 7200
+    braucht_spieler: true
+    effekte: {energie: -65, stress: 55, gesundheit: -18, muskelkater: 35, verletzungsrisiko: 25}
+    wettbewerb_effekte: {ausdruck: 10, charme: 4, disziplin: 2}
+    abbruch_effekte: {vertrauen: -4, sicherheit: -3}
+    folgeaktionen: ["langer_schlaf", "doktorbesuch", "kurzer_blick"]
+    markierungen: ["wettbewerb", "ausdruck"]
+
+  disziplin_kurz_trainieren:
+    name: "Disziplin trainieren"
+    beschreibung: "Kurzes Wettbewerbstraining für ruhige Wiederholung."
+    kategorie: "training"
+    intensität: "kurz"
+    dauer_sekunden: 600
+    braucht_spieler: true
+    effekte: {energie: -4, stress: 2}
+    wettbewerb_effekte: {disziplin: 2, intelligenz: 1}
+    abbruch_effekte: {vertrauen: -1, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "disziplin"]
+
+  disziplin_trainieren:
+    name: "Disziplin trainieren"
+    beschreibung: "Gründliches Wettbewerbstraining für ruhige Wiederholung und verlässliche Signale."
+    kategorie: "training"
+    intensität: "gründlich"
+    dauer_sekunden: 3600
+    braucht_spieler: true
+    effekte: {energie: -12, stress: 10, stimmung: -1, muskelkater: 4}
+    wettbewerb_effekte: {disziplin: 5, intelligenz: 1, harmonie: 1}
+    abbruch_effekte: {vertrauen: -2, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "disziplin"]
+
+  disziplin_ausgiebig_trainieren:
+    name: "Disziplin trainieren"
+    beschreibung: "Ausgiebiges Wettbewerbstraining mit hohem Risiko und starker Nachbelastung."
+    kategorie: "training"
+    intensität: "ausgiebig"
+    dauer_sekunden: 7200
+    braucht_spieler: true
+    effekte: {energie: -65, stress: 55, gesundheit: -18, muskelkater: 35, verletzungsrisiko: 25, stimmung: -10}
+    wettbewerb_effekte: {disziplin: 10, intelligenz: 3, harmonie: 2}
+    abbruch_effekte: {vertrauen: -4, sicherheit: -3}
+    folgeaktionen: ["langer_schlaf", "doktorbesuch", "kurzer_blick"]
+    markierungen: ["wettbewerb", "disziplin"]
+
+  harmonie_kurz_trainieren:
+    name: "Harmonie trainieren"
+    beschreibung: "Kurzes Wettbewerbstraining für Zusammenspiel."
+    kategorie: "training"
+    intensität: "kurz"
+    dauer_sekunden: 600
+    braucht_spieler: true
+    effekte: {energie: -5, stress: 1, vertrauen: 1}
+    wettbewerb_effekte: {harmonie: 2, disziplin: 1}
+    abbruch_effekte: {vertrauen: -1, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "harmonie"]
+
+  harmonie_üben:
+    name: "Harmonie trainieren"
+    beschreibung: "Gründliches Wettbewerbstraining für Zusammenspiel und Kontrolle."
+    kategorie: "training"
+    intensität: "gründlich"
+    dauer_sekunden: 3600
+    braucht_spieler: true
+    effekte: {energie: -14, stress: 7, muskelkater: 6, vertrauen: 2}
+    wettbewerb_effekte: {harmonie: 5, disziplin: 2, eleganz: 1}
+    abbruch_effekte: {vertrauen: -2, sicherheit: -1}
+    folgeaktionen: ["kontrollierte_ruhe", "kurzer_blick"]
+    markierungen: ["wettbewerb", "harmonie"]
+
+  harmonie_ausgiebig_trainieren:
+    name: "Harmonie trainieren"
+    beschreibung: "Ausgiebiges Wettbewerbstraining mit hohem Risiko und starker Nachbelastung."
+    kategorie: "training"
+    intensität: "ausgiebig"
+    dauer_sekunden: 7200
+    braucht_spieler: true
+    effekte: {energie: -65, stress: 55, gesundheit: -18, muskelkater: 35, verletzungsrisiko: 25}
+    wettbewerb_effekte: {harmonie: 10, disziplin: 4, eleganz: 2}
+    abbruch_effekte: {vertrauen: -4, sicherheit: -3}
+    folgeaktionen: ["langer_schlaf", "doktorbesuch", "kurzer_blick"]
     markierungen: ["wettbewerb", "harmonie"]

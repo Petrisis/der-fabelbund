@@ -12,15 +12,18 @@ from fabelbund.datenbank.speicher.auftrag_speicher import AuftragSpeicher
 from fabelbund.datenbank.speicher.fabelwesen_speicher import FabelwesenSpeicher
 from fabelbund.datenbank.speicher.server_speicher import ServerSpeicher
 from fabelbund.datenbank.speicher.spieler_speicher import SpielerSpeicher
+from fabelbund.datenbank.speicher.wettbewerb_speicher import WettbewerbSpeicher
 from fabelbund.dienste.auftrag_dienst import AuftragDienst
 from fabelbund.dienste.fabelwesen_fabrik import FabelwesenFabrik
 from fabelbund.dienste.pflege_dienst import PflegeDienst
 from fabelbund.dienste.spiel_dienst import SpielDienst
+from fabelbund.dienste.wettbewerb_dienst import leistungswert, wettbewerb_erstellen
 from fabelbund.dienste.yaml_lader import YamlLader
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.befehle.inventar import InventarAnsicht
 from fabelbund.discord.befehle.profil import ProfilAnsicht, profil_einbettung_mit_inventar
 from fabelbund.discord.auftragswand import AuftragsnavigationAnsicht, EinzelauftragAnsicht
+from fabelbund.discord.ansichten.stall_ansicht import StallAnsicht
 from fabelbund.discord.darstellung import (
     aktivität_ergebnis_einbettung,
     auftrag_einbettung,
@@ -28,10 +31,11 @@ from fabelbund.discord.darstellung import (
     auftragswand_einbettung,
     betreuungszeit_text,
     veränderung_text,
+    zustand_text,
 )
 from fabelbund.discord.server_einrichtung import guild_ids_für_nachholeinrichtung
 from fabelbund.modelle.inhalte import ArtDefinition, AuftragDefinition, GegenstandDefinition, InhaltsKatalog, PflegeaktionDefinition
-from fabelbund.modelle.laufzeit import ServerKonfiguration, SpielerProfil
+from fabelbund.modelle.laufzeit import ServerKonfiguration, SpielerProfil, WettbewerbAnmeldung
 from fabelbund_bot.bot import FabelbundBot
 
 
@@ -630,6 +634,78 @@ class SpielDienstTests(unittest.TestCase):
         self.assertGreater(ergebnis.fabelwesen.wettbewerbswerte["ausdruck"], vorher)
         self.assertEqual(ergebnis.wettbewerb_änderungen["ausdruck"], 5)
 
+    def test_yaml_trainingsaktionen_decken_alle_wettbewerbswerte_ab(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        erwartete_werte = {"schönheit", "eleganz", "charme", "intelligenz", "ausdruck", "disziplin", "harmonie"}
+        hauptwerte = {
+            wert
+            for aktion in katalog.pflegeaktionen.values()
+            if aktion.kategorie == "training" and aktion.name.endswith("trainieren")
+            for wert, änderung in aktion.wettbewerb_effekte.items()
+            if änderung >= 5
+        }
+        intensitäten = {
+            wert: {
+                aktion.intensität
+                for aktion in katalog.pflegeaktionen.values()
+                if aktion.kategorie == "training" and wert in aktion.markierungen
+            }
+            for wert in erwartete_werte
+        }
+
+        self.assertEqual(hauptwerte, erwartete_werte)
+        self.assertTrue(all(stufen == {"kurz", "gründlich", "ausgiebig"} for stufen in intensitäten.values()))
+
+    def test_trainingsansicht_nutzt_wertauswahl_und_danach_drei_stufen(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank = Datenbank(Path(tmp) / "test.sqlite3")
+            datenbank.migrieren()
+            spiel = SpielDienst(
+                inhalte=YamlLader(Path("daten")).lade_alle(),
+                spieler=SpielerSpeicher(datenbank),
+                fabelwesen=FabelwesenSpeicher(datenbank),
+                aufträge=AuftragSpeicher(datenbank),
+                aktivitäten=AktivitätSpeicher(datenbank),
+                fabrik=FabelwesenFabrik(),
+                pflege=PflegeDienst(),
+                auftrag_dienst=AuftragDienst(),
+            )
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+
+            wertansicht = StallAnsicht(spiel, "123", [fabling], 1, fabling.id, "training")
+            stufenansicht = StallAnsicht(spiel, "123", [fabling], 1, fabling.id, "training:ausdruck")
+
+        wertbuttons = [kind for kind in wertansicht.children if getattr(kind, "custom_id", "").startswith("stall:training:")]
+        stufenbuttons = [kind for kind in stufenansicht.children if getattr(kind, "custom_id", "").startswith("stall:aktion:")]
+        self.assertEqual(len(wertbuttons), 7)
+        self.assertEqual(len(stufenbuttons), 3)
+        self.assertEqual([button.label for button in stufenbuttons], ["Kurz (10m)", "Gründlich (1h)", "Ausgiebig (2h)"])
+
+    def test_checkansicht_blendet_kostenlosen_sofortcheck_als_button_aus(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank = Datenbank(Path(tmp) / "test.sqlite3")
+            datenbank.migrieren()
+            spiel = SpielDienst(
+                inhalte=YamlLader(Path("daten")).lade_alle(),
+                spieler=SpielerSpeicher(datenbank),
+                fabelwesen=FabelwesenSpeicher(datenbank),
+                aufträge=AuftragSpeicher(datenbank),
+                aktivitäten=AktivitätSpeicher(datenbank),
+                fabrik=FabelwesenFabrik(),
+                pflege=PflegeDienst(),
+                auftrag_dienst=AuftragDienst(),
+            )
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+
+            ansicht = StallAnsicht(spiel, "123", [fabling], 1, fabling.id, "check")
+
+        ids = [getattr(kind, "custom_id", "") for kind in ansicht.children]
+        self.assertNotIn("stall:aktion:kurzer_blick", ids)
+        self.assertIn("stall:aktion:genauer_check", ids)
+        self.assertIn("stall:aktion:doktorbesuch", ids)
+
     def test_doktorbesuch_kostet_geld_und_bucht_nicht_doppelt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
@@ -1035,7 +1111,21 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertNotIn("Pflege", text)
         self.assertNotIn("Fell", text)
-        self.assertIn("zufrieden", text.lower())
+        self.assertIn("Stimmung :green_square:", text)
+        self.assertIn("Energie :red_square:", text)
+
+    def test_status_nutzt_fünfer_emoji_balken(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+            fabling.wettbewerbswerte["ausdruck"] = 45
+            spiel.fabelwesen.speichern(fabling)
+
+            text = zustand_text(spiel.sammlung("123")[0])
+
+        self.assertIn("Energie :blue_square::blue_square::blue_square::orange_square::black_large_square:", text)
+        self.assertIn("Ausdruck :blue_square::blue_square::orange_square::black_large_square::black_large_square:", text)
 
     def test_serverkonfiguration_wird_gespeichert(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -1075,6 +1165,48 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertIn("eingerichtet", spalten)
 
+    def test_migration_legt_wettbewerbstabellen_an(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank = Datenbank(Path(tmp) / "test.sqlite3")
+            datenbank.migrieren()
+            with datenbank.verbinden() as verbindung:
+                tabellen = {
+                    zeile["name"]
+                    for zeile in verbindung.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+                }
+
+        self.assertIn("wettbewerbe", tabellen)
+        self.assertIn("wettbewerb_anmeldungen", tabellen)
+
+    def test_wettbewerb_anmeldung_wird_pro_spieler_ersetzt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            datenbank = Datenbank(Path(tmp) / "test.sqlite3")
+            datenbank.migrieren()
+            speicher = WettbewerbSpeicher(datenbank)
+            wettbewerb = wettbewerb_erstellen("12345", datetime.now(timezone.utc) + timedelta(days=2), wert="ausdruck")
+            speicher.speichern(wettbewerb)
+            speicher.anmelden(WettbewerbAnmeldung(wettbewerb_id=wettbewerb.id, spieler_id="7", fabelwesen_id="fw_1"))
+            speicher.anmelden(WettbewerbAnmeldung(wettbewerb_id=wettbewerb.id, spieler_id="7", fabelwesen_id="fw_2"))
+
+            anmeldungen = speicher.anmeldungen(wettbewerb.id)
+
+        self.assertEqual(len(anmeldungen), 1)
+        self.assertEqual(anmeldungen[0].fabelwesen_id, "fw_2")
+
+    def test_wettbewerbsleistung_nutzt_stat_als_hauptfaktor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+            schwach = fabling.model_copy(deep=True)
+            stark = fabling.model_copy(deep=True)
+            schwach.wettbewerbswerte["ausdruck"] = 10
+            stark.wettbewerbswerte["ausdruck"] = 80
+            schwach.zustand.update({"gesundheit": 75, "stimmung": 50, "energie": 50, "stress": 20})
+            stark.zustand.update({"gesundheit": 75, "stimmung": 50, "energie": 50, "stress": 20})
+
+        self.assertGreater(leistungswert(stark, "ausdruck"), leistungswert(schwach, "ausdruck"))
+
     def test_nur_nicht_eingerichtete_guilds_werden_nachgeholt(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             datenbank = Datenbank(Path(tmp) / "test.sqlite3")
@@ -1105,7 +1237,11 @@ class BotLifecycleTests(unittest.IsolatedAsyncioTestCase):
             datenbank = Datenbank(Path(tmp) / "test.sqlite3")
             datenbank.migrieren()
             spiel = SpielDienstTests().baue_spiel(Path(tmp) / "spiel.sqlite3")
-            kontext = Anwendungskontext(spiel=spiel, server=ServerSpeicher(datenbank))
+            kontext = Anwendungskontext(
+                spiel=spiel,
+                server=ServerSpeicher(datenbank),
+                wettbewerbe=WettbewerbSpeicher(datenbank),
+            )
             bot = FabelbundBot(kontext, befehle_synchronisieren=False, testserver_id=None)
 
             await bot.setup_hook()

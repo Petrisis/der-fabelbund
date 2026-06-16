@@ -143,6 +143,8 @@ Textregel:
 
 Alle Trainingswerte sollen grundsätzlich spielbar werden. Für den MVP dürfen sie einfach und klar starten; die Differenzierung entsteht über Aktionen, Dauer, Intensität, Risiko und spätere Wettbewerbe.
 
+Die konkrete numerische Grundlage für Wettbewerbstrainings steht in [trainings-matrix.md](trainings-matrix.md).
+
 ### Checks
 
 Checks sind Informationsaktionen. Ein Check verändert grundsätzlich keine Werte. Er macht Beobachtungen, Risiken, Vorlieben, Abneigungen oder Einschätzungen sichtbar.

@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fabelbund.anwendung import Anwendungskontext
 from fabelbund.discord.auftragswand import auftragswand_erstellen_oder_aktualisieren
 from fabelbund.discord.eventmarkt import eventmarkt_aktualisieren
+from fabelbund.discord.wettbewerb import wettbewerb_aktualisieren
 from fabelbund_bot.konfiguration import lade_konfiguration
 
 
@@ -48,6 +49,7 @@ class KanalNeuaufbauClient(discord.Client):
             konfiguration.model_copy(update={"einstieg_nachricht_id": None, "auftragswand_nachricht_id": None})
         )
         await auftragswand_erstellen_oder_aktualisieren(self.kontext, guild)
+        await wettbewerb_aktualisieren(self.kontext, guild)
         await eventmarkt_aktualisieren(self.kontext, guild)
         log.info("Fabelbund-Nachrichten neu aufgebaut: %s (%s)", guild.name, guild.id)
 

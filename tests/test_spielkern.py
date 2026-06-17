@@ -103,6 +103,19 @@ def inhalts_katalog() -> InhaltsKatalog:
             "wettbewerb_effekte": {"ausdruck": 5},
         }
     )
+    abbruch_training = PflegeaktionDefinition.model_validate(
+        {
+            "aktion_id": "harmonie_ausgiebig_trainieren",
+            "name": "Harmonie trainieren",
+            "kategorie": "training",
+            "intensität": "ausgiebig",
+            "dauer_sekunden": 7200,
+            "braucht_spieler": True,
+            "effekte": {"energie": -65, "stress": 55, "gesundheit": -18},
+            "wettbewerb_effekte": {"harmonie": 10},
+            "abbruch_effekte": {"vertrauen": -4, "sicherheit": -3},
+        }
+    )
     spiel = PflegeaktionDefinition.model_validate(
         {
             "aktion_id": "gemeinsames_spiel",
@@ -239,6 +252,24 @@ def inhalts_katalog() -> InhaltsKatalog:
             "belohnungen": {"geld": 20, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
         }
     )
+    tutorial_abbruch = AuftragDefinition.model_validate(
+        {
+            "auftrag_id": "tutorial_abbruch_005",
+            "name": "Einführung: Abbrechen",
+            "art": "tutorial",
+            "dauer_tage": 1,
+            "fabelwesen": [
+                {
+                    "art_id": "gluthase",
+                    "spitzname": "Tamos Gluthase",
+                    "starter_kandidat": False,
+                    "start_zustand": {"vertrauen": 55, "sicherheit": 55, "energie": 72},
+                },
+            ],
+            "ziele": {"vertrauen_höchstens": 51, "sicherheit_höchstens": 52},
+            "belohnungen": {"geld": 15, "ruf": {"pflege": 1, "zuverlässigkeit": 1}},
+        }
+    )
     tutorial_betreuung = AuftragDefinition.model_validate(
         {
             "auftrag_id": "tutorial_betreuung_005",
@@ -321,6 +352,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "gemeinsames_spiel": spiel,
             "kurze_pause": pause,
             "ausdruck_üben": training,
+            "harmonie_ausgiebig_trainieren": abbruch_training,
             "kurzer_blick": check,
             "doktorbesuch": doktorbesuch,
         },
@@ -330,6 +362,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "tutorial_pflege_002": tutorial_pflege,
             "tutorial_aktiv_passiv_003": tutorial_aktiv_passiv,
             "tutorial_futter_004": tutorial_futter,
+            "tutorial_abbruch_005": tutorial_abbruch,
             "tutorial_betreuung_005": tutorial_betreuung,
             "tutorial_wettbewerb_006": tutorial_wettbewerb,
         },
@@ -891,15 +924,21 @@ class SpielDienstTests(unittest.TestCase):
             vierte_abgabe = spiel.auftrag_abgeben("123")
 
             fünfter_auftrag = spiel.pflegeauftrag_starten("123")
+            tamo_fabling = spiel.sammlung("123")[0]
+            abbruch_aktivität = spiel.pflegeaktivität_starten("123", "harmonie_ausgiebig_trainieren", tamo_fabling.id)
+            fünfte_abgabe = spiel.aktivität_abbrechen("123", abbruch_aktivität.id)
+            fünfte_auftragsabgabe = spiel.auftrag_abgeben("123")
+
+            sechster_auftrag = spiel.pflegeauftrag_starten("123")
             quellfink = spiel.sammlung("123")[0]
             self.schließe_aktivität_ab(spiel, spiel.pflegeaktivität_starten("123", "gemeinsames_spiel", quellfink.id))
             self.schließe_aktivität_ab(spiel, spiel.pflegeaktivität_starten("123", "kurze_pause", quellfink.id))
-            fünfte_abgabe = spiel.auftrag_abgeben("123")
+            sechste_abgabe = spiel.auftrag_abgeben("123")
 
-            sechster_auftrag = spiel.pflegeauftrag_starten("123")
+            siebter_auftrag = spiel.pflegeauftrag_starten("123")
             wettbewerbs_fabling = spiel.sammlung("123")[0]
             self.schließe_aktivität_ab(spiel, spiel.pflegeaktivität_starten("123", "ausdruck_üben", wettbewerbs_fabling.id))
-            sechste_abgabe = spiel.auftrag_abgeben("123")
+            siebte_abgabe = spiel.auftrag_abgeben("123")
             vor_starterwahl = spiel.spieler.holen("123")
 
             starter = spiel.tutorial_starter_wählen("123", "gluthase")
@@ -922,10 +961,14 @@ class SpielDienstTests(unittest.TestCase):
         self.assertIn("Gluthase", dritte_abgabe.rückgabe_text)
         self.assertEqual(vierter_auftrag.auftrag_id, "tutorial_futter_004")
         self.assertTrue(vierte_abgabe.erfolgreich)
-        self.assertEqual(fünfter_auftrag.auftrag_id, "tutorial_betreuung_005")
-        self.assertTrue(fünfte_abgabe.erfolgreich)
-        self.assertEqual(sechster_auftrag.auftrag_id, "tutorial_wettbewerb_006")
+        self.assertEqual(fünfter_auftrag.auftrag_id, "tutorial_abbruch_005")
+        self.assertEqual(fünfte_abgabe.änderungen.get("vertrauen"), -4)
+        self.assertEqual(fünfte_abgabe.änderungen.get("sicherheit"), -3)
+        self.assertTrue(fünfte_auftragsabgabe.erfolgreich)
+        self.assertEqual(sechster_auftrag.auftrag_id, "tutorial_betreuung_005")
         self.assertTrue(sechste_abgabe.erfolgreich)
+        self.assertEqual(siebter_auftrag.auftrag_id, "tutorial_wettbewerb_006")
+        self.assertTrue(siebte_abgabe.erfolgreich)
         self.assertIsNotNone(vor_starterwahl)
         assert vor_starterwahl is not None
         self.assertEqual(vor_starterwahl.tutorialschritt, "starter_wählen")

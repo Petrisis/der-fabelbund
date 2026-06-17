@@ -101,6 +101,7 @@ class AuftragAnsicht(discord.ui.View):
                 "pflege_und_ausrüstung",
                 "aktiv_passiv",
                 "futterauftrag",
+                "abbruch_lernen",
                 "betreuungszeit",
                 "wettbewerb_vorbereitung",
             }:

@@ -415,6 +415,7 @@ class SpielDienst:
             "pflege_und_ausrüstung": "tutorial_pflege_002",
             "aktiv_passiv": "tutorial_aktiv_passiv_003",
             "futterauftrag": "tutorial_futter_004",
+            "abbruch_lernen": "tutorial_abbruch_005",
             "betreuungszeit": "tutorial_betreuung_005",
             "wettbewerb_vorbereitung": "tutorial_wettbewerb_006",
         }.get(spieler.tutorialschritt)
@@ -645,6 +646,8 @@ class SpielDienst:
         elif auftrag.auftrag_id == "tutorial_aktiv_passiv_003":
             aktualisiert.tutorialschritt = "futterauftrag"
         elif auftrag.auftrag_id == "tutorial_futter_004":
+            aktualisiert.tutorialschritt = "abbruch_lernen"
+        elif auftrag.auftrag_id == "tutorial_abbruch_005":
             aktualisiert.tutorialschritt = "betreuungszeit"
         elif auftrag.auftrag_id == "tutorial_betreuung_005":
             aktualisiert.tutorialschritt = "wettbewerb_vorbereitung"
@@ -739,6 +742,8 @@ class SpielDienst:
             return "Hin und wieder tut deinen Fablingen ein bisschen Pflege gut. Denk daran, dass du passende Utensilien brauchst und selbst eine Pflege ein wenig Energie abverlangt."
         if auftrag.auftrag_id == "tutorial_aktiv_passiv_003":
             return "Wenn du deinen Stall noch mehr erweiterst, musst du vorausschauend planen: Mit welchem Fabling beschäftigst du dich aktiv, und wer kann in der Zeit zum Beispiel alleine ruhen?"
+        if auftrag.auftrag_id == "tutorial_abbruch_005":
+            return "Abbrechen beendet eine Aktivität sofort, kann aber Vertrauen und Sicherheit beschädigen. Nutze es, wenn du musst, aber plane lange aktive Betreuungen bewusst."
         return "Der Auftrag wurde abgegeben."
 
     def _rückgabe_text(self, auftrag, fabelwesen_liste: list[Fabelwesen]) -> str:

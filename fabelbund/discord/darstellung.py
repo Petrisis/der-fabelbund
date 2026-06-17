@@ -44,6 +44,7 @@ def tutorial_hinweis_text(spieler: SpielerProfil) -> str:
         "stall_ausbauen": "Gehe zu deinen Fablingen und erweitere deinen Stall.",
         "aktiv_passiv": "Nimm den nächsten Auftrag an und kombiniere passive Ruhe mit aktiver Betreuung.",
         "futterauftrag": "Nimm den nächsten Auftrag an, kaufe Leckerlis und finde heraus, welches davon passt.",
+        "abbruch_lernen": "Nimm Tamos Auftrag an und brich die gestartete Aktivität bewusst ab.",
         "betreuungszeit": "Nimm den nächsten Auftrag an und betreue den Fabling einige Minuten.",
         "wettbewerb_vorbereitung": "Nimm den nächsten Auftrag an und bereite einen Fabling auf einen Wettbewerb vor.",
         "starter_wählen": "Wähle deinen ersten eigenen Fabling.",
@@ -242,6 +243,8 @@ ZUSTANDSZIELE = (
     ("vertrauen_mindestens", "vertrauen", "Vertrauen", "mindestens"),
     ("sicherheit_mindestens", "sicherheit", "Sicherheit", "mindestens"),
     ("sättigung_mindestens", "sättigung", "Sättigung", "mindestens"),
+    ("vertrauen_höchstens", "vertrauen", "Vertrauen", "höchstens"),
+    ("sicherheit_höchstens", "sicherheit", "Sicherheit", "höchstens"),
     ("fellpflege_mindestens", "fellpflege", "Fellpflege", "mindestens"),
     ("stress_höchstens", "stress", "Stress", "höchstens"),
 )

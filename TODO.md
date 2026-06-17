@@ -37,14 +37,8 @@ Diese Liste enthält nur offene Punkte. Priorisierte Aufgaben stehen in nummerie
 
 Details und Originalgedanken stehen in `planung/futter-und-aktivitaetsrework.md`; vor Umsetzung vollständig lesen.
 
-- [x] Standardfutter von Leckerlis trennen.
-- [x] Automatische Grundversorgung nur bis Sättigung 65 modellieren.
-- [x] Leckerlis als bewusste `Futter geben`-Aktion wieder einführen.
-- [x] Leckerli-Buffs und deren Zeitabrechnung entwerfen.
-- [x] Prüfen, ob Leckerli-Buffs eine häufigere Futterabrechnung brauchen als den aktuellen Abruf über die Fablingübersicht.
-- [x] Reaktionen auf nicht bevorzugte Leckerlis ergänzen.
-- [x] Tutorial-Futterauftrag nach dem Rework neu schreiben.
 - [ ] Futter- und Leckerli-Rework im kompletten Tutorialdurchlauf testen.
+- [ ] Getestete Leckerlis pro Fabling speichern und anzeigen: falsche Versuche als `❌ Name`, nach Treffer nur noch Lieblingsleckerli mit Emoji.
 
 ## B. Aktivitätszeiten und Online-/AFK-Spiel
 

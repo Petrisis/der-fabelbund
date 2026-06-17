@@ -22,6 +22,8 @@ from fabelbund.modelle.laufzeit import Fabelwesen, Wettbewerb, WettbewerbAnmeldu
 log = logging.getLogger(__name__)
 WETTBEWERB_SCAN_LIMIT = 80
 AUSWERTUNG_PAUSE_SEKUNDEN = 60
+WETTBEWERB_ERWÄHNUNGEN = discord.AllowedMentions(everyone=False, users=True, roles=False)
+WETTBEWERB_START_ERWÄHNUNGEN = discord.AllowedMentions(everyone=True, users=True, roles=False)
 WERTNAMEN = {
     "schönheit": "Schönheit",
     "eleganz": "Eleganz",
@@ -198,8 +200,13 @@ async def wettbewerb_auswerten(kontext: Anwendungskontext, guild: discord.Guild,
         await _nächsten_wettbewerb_planen(kontext, guild, wettbewerb)
         return
 
-    namen = ", ".join(f"**{fabling.spitzname}**" for _, fabling in teilnehmer)
-    await kanal.send(f"Der Wettbewerb um **{wertname}** beginnt. Teilnehmende Fablinge: {namen}", silent=True)
+    namen = ", ".join(_teilnehmer_label(anmeldung, fabling) for anmeldung, fabling in teilnehmer)
+    await kanal.send(
+        f"🏆✨ @everyone **Der Wettbewerb um {wertname} beginnt jetzt!** ✨🏆\n"
+        f"🎺 Teilnehmende Fablinge: {namen}\n"
+        "📣 Die Wertung läuft. Ergebnisse folgen gleich einzeln.",
+        allowed_mentions=WETTBEWERB_START_ERWÄHNUNGEN,
+    )
     await asyncio.sleep(AUSWERTUNG_PAUSE_SEKUNDEN)
 
     random.shuffle(teilnehmer)
@@ -207,7 +214,10 @@ async def wettbewerb_auswerten(kontext: Anwendungskontext, guild: discord.Guild,
     for anmeldung, fabling in teilnehmer:
         punktzahl = leistungswert(fabling, wettbewerb.wert)
         leistungen.append((anmeldung, fabling, punktzahl))
-        await kanal.send(f"**{fabling.spitzname}** erreicht **{punktzahl} Punkte**.", silent=True)
+        await kanal.send(
+            f"🎯 {_teilnehmer_label(anmeldung, fabling)} erreicht **{punktzahl} Punkte**.",
+            allowed_mentions=WETTBEWERB_ERWÄHNUNGEN,
+        )
         await asyncio.sleep(AUSWERTUNG_PAUSE_SEKUNDEN)
 
     leistungen.sort(key=lambda eintrag: eintrag[2], reverse=True)
@@ -217,17 +227,18 @@ async def wettbewerb_auswerten(kontext: Anwendungskontext, guild: discord.Guild,
         kontext.spiel.spieler.speichern(spieler.model_copy(update={"geld": spieler.geld + wettbewerb.preisgeld}))
 
     rangliste = "\n".join(
-        f"{platz}. <@{anmeldung.spieler_id}> mit **{fabling.spitzname}**: {punktzahl} Punkte"
+        f"{platz}. {_teilnehmer_label(anmeldung, fabling)}: {punktzahl} Punkte"
         for platz, (anmeldung, fabling, punktzahl) in enumerate(leistungen, start=1)
     )
     embed = discord.Embed(
-        title="Wettbewerb entschieden",
-        description=f"**{sieger_fabling.spitzname}** gewinnt für <@{sieger_anmeldung.spieler_id}>.",
+        title="🏆 Wettbewerb entschieden",
+        description=f"✨ {_teilnehmer_label(sieger_anmeldung, sieger_fabling)} gewinnt den Wettbewerb.",
         color=discord.Color.gold(),
     )
     embed.add_field(name="Preisgeld", value=siegel(wettbewerb.preisgeld), inline=True)
     embed.add_field(name="Rangliste", value=rangliste, inline=False)
-    await kanal.send(embed=embed, silent=True)
+    await kanal.send(embed=embed, allowed_mentions=WETTBEWERB_ERWÄHNUNGEN)
+    await asyncio.sleep(AUSWERTUNG_PAUSE_SEKUNDEN)
     await _nächsten_wettbewerb_planen(kontext, guild, wettbewerb)
 
 
@@ -254,6 +265,10 @@ def wettbewerb_ansichten(kontext: Anwendungskontext) -> list[WettbewerbAnsicht]:
         for server in kontext.server.auflisten()
         if (wettbewerb := kontext.wettbewerbe.nächster_offener_für_guild(server.guild_id)) is not None
     ]
+
+
+def _teilnehmer_label(anmeldung: WettbewerbAnmeldung, fabling: Fabelwesen) -> str:
+    return f"<@{anmeldung.spieler_id}>s Fabling **{fabling.spitzname}**"
 
 
 async def _nächsten_wettbewerb_planen(kontext: Anwendungskontext, guild: discord.Guild, wettbewerb: Wettbewerb) -> None:

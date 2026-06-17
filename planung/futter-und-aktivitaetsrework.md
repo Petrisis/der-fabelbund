@@ -17,6 +17,8 @@ MVP-Stand:
 - Das Lieblingsleckerli gibt für eine Zeitspanne, die 20 Futterwert entspricht, einen leichten Bonus auf positive Aktivitätseffekte.
 - Nicht bevorzugte Leckerlis sättigen ebenfalls, geben aber keinen Buff und erzeugen eine zurückhaltendere Reaktion.
 - Das Tutorial nutzt Leckerlis als Beobachtungsaufgabe: Spieler kaufen Leckerlis und finden heraus, was ein Fabling am liebsten isst.
+- Der Laden bietet Leckerlis als eigenes Untermenü an; im Tutorial wird die Auswahl auf das richtige Leckerli plus zwei günstige Alternativen begrenzt.
+- Die Starter-Fablinge sind alle `gewöhnlich`; ihre Leckerlis bleiben im günstigen Einstiegsbereich.
 
 Getroffene Zwischenentscheidungen:
 
@@ -28,6 +30,7 @@ Getroffene Zwischenentscheidungen:
 
 Offene Designfragen:
 
+- Wenn bis zu 25 Leckerlis existieren, muss pro Fabling gespeichert werden, welche Leckerlis bereits getestet wurden. Bis das Lieblingsleckerli gefunden ist, sollen falsche Tests als `❌ Name` sichtbar bleiben. Sobald das Lieblingsleckerli einmal gegeben wurde, zeigt die Fabling-Ansicht nur noch dieses Lieblingsleckerli mit passendem Emoji.
 - Brauchen unterschiedliche Elemente später unterschiedliche Standardfutter?
 - Sollen Lieblingsleckerlis langfristig pro Art, pro Persönlichkeit oder pro individuellem Fabling variieren?
 - Sollen Leckerlis später gezieltere Bufftypen haben, z.B. Training, Ruhe, Wettbewerb oder Bindung?

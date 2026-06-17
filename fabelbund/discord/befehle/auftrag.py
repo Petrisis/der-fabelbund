@@ -226,6 +226,8 @@ class TutorialZwischenschrittAnsicht(discord.ui.View):
 
 
 def auftragsziel_text(ziele: dict[str, object]) -> str:
+    if ziele.get("aufgabentext"):
+        return str(ziele["aufgabentext"])
     if ziele.get("betreuungsdauer_sekunden") and ziele.get("vertrauen_mindestens"):
         return "Baue Vertrauen auf: Gemeinsames Spiel hilft dabei. Erreiche insgesamt 4 Minuten Betreuungszeit; sinnvolle Pausen zählen dazu."
     if ziele.get("wettbewerb_mindestens"):

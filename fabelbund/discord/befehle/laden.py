@@ -70,11 +70,7 @@ class LadenAnsicht(discord.ui.View):
             self.add_item(button)
 
     def _leckerli_buttons_anlegen(self) -> None:
-        leckerlis = [
-            gegenstand
-            for gegenstand in self.kontext.spiel.inhalte.gegenstände.values()
-            if "leckerli" in gegenstand.markierungen
-        ]
+        leckerlis = self._leckerli_sortiment()
         for index, gegenstand in enumerate(sorted(leckerlis, key=lambda eintrag: (eintrag.preis, eintrag.name))[:21]):
             button = discord.ui.Button(
                 label=f"{leckerli_emoji(gegenstand.gegenstand_id)} {gegenstand.name} ({siegel(gegenstand.preis)})",
@@ -148,19 +144,57 @@ class LadenAnsicht(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=AuftragAnsicht(self.kontext, self.nutzer_id))
 
 
+    def _leckerli_sortiment(self):
+        leckerlis = [
+            gegenstand
+            for gegenstand in self.kontext.spiel.inhalte.gegenstände.values()
+            if "leckerli" in gegenstand.markierungen
+        ]
+        tutorial_ids = self._tutorial_leckerli_ids(leckerlis)
+        if tutorial_ids:
+            nach_id = {gegenstand.gegenstand_id: gegenstand for gegenstand in leckerlis}
+            return [nach_id[gegenstand_id] for gegenstand_id in tutorial_ids if gegenstand_id in nach_id]
+        return leckerlis
+
+    def _tutorial_leckerli_ids(self, leckerlis) -> list[str]:
+        aktiver_auftrag = self.kontext.spiel.aktiver_auftrag(self.nutzer_id)
+        if aktiver_auftrag is None or aktiver_auftrag.auftrag_id != "tutorial_futter_004":
+            return []
+        fablinge = self.kontext.spiel.auftrag_fablinge(aktiver_auftrag)
+        liebling = None
+        for fabling in fablinge:
+            wert = fabling.persönlichkeit.get("lieblingsfutter")
+            if isinstance(wert, str):
+                liebling = wert
+                break
+        if liebling is None:
+            return []
+        günstige = [
+            gegenstand.gegenstand_id
+            for gegenstand in sorted(leckerlis, key=lambda eintrag: (eintrag.preis, eintrag.name))
+            if gegenstand.gegenstand_id != liebling
+        ][:2]
+        auswahl = [liebling, *günstige]
+        return [
+            gegenstand_id
+            for gegenstand_id in sorted(auswahl, key=lambda eintrag: self.kontext.spiel.inhalte.gegenstände[eintrag].preis)
+        ]
+
+
 def laden_einbettung(kontext: Anwendungskontext, nutzer_id: str, kategorie: str | None = None) -> discord.Embed:
     spieler = kontext.spiel.stelle_spieler_sicher(nutzer_id)
     titel = "Fabelbund-Laden: Leckerlis" if kategorie == "leckerli" else "Fabelbund-Laden"
     embed = discord.Embed(title=titel, color=discord.Color.green())
     embed.add_field(name="Bundsiegel", value=siegel(spieler.geld), inline=True)
-    embed.add_field(name="Sortiment", value=sortiment_text(kontext, kategorie), inline=False)
     return embed
 
 
-def sortiment_text(kontext: Anwendungskontext, kategorie: str | None = None) -> str:
+def sortiment_text(kontext: Anwendungskontext, nutzer_id: str | None = None, kategorie: str | None = None) -> str:
     gegenstände = list(kontext.spiel.inhalte.gegenstände.values())
     if kategorie == "leckerli":
         gegenstände = [gegenstand for gegenstand in gegenstände if "leckerli" in gegenstand.markierungen]
+        if nutzer_id is not None:
+            gegenstände = tutorial_leckerli_sortiment(kontext, nutzer_id, gegenstände) or gegenstände
     else:
         gegenstände = [gegenstand for gegenstand in gegenstände if "leckerli" not in gegenstand.markierungen]
     zeilen = []
@@ -168,6 +202,33 @@ def sortiment_text(kontext: Anwendungskontext, kategorie: str | None = None) -> 
         name = f"{leckerli_emoji(gegenstand.gegenstand_id)} {gegenstand.name}" if "leckerli" in gegenstand.markierungen else gegenstand.name
         zeilen.append(f"{name}: {siegel(gegenstand.preis)}")
     return "\n".join(zeilen)
+
+
+def tutorial_leckerli_sortiment(kontext: Anwendungskontext, nutzer_id: str, leckerlis) -> list:
+    aktiver_auftrag = kontext.spiel.aktiver_auftrag(nutzer_id)
+    if aktiver_auftrag is None or aktiver_auftrag.auftrag_id != "tutorial_futter_004":
+        return []
+    fablinge = kontext.spiel.auftrag_fablinge(aktiver_auftrag)
+    liebling = None
+    for fabling in fablinge:
+        wert = fabling.persönlichkeit.get("lieblingsfutter")
+        if isinstance(wert, str):
+            liebling = wert
+            break
+    if liebling is None:
+        return []
+    nach_id = {gegenstand.gegenstand_id: gegenstand for gegenstand in leckerlis}
+    günstige = [
+        gegenstand.gegenstand_id
+        for gegenstand in sorted(leckerlis, key=lambda eintrag: (eintrag.preis, eintrag.name))
+        if gegenstand.gegenstand_id != liebling
+    ][:2]
+    auswahl = [liebling, *günstige]
+    return [
+        nach_id[gegenstand_id]
+        for gegenstand_id in sorted(auswahl, key=lambda eintrag: nach_id[eintrag].preis)
+        if gegenstand_id in nach_id
+    ]
 
 
 def leckerli_emoji(gegenstand_id: str) -> str:

@@ -734,10 +734,12 @@ class SpielDienst:
 
     def _tutorial_hinweis_nach_abgabe(self, auftrag: AktiverAuftrag) -> str:
         if auftrag.auftrag_id == "tutorial_ruhe_001":
-            return "Mira nickt zufrieden: Eine eingehaltene Ruhephase ist kein Stillstand, sondern verlässliche Betreuung."
+            return "Nach einer Aktion siehst du, welche Werte sich verbessert 🟩 oder verschlechtert 🟥 haben. Eine Ruhe nach anstrengenden Aktivitäten tut uns doch allen gut, oder?"
         if auftrag.auftrag_id == "tutorial_pflege_002":
-            return "Brann notiert die Rückgabe knapp: Sauberer Zustand, Auftrag erfüllt."
-        return "Der Auftrag wurde sauber abgegeben."
+            return "Hin und wieder tut deinen Fablingen ein bisschen Pflege gut. Denk daran, dass du passende Utensilien brauchst und selbst eine Pflege ein wenig Energie abverlangt."
+        if auftrag.auftrag_id == "tutorial_aktiv_passiv_003":
+            return "Wenn du deinen Stall noch mehr erweiterst, musst du vorausschauend planen: Mit welchem Fabling beschäftigst du dich aktiv, und wer kann in der Zeit zum Beispiel alleine ruhen?"
+        return "Der Auftrag wurde abgegeben."
 
     def _rückgabe_text(self, auftrag, fabelwesen_liste: list[Fabelwesen]) -> str:
         namen = ", ".join(fabelwesen.spitzname for fabelwesen in fabelwesen_liste)

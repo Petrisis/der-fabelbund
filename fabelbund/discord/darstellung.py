@@ -85,7 +85,7 @@ def auftrag_einbettung(
             zeilen.append(wert)
         embed.add_field(name="Zugegeteilt", value="\n\n".join(zeilen), inline=False)
         zielbild = auftragszustand_text(auftrag, zugeteilte)
-        if zielbild:
+        if zielbild and auftrag.art != "tutorial":
             embed.add_field(name="Ausgangslage und Ziel", value=zielbild, inline=False)
     betreuungszeit = betreuungszeit_text(aktiver_auftrag, auftrag, zugeteilte)
     if betreuungszeit:

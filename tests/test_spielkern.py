@@ -24,7 +24,7 @@ from fabelbund.discord.befehle.inventar import InventarAnsicht
 from fabelbund.discord.befehle.profil import ProfilAnsicht, profil_einbettung_mit_inventar
 from fabelbund.discord.auftragswand import AuftragsnavigationAnsicht, EinzelauftragAnsicht
 from fabelbund.discord.ansichten.stall_ansicht import StallAnsicht
-from fabelbund.discord.befehle.laden import LadenAnsicht, sortiment_text
+from fabelbund.discord.befehle.laden import LadenAnsicht, laden_einbettung
 from fabelbund.discord.darstellung import (
     aktivität_ergebnis_einbettung,
     auftrag_einbettung,
@@ -80,7 +80,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "folgeaktionen": ["kontrollierte_ruhe", "kurzer_blick"],
         }
     )
-    moosluchs = art.model_copy(update={"art_id": "moosluchs", "name": "Moosluchs", "element": "wald", "grundseltenheit": "selten"})
+    moosluchs = art.model_copy(update={"art_id": "moosluchs", "name": "Moosluchs", "element": "wald"})
     quellfink = art.model_copy(update={"art_id": "quellfink", "name": "Quellfink", "element": "wasser"})
     ruhe = PflegeaktionDefinition.model_validate(
         {
@@ -446,7 +446,16 @@ class SpielDienstTests(unittest.TestCase):
                 if getattr(auftrag, "öffentlich") and auftrag.dauer_stunden == 1
             ]
             gewöhnlicher_preis = spiel.fabelwesen_preis("gluthase")
-            seltener_preis = spiel.fabelwesen_preis("moosluchs")
+            seltener_preis = SpielDienst(
+                katalog,
+                spiel.spieler,
+                spiel.fabelwesen,
+                spiel.aufträge,
+                spiel.aktivitäten,
+                spiel.fabrik,
+                spiel.pflege,
+                spiel.auftrag_dienst,
+            ).fabelwesen_preis("dornenkatze")
 
         self.assertGreaterEqual(gewöhnlicher_preis, max(öffentliche_belohnungen) * 4)
         self.assertGreaterEqual(seltener_preis, max(öffentliche_belohnungen) * 10)
@@ -980,7 +989,7 @@ class SpielDienstTests(unittest.TestCase):
         self.assertIn("Gesammelt: 0s von 4m.", text)
         self.assertIn("Früheste Abgabe", text)
         self.assertTrue(any(feld.name == "Betreuungszeit" for feld in embed.fields))
-        self.assertTrue(any(feld.name == "Ausgangslage und Ziel" for feld in embed.fields))
+        self.assertFalse(any(feld.name == "Ausgangslage und Ziel" for feld in embed.fields))
 
     def test_öffentliche_standardaufträge_sind_zustandsbasiert(self) -> None:
         katalog = YamlLader(Path("daten")).lade_alle()
@@ -1195,13 +1204,34 @@ class SpielDienstTests(unittest.TestCase):
 
             hauptansicht = LadenAnsicht(kontext, "123")
             leckerli_ansicht = LadenAnsicht(kontext, "123", "leckerli")
-            text = sortiment_text(kontext, "leckerli")
+            embed = laden_einbettung(kontext, "123", "leckerli")
 
         self.assertLessEqual(len(hauptansicht.children), 25)
         self.assertLessEqual(len(leckerli_ansicht.children), 25)
         self.assertTrue(any(kind.label == "🍬 Leckerlis" for kind in hauptansicht.children))
-        self.assertIn("🍎 Apfelstücke", text)
-        self.assertIn("✨ Glanzkörner", text)
+        self.assertTrue(any("🍎 Apfelstücke" in str(kind.label) for kind in leckerli_ansicht.children))
+        self.assertTrue(any("✨ Glanzkörner" in str(kind.label) for kind in leckerli_ansicht.children))
+        self.assertFalse(any(feld.name == "Sortiment" for feld in embed.fields))
+
+    def test_tutorial_laden_zeigt_nur_drei_leckerlis(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            spiel.inhalte = katalog
+            spieler = spiel.tutorial_starten("123").model_copy(update={"tutorialschritt": "futterauftrag", "geld": 500})
+            spiel.spieler.speichern(spieler)
+            spiel.pflegeauftrag_starten("123")
+            kontext = SimpleNamespace(spiel=spiel)
+
+            leckerli_ansicht = LadenAnsicht(kontext, "123", "leckerli")
+            embed = laden_einbettung(kontext, "123", "leckerli")
+
+        kaufbuttons = [kind for kind in leckerli_ansicht.children if str(kind.custom_id).startswith("laden:kaufen:")]
+        labels = [str(kind.label) for kind in kaufbuttons]
+        self.assertEqual(len(kaufbuttons), 3)
+        self.assertTrue(any("Kräuterheu" in label for label in labels))
+        self.assertFalse(any("✨ Glanzkörner" in label for label in labels))
+        self.assertFalse(any(feld.name == "Sortiment" for feld in embed.fields))
 
     def test_fablinge_fressen_automatisch_nur_standardfutter(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

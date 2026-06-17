@@ -31,7 +31,7 @@ gegenstände:
   kräuterheu:
     name: "Kräuterheu"
     kategorie: "futter"
-    preis: 28
+    preis: 10
     beschreibung: "Ein duftendes Leckerli, das ruhige Fablinge oft vorsichtig annehmen."
     effekte:
       gesundheit: 1

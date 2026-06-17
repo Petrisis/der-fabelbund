@@ -19,6 +19,7 @@ aufträge:
     voraussetzungen:
       tutorialschritt: "ruhe_starten"
     ziele:
+      aufgabentext: "Der Fabling soll sich von dir angeleitet ausruhen."
       energie_mindestens: 49
       stress_höchstens: 32
     belohnungen:
@@ -49,6 +50,7 @@ aufträge:
     voraussetzungen:
       tutorialschritt: "pflege_und_ausrüstung"
     ziele:
+      aufgabentext: "Pflege das Fell meines Moosluchses mit einer Moosbürste."
       fellpflege_mindestens: 50
     belohnungen:
       geld: 180
@@ -85,6 +87,7 @@ aufträge:
     voraussetzungen:
       tutorialschritt: "aktiv_passiv"
     ziele:
+      aufgabentext: "Miras Quellfink soll sich ausruhen, während du mit Miras Gluthase etwas spielst."
       fabling_ziele:
         - spitzname: "Miras Quellfink"
           energie_mindestens: 50
@@ -125,7 +128,7 @@ aufträge:
         pflege: 2
         zuverlässigkeit: 2
     fehlschlag:
-      hinweis: "Jonna sagt: „Er nimmt das so noch nicht richtig an. Achte auf seine Reaktion und probier ein anderes Leckerli, wenn er nur höflich bleibt.“"
+      hinweis: "❌ Probier es doch mal mit 🌿."
 
   - auftrag_id: "tutorial_betreuung_005"
     name: "Einführung: Betreuungszeit"

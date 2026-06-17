@@ -43,7 +43,7 @@ def tutorial_hinweis_text(spieler: SpielerProfil) -> str:
         "pflege_und_ausrüstung": "Nimm den nächsten Probeauftrag an, kaufe eine Moosbürste und nutze Sanfte Fellpflege.",
         "stall_ausbauen": "Gehe zu deinen Fablingen und erweitere deinen Stall.",
         "aktiv_passiv": "Nimm den nächsten Auftrag an und kombiniere passive Ruhe mit aktiver Betreuung.",
-        "futterauftrag": "Nimm den nächsten Auftrag an und setze die passende Futterpräferenz.",
+        "futterauftrag": "Nimm den nächsten Auftrag an, kaufe Leckerlis und finde heraus, welches davon passt.",
         "betreuungszeit": "Nimm den nächsten Auftrag an und betreue den Fabling einige Minuten.",
         "wettbewerb_vorbereitung": "Nimm den nächsten Auftrag an und bereite einen Fabling auf einen Wettbewerb vor.",
         "starter_wählen": "Wähle deinen ersten eigenen Fabling.",
@@ -456,13 +456,12 @@ def kauf_einbettung(ergebnis: KaufErgebnis) -> discord.Embed:
 
 
 def fütterung_einbettung(ergebnis: FütterungErgebnis) -> discord.Embed:
-    embed = discord.Embed(title="Futter gegeben", color=discord.Color.green())
+    embed = discord.Embed(title="Leckerli gegeben", color=discord.Color.green())
     embed.add_field(name="Fabling", value=ergebnis.fabelwesen.spitzname, inline=True)
-    embed.add_field(name="Futter", value=ergebnis.name, inline=True)
+    embed.add_field(name="Leckerli", value=ergebnis.name, inline=True)
+    embed.add_field(name="Reaktion", value=ergebnis.reaktion, inline=False)
     if ergebnis.lieblingsfutter:
-        embed.add_field(name="Reaktion", value=f"{ergebnis.fabelwesen.spitzname} erkennt sein Lieblingsfutter sofort.", inline=False)
-    else:
-        embed.add_field(name="Reaktion", value=f"{ergebnis.fabelwesen.spitzname} nimmt das Futter ruhig an.", inline=False)
+        embed.add_field(name="Wirkung", value="Die nächsten Aktivitäten profitieren leicht von der guten Stimmung.", inline=False)
     return embed
 
 

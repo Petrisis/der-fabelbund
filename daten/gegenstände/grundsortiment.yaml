@@ -6,38 +6,38 @@ gegenstände:
     beschreibung: "Schlichtes neutrales Futter, das fast alle Fablinge zuverlässig fressen."
     effekte:
       energie: 1
-    markierungen: ["futter", "neutral", "normal"]
+    markierungen: ["futter", "neutral", "standardfutter"]
 
   apfelstücke:
     name: "Apfelstücke"
     kategorie: "futter"
     preis: 8
-    beschreibung: "Ein einfaches, frisches Futter für fast jeden Fabling."
+    beschreibung: "Ein frisches Leckerli für Fablinge, die knackige Süße mögen."
     effekte:
       stimmung: 3
       energie: 2
-    markierungen: ["futter", "normal"]
+    markierungen: ["futter", "leckerli"]
 
   honigbeeren:
     name: "Honigbeeren"
     kategorie: "futter"
     preis: 9
-    beschreibung: "Süße Beeren, die viele Fablinge neugierig machen."
+    beschreibung: "Süße Leckerlibeeren, die viele Fablinge neugierig machen."
     effekte:
       stimmung: 4
       energie: 1
-    markierungen: ["futter", "normal"]
+    markierungen: ["futter", "leckerli"]
 
   kräuterheu:
     name: "Kräuterheu"
     kategorie: "futter"
     preis: 7
-    beschreibung: "Ruhiges Grundfutter, das leicht bekömmlich ist."
+    beschreibung: "Ein duftendes Leckerli, das ruhige Fablinge oft vorsichtig annehmen."
     effekte:
       gesundheit: 1
       energie: 2
       stress: -1
-    markierungen: ["futter", "normal"]
+    markierungen: ["futter", "leckerli"]
 
   einfache_bürste:
     name: "Einfache Bürste"

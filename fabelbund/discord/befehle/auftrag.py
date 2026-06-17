@@ -251,8 +251,10 @@ def auftragsziel_text(ziele: dict[str, object]) -> str:
         return "Erfülle die genannten Betreuungen bei den zugeteilten Fablingen."
     if ziele.get("gefüttert"):
         return "Versorge den zugeteilten Fabling passend."
+    if ziele.get("lieblingsleckerli_gegeben"):
+        return "Finde heraus, welches Leckerli der zugeteilte Fabling bevorzugt."
     if ziele.get("futter_priorität"):
-        return "Setze die passende Futterpräferenz beim zugeteilten Fabling."
+        return "Finde heraus, welches Leckerli der zugeteilte Fabling bevorzugt."
     if ziele.get("betreuungsdauer_sekunden"):
         return "Betreue den Fabling über die geforderte Zeit, ohne seinen Zustand zu verschlechtern."
 

@@ -34,6 +34,7 @@ class AuftragDienst:
             and self._kategorie_abgeschlossen(fabelwesen, ziele.get("abgeschlossene_kategorie"))
             and self._gefüttert(fabelwesen, ziele.get("gefüttert"))
             and self._futter_priorität(fabelwesen, ziele.get("futter_priorität"))
+            and self._lieblingsleckerli_gegeben(fabelwesen, ziele.get("lieblingsleckerli_gegeben"))
             and self._betreuungsdauer(alle_fabelwesen, ziele.get("betreuungsdauer_sekunden"))
             and self._wettbewerb_mindestens(fabelwesen, ziele.get("wettbewerb_mindestens"))
             and self._fabling_ziele(alle_fabelwesen, ziele.get("fabling_ziele"))
@@ -115,6 +116,14 @@ class AuftragDienst:
             return True
         priorität = fabelwesen.status.get("futter_priorität", [])
         return isinstance(priorität, list) and bool(priorität) and str(priorität[0]) == str(erwartet)
+
+    @staticmethod
+    def _lieblingsleckerli_gegeben(fabelwesen: Fabelwesen, erwartet: object) -> bool:
+        if erwartet is None:
+            return True
+        if isinstance(erwartet, str):
+            return fabelwesen.status.get("letztes_leckerli") == erwartet and bool(fabelwesen.status.get("letztes_leckerli_bevorzugt"))
+        return bool(fabelwesen.status.get("lieblingsleckerli_gefunden"))
 
     @staticmethod
     def _betreuungsdauer(fabelwesen_liste: list[Fabelwesen], minimum: object) -> bool:

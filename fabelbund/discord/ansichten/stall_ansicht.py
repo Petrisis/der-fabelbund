@@ -6,7 +6,7 @@ import discord
 
 from fabelbund.dienste.spiel_dienst import MAXIMALE_FABLINGE_PRO_SPIELER, SpielDienst
 from fabelbund.anwendung import Anwendungskontext
-from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, siegel, schlüssel_label, unixzeit
+from fabelbund.discord.darstellung import aktivität_einbettung, aktivität_ergebnis_einbettung, fabelwesen_einbettung, fütterung_einbettung, siegel, schlüssel_label, unixzeit
 from fabelbund.discord.zeitlimits import EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN
 from fabelbund.modelle.laufzeit import Fabelwesen
 
@@ -43,7 +43,8 @@ class StallAnsicht(discord.ui.View):
         if ausgewählt_id in self.fabelwesen_nach_id:
             aktivität = self._angezeigte_aktivität(ausgewählt_id)
             if aktivität is None and kategorie is None:
-                self.add_item(FutterPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id, kontext))
+                if spiel.verfügbare_leckerli_ids(nutzer_id):
+                    self.add_item(LeckerliAuswahl(spiel, nutzer_id, ausgewählt_id, kontext))
                 self.add_item(StallPrioritätAuswahl(spiel, nutzer_id, ausgewählt_id, kontext))
             if aktivität is not None:
                 self.add_item(self._abholen_button(aktivität.id))
@@ -86,9 +87,9 @@ class StallAnsicht(discord.ui.View):
                     value=f"{aktivität.name}\nFertig <t:{unixzeit(aktivität.endet_am)}:R>",
                     inline=False,
                 )
-            futter = futterpriorität_text(self.spiel, aktueller_fabling)
+            futter = leckerli_text(self.spiel, aktueller_fabling)
             if futter:
-                embed.add_field(name="Futterpräferenz", value=futter, inline=False)
+                embed.add_field(name="Leckerlis", value=futter, inline=False)
             fabelwesen = self.spiel.sammlung(self.nutzer_id)
             kapazität = self.spiel.stall_kapazität(self.nutzer_id)
             await interaction.response.edit_message(
@@ -496,9 +497,9 @@ def fabelwesen_detail_einbettung(spiel: SpielDienst, fabelwesen: Fabelwesen | No
             value=f"{aktivität.name}\nFertig <t:{unixzeit(aktivität.endet_am)}:R>",
             inline=False,
         )
-    futter = futterpriorität_text(spiel, fabelwesen)
+    futter = leckerli_text(spiel, fabelwesen)
     if futter:
-        embed.add_field(name="Futterpräferenz", value=futter, inline=False)
+        embed.add_field(name="Leckerlis", value=futter, inline=False)
     return embed
 
 
@@ -588,7 +589,7 @@ class StallPrioritätAuswahl(discord.ui.Select):
         )
 
 
-class FutterPrioritätAuswahl(discord.ui.Select):
+class LeckerliAuswahl(discord.ui.Select):
     def __init__(
         self,
         spiel: SpielDienst,
@@ -600,15 +601,15 @@ class FutterPrioritätAuswahl(discord.ui.Select):
         self.nutzer_id = nutzer_id
         self.fabelwesen_id = fabelwesen_id
         self.kontext = kontext
-        inventar = spiel.inventar(nutzer_id)
-        optionen = [discord.SelectOption(label="Automatisch", value="automatisch", description="Persönliche Vorlieben beachten.")]
+        leckerli_ids = spiel.verfügbare_leckerli_ids(nutzer_id)
+        optionen = []
         optionen.extend(
-            discord.SelectOption(label=gegenstand.name, value=gegenstand.gegenstand_id)
-            for gegenstand_id in inventar
-            if (gegenstand := spiel.inhalte.gegenstände.get(gegenstand_id)) is not None and gegenstand.kategorie == "futter"
+            discord.SelectOption(label=gegenstand.name, value=gegenstand.gegenstand_id, description="Als Leckerli geben")
+            for gegenstand_id in leckerli_ids
+            if (gegenstand := spiel.inhalte.gegenstände.get(gegenstand_id)) is not None
         )
         super().__init__(
-            placeholder="Futterpräferenz wählen",
+            placeholder="Leckerli geben",
             min_values=1,
             max_values=1,
             options=optionen[:25],
@@ -616,22 +617,19 @@ class FutterPrioritätAuswahl(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        wert = self.values[0]
-        gegenstand_id = None if wert == "automatisch" else wert
+        gegenstand_id = self.values[0]
         try:
-            fabelwesen = self.spiel.futterpriorität_setzen(self.nutzer_id, self.fabelwesen_id, gegenstand_id)
+            ergebnis = self.spiel.futter_geben(self.nutzer_id, gegenstand_id, self.fabelwesen_id)
         except ValueError as fehler:
             await interaction.response.send_message(str(fehler), ephemeral=True)
             return
 
-        embed = fabelwesen_einbettung(fabelwesen)
-        futter = futterpriorität_text(self.spiel, fabelwesen) or "Automatisch"
-        embed.add_field(name="Futterpräferenz", value=futter, inline=False)
+        embed = fütterung_einbettung(ergebnis)
         fabelwesen_liste = self.spiel.sammlung(self.nutzer_id)
         kapazität = self.spiel.stall_kapazität(self.nutzer_id)
         await interaction.response.edit_message(
             embed=embed,
-            view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen_liste, kapazität, fabelwesen.id, kontext=self.kontext),
+            view=StallAnsicht(self.spiel, self.nutzer_id, fabelwesen_liste, kapazität, ergebnis.fabelwesen.id, kontext=self.kontext),
         )
 
 
@@ -643,16 +641,14 @@ def stalltyp_label(stalltyp: str | None) -> str:
     return f"{element_emoji(stalltyp)} {stalltyp[:1].upper() + stalltyp[1:]}stall"
 
 
-def futterpriorität_text(spiel: SpielDienst, fabelwesen: Fabelwesen) -> str:
-    priorität = fabelwesen.status.get("futter_priorität", [])
-    if not isinstance(priorität, list) or not priorität:
-        lieblingsfutter = fabelwesen.persönlichkeit.get("lieblingsfutter")
-        if isinstance(lieblingsfutter, str):
-            gegenstand = spiel.inhalte.gegenstände.get(lieblingsfutter)
-            return f"Automatisch: {gegenstand.name if gegenstand else lieblingsfutter}"
-        return ""
-    namen = []
-    for gegenstand_id in priorität:
-        gegenstand = spiel.inhalte.gegenstände.get(str(gegenstand_id))
-        namen.append(gegenstand.name if gegenstand else str(gegenstand_id))
-    return "\n".join(namen)
+def leckerli_text(spiel: SpielDienst, fabelwesen: Fabelwesen) -> str:
+    lieblingsfutter = fabelwesen.persönlichkeit.get("lieblingsfutter")
+    gefunden = bool(fabelwesen.status.get("lieblingsleckerli_gefunden"))
+    if gefunden and isinstance(lieblingsfutter, str):
+        gegenstand = spiel.inhalte.gegenstände.get(lieblingsfutter)
+        return f"Lieblingsleckerli erkannt: {gegenstand.name if gegenstand else lieblingsfutter}"
+    letztes = fabelwesen.status.get("letztes_leckerli")
+    if isinstance(letztes, str):
+        gegenstand = spiel.inhalte.gegenstände.get(letztes)
+        return f"Zuletzt probiert: {gegenstand.name if gegenstand else letztes}"
+    return "Noch kein Leckerli ausprobiert."

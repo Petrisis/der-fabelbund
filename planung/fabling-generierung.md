@@ -371,18 +371,19 @@ Beispiele:
 
 Habits sollen nicht bloß niedlich sein. Sie sollen spielerisch andeuten, welche Betreuung passt.
 
-## Lieblingsfutter
+## Lieblingsleckerli
 
-Lieblingsfutter ist keine stärkere Nahrung. Es wird bevorzugt angenommen, hat aber keinen höheren Nährwert. Das ist wichtig für Balancing und Ökonomie.
+Das Feld `lieblingsfutter` wird im aktuellen MVP als Lieblingsleckerli interpretiert. Es ist keine stärkere Nahrung und ersetzt kein Standardfutter. Ein passendes Leckerli sättigt wie jedes andere Leckerli, wird aber sichtbar besser angenommen und gibt kurzzeitig einen leichten Bonus auf positive Aktivitätseffekte.
 
 Futterlogik:
 
-- bevorzugtes Futter wird zuerst gefressen, wenn vorhanden
-- neutrales Futter ist Fallback
-- sonstiges Futter kann verbraucht werden, wenn nichts Passenderes da ist
+- Standardfutter wird automatisch für die Grundversorgung genutzt
+- automatische Grundversorgung füllt nur bis Sättigung 65 auf
+- Leckerlis werden bewusst in der Fabling-Detailansicht gegeben
+- falsche Leckerlis sättigen ebenfalls, erzeugen aber keinen Buff
 - Futter senkt Hunger über `sättigung`
 
-Neue Arten dürfen eine typische Futtervorliebe bekommen, aber nicht jede Art braucht sofort eine eigene neue Futtersorte.
+Neue Arten dürfen eine typische Leckerli-Vorliebe bekommen, aber nicht jede Art braucht sofort eine eigene neue Leckerlisorte. Wenn eine Art ein neues Lieblingsleckerli nennt, muss dieses als Gegenstand ergänzt werden, bevor es spielbar beobachtet werden kann.
 
 ## Wettbewerbs- und Sportneigungen
 

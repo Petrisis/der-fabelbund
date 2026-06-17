@@ -84,7 +84,10 @@ def inventar_einbettung(kontext: Anwendungskontext, nutzer_id: str) -> discord.E
     inventar = kontext.spiel.inventar(nutzer_id)
     embed = discord.Embed(title="Inventar", color=discord.Color.green())
     if inventar:
-        embed.description = f"{inventar_text(kontext, inventar)}\n\nFutter wird von deinen Fablingen automatisch aus dem Vorrat genommen."
+        embed.description = (
+            f"{inventar_text(kontext, inventar)}\n\n"
+            "Basisfutter wird automatisch für die Grundversorgung genutzt. Leckerlis gibst du in der Fabling-Ansicht."
+        )
     else:
         embed.description = "Dein Inventar ist leer."
     return embed

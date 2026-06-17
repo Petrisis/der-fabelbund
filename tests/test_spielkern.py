@@ -234,7 +234,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "fabelwesen": [
                 {"art_id": "moosluchs", "spitzname": "Jonnas Moosluchs", "lieblingsfutter": "kräuterheu", "starter_kandidat": True},
             ],
-            "ziele": {"futter_priorität": "kräuterheu"},
+            "ziele": {"lieblingsleckerli_gegeben": "kräuterheu"},
             "belohnungen": {"geld": 20, "ruf": {"pflege": 2, "zuverlässigkeit": 2}},
         }
     )
@@ -279,6 +279,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "kategorie": "futter",
             "preis": 8,
             "effekte": {"stimmung": 3, "energie": 2},
+            "markierungen": ["futter", "leckerli"],
         }
     )
     kräuterheu = GegenstandDefinition.model_validate(
@@ -288,6 +289,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "kategorie": "futter",
             "preis": 7,
             "effekte": {"gesundheit": 1},
+            "markierungen": ["futter", "leckerli"],
         }
     )
     basisfutter = GegenstandDefinition.model_validate(
@@ -297,7 +299,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "kategorie": "futter",
             "preis": 6,
             "effekte": {"energie": 1},
-            "markierungen": ["futter", "neutral", "normal"],
+            "markierungen": ["futter", "neutral", "standardfutter"],
         }
     )
     honigbeeren = GegenstandDefinition.model_validate(
@@ -307,7 +309,7 @@ def inhalts_katalog() -> InhaltsKatalog:
             "kategorie": "futter",
             "preis": 9,
             "effekte": {"stimmung": 4, "energie": 1},
-            "markierungen": ["futter", "normal"],
+            "markierungen": ["futter", "leckerli"],
         }
     )
     return InhaltsKatalog(
@@ -875,7 +877,7 @@ class SpielDienstTests(unittest.TestCase):
             vierter_auftrag = spiel.pflegeauftrag_starten("123")
             moosluchs = spiel.sammlung("123")[0]
             spiel.gegenstand_kaufen("123", "kräuterheu")
-            spiel.futterpriorität_setzen("123", moosluchs.id, "kräuterheu")
+            spiel.futter_geben("123", "kräuterheu", moosluchs.id)
             vierte_abgabe = spiel.auftrag_abgeben("123")
 
             fünfter_auftrag = spiel.pflegeauftrag_starten("123")
@@ -1111,23 +1113,22 @@ class SpielDienstTests(unittest.TestCase):
         self.assertEqual(len(ansicht.children), 1)
         self.assertEqual(ansicht.children[0].custom_id, f"auftragswand:annehmen:{auftrag.auftrag_id}")
 
-    def test_futterpriorität_steuert_bevorzugtes_futter(self) -> None:
+    def test_lieblingsleckerli_setzt_bonus(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             self.erzeuge_starter(spiel)
             fabling = spiel.sammlung("123")[0]
+            fabling.persönlichkeit["lieblingsfutter"] = "apfelstücke"
+            spiel.fabelwesen.speichern(fabling)
             spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=1)
-            spiel.gegenstand_kaufen("123", "kräuterheu", anzahl=1)
 
-            aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "apfelstücke")
-            aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "kräuterheu")
-            aktualisiert = spiel.futterpriorität_setzen("123", fabling.id, "apfelstücke")
             fütterung = spiel.futter_geben("123", "apfelstücke", fabling.id)
 
-        self.assertEqual(aktualisiert.status["futter_priorität"], ["apfelstücke"])
         self.assertTrue(fütterung.lieblingsfutter)
+        self.assertTrue(fütterung.fabelwesen.status["lieblingsleckerli_gefunden"])
+        self.assertIn("leckerli_buff_bis", fütterung.fabelwesen.status)
 
-    def test_futterpriorität_braucht_futter_im_inventar(self) -> None:
+    def test_leckerli_geben_braucht_vorrat(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             self.erzeuge_starter(spiel)
@@ -1135,11 +1136,36 @@ class SpielDienstTests(unittest.TestCase):
             fehlertext = None
 
             try:
-                spiel.futterpriorität_setzen("123", fabling.id, "kräuterheu")
+                spiel.futter_geben("123", "kräuterheu", fabling.id)
             except ValueError as fehler:
                 fehlertext = str(fehler)
 
         self.assertEqual(fehlertext, "Dieses Futter ist nicht in deinem Inventar.")
+
+    def test_lieblingsleckerli_verstärkt_positive_aktivitätseffekte_leicht(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            self.erzeuge_starter(spiel)
+            fabling = spiel.sammlung("123")[0]
+            fabling.persönlichkeit["lieblingsfutter"] = "apfelstücke"
+            fabling.zustand["stimmung"] = 40
+            spiel.fabelwesen.speichern(fabling)
+            spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=1)
+            spiel.futter_geben("123", "apfelstücke", fabling.id)
+            aktivität = spiel.pflegeaktivität_starten("123", "gemeinsames_spiel", fabling.id)
+            jetzt = datetime.now(timezone.utc)
+            spiel.aktivitäten.speichern(
+                aktivität.model_copy(
+                    update={
+                        "gestartet_am": jetzt - timedelta(seconds=901),
+                        "endet_am": jetzt - timedelta(seconds=1),
+                    }
+                )
+            )
+
+            ergebnis = spiel.aktivität_abholen("123", aktivität.id)
+
+        self.assertEqual(ergebnis.änderungen["stimmung"], 13)
 
     def test_profil_und_inventar_sind_per_buttons_verbunden(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -1158,11 +1184,12 @@ class SpielDienstTests(unittest.TestCase):
         inventar_feld = next(feld for feld in embed.fields if feld.name == "Inventar")
         self.assertIn("Apfelstücke", inventar_feld.value)
 
-    def test_fablinge_fressen_automatisch_bevorzugtes_futter(self) -> None:
+    def test_fablinge_fressen_automatisch_nur_standardfutter(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             self.erzeuge_starter(spiel)
             spiel.gegenstand_kaufen("123", "apfelstücke", anzahl=1)
+            spiel.gegenstand_kaufen("123", "basisfutter", anzahl=4)
             fabling = spiel.sammlung("123")[0]
             fabling.persönlichkeit["lieblingsfutter"] = "apfelstücke"
             fabling.zustand["sättigung"] = 80
@@ -1172,16 +1199,17 @@ class SpielDienstTests(unittest.TestCase):
             aktualisiert = spiel.sammlung("123")[0]
             inventar = spiel.inventar("123")
 
-        self.assertEqual(aktualisiert.status["letztes_futter"], "apfelstücke")
-        self.assertEqual(aktualisiert.status["letztes_futter_art"], "bevorzugt")
-        self.assertNotIn("apfelstücke", inventar)
-        self.assertGreater(aktualisiert.zustand["sättigung"], 0)
+        self.assertEqual(aktualisiert.status["letztes_futter"], "basisfutter")
+        self.assertEqual(aktualisiert.status["letztes_futter_art"], "neutral")
+        self.assertIn("apfelstücke", inventar)
+        self.assertNotIn("basisfutter", inventar)
+        self.assertEqual(aktualisiert.zustand["sättigung"], 65)
 
     def test_fablinge_fressen_neutrales_futter_als_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
             self.erzeuge_starter(spiel)
-            spiel.gegenstand_kaufen("123", "basisfutter", anzahl=1)
+            spiel.gegenstand_kaufen("123", "basisfutter", anzahl=4)
             fabling = spiel.sammlung("123")[0]
             fabling.persönlichkeit["lieblingsfutter"] = "apfelstücke"
             fabling.zustand["sättigung"] = 80
@@ -1192,6 +1220,7 @@ class SpielDienstTests(unittest.TestCase):
 
         self.assertEqual(aktualisiert.status["letztes_futter"], "basisfutter")
         self.assertEqual(aktualisiert.status["letztes_futter_art"], "neutral")
+        self.assertEqual(aktualisiert.zustand["sättigung"], 65)
 
     def test_spielaktivität_spricht_nicht_von_pflegewirkung(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -20,7 +20,7 @@ Der Stand ist ein Tutorial-MVP. Das Tutorial ist weitgehend spielbar und erklär
 - Leih-Fablinge und Auftragsabgabe
 - Fabling- und Stallübersicht
 - Pflege, Ruhe, Spiel, Training und Check
-- Laden, Inventar und Futterpräferenz
+- Laden, Inventar, Standardfutter und Leckerlis
 - aktive und passive Betreuung
 - Starterwahl und Aufnahme in den Fabelbund
 
@@ -69,7 +69,7 @@ Das ist bewusst testserverfreundlich. Später kann der Zeitfaktor wieder gesenkt
 
 ## Offene Designentscheidungen
 
-- Wie stark Lieblingsfutter positive und negative Effekte verändern soll.
+- Ob Leckerlis später gezieltere Bufftypen bekommen sollen.
 - Wie dauerhafte Grundbedürfnisse getaktet werden.
 - Wie Wettbewerbe konkret heißen, bewertet und freigeschaltet werden.
 - Wie frei Spieler nach dem Tutorial zwischen Aufträgen wählen können.

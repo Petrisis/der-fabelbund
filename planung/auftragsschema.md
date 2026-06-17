@@ -9,7 +9,7 @@ Das Schema ist die Zielarchitektur. Neue Inhalte sollen ihm direkt folgen. Älte
 Eine Abgabe darf nur dann nicht zustandsbasiert sein, wenn der geprüfte Punkt selbst das Lern- oder Auftragsziel ist. Zulässige Ausnahmen sind aktuell:
 
 - eine tatsächliche Betreuungsdauer
-- eine gesetzte Futterpräferenz
+- eine erkannte Leckerli-Vorliebe, wenn Beobachtung und Zuordnung selbst das Lernziel sind
 - spätere explizite Sondermechaniken
 
 ## Grundsatz
@@ -34,7 +34,7 @@ Aufträge dürfen direkt prüfen:
 - Beziehungswerte, wenn der Auftrag diese Beziehung ausdrücklich zum Thema macht, z.B. Vertrauen oder Sicherheit
 - Trainings- und Wettbewerbswerte wie Ausdruck, Harmonie oder Technik
 - Zeitbedingungen, wenn Betreuungsdauer selbst Teil des Auftrags ist
-- Auswahlentscheidungen wie passende Futterpräferenz, wenn der Auftrag Beobachtung oder Zuordnung trainiert
+- Auswahlentscheidungen wie passendes Lieblingsleckerli, wenn der Auftrag Beobachtung oder Zuordnung trainiert
 
 Abgeschlossene Aktionen dürfen nicht als normale Abgabebedingung verwendet werden. Felder wie `abgeschlossene_aktion` oder `abgeschlossene_aktionen` sind nur für alte Inhalte oder technische Übergänge erlaubt und sollen nicht für neue Aufträge verwendet werden.
 

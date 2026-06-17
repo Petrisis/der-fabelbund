@@ -27,9 +27,12 @@ INAKTIVITÄT_MAX_WIRKUNG_SEKUNDEN = 8 * 60 * 60
 VERWAHRLOSUNG_START_SEKUNDEN = 24 * 60 * 60
 SÄTTIGUNG_VERBRAUCH_PRO_TAG = 100
 SÄTTIGUNG_FRESSSCHWELLE = 65
-SÄTTIGUNG_ZIELWERT = 85
+SÄTTIGUNG_GRUNDVERSORGUNG_ZIELWERT = 65
 SÄTTIGUNG_NÄHRWERT_NORMAL = 20
 SÄTTIGUNG_NÄHRWERT_SONSTIG = 14
+LECKERLI_NÄHRWERT = 20
+LECKERLI_BUFF_SPIELSEKUNDEN = int(86400 * LECKERLI_NÄHRWERT / SÄTTIGUNG_VERBRAUCH_PRO_TAG)
+LECKERLI_BUFF_FAKTOR = 1.1
 TUTORIAL_DAUER_OVERRIDES_SEKUNDEN = {
     ("tutorial_pflege_002", "sanfte_fellpflege"): 120,
     ("tutorial_aktiv_passiv_003", "kontrollierte_ruhe"): 180,
@@ -102,6 +105,7 @@ class FütterungErgebnis:
     name: str
     lieblingsfutter: bool
     änderungen: dict[str, int]
+    reaktion: str
 
 
 @dataclass(frozen=True)
@@ -577,6 +581,8 @@ class SpielDienst:
         gegenstand = self.inhalte.gegenstände.get(gegenstand_id)
         if gegenstand is None or gegenstand.kategorie != "futter":
             raise ValueError("Dieser Gegenstand ist kein Futter.")
+        if not self._ist_leckerli(gegenstand_id):
+            raise ValueError("Dieses Futter gehört zur Grundversorgung. Leckerlis gibst du bewusst einem Fabling.")
         if self._inventar_anzahl(spieler.inventar.get(gegenstand_id)) <= 0:
             raise ValueError("Dieses Futter ist nicht in deinem Inventar.")
 
@@ -600,19 +606,23 @@ class SpielDienst:
 
         aktualisiertes_fabling = fabelwesen.model_copy(deep=True)
         effekte = dict(gegenstand.effekte)
-        futter_priorität = aktualisiertes_fabling.status.get("futter_priorität", [])
-        if not isinstance(futter_priorität, list):
-            futter_priorität = []
-        lieblingsfutter = (
-            (futter_priorität and str(futter_priorität[0]) == gegenstand_id)
-            or aktualisiertes_fabling.persönlichkeit.get("lieblingsfutter") == gegenstand_id
-        )
+        lieblingsfutter = self._ist_lieblingsleckerli(aktualisiertes_fabling, gegenstand_id)
         änderungen = self._werte_anteilig_anwenden(aktualisiertes_fabling.zustand, effekte, 1.0, standardwert=0)
         sättigung = int(aktualisiertes_fabling.zustand.get("sättigung", 80))
-        aktualisiertes_fabling.zustand["sättigung"] = begrenze_prozent(sättigung + self._futter_nährwert(aktualisiertes_fabling, gegenstand_id))
+        aktualisiertes_fabling.zustand["sättigung"] = begrenze_prozent(sättigung + LECKERLI_NÄHRWERT)
         aktualisiertes_fabling.zustand["verletzungsrisiko"] = self.pflege._risiko_aus_zustand(aktualisiertes_fabling)
         aktualisiertes_fabling.status["zuletzt_gefüttert_am"] = datetime.now(timezone.utc).isoformat()
-        aktualisiertes_fabling.status["letztes_futter"] = gegenstand_id
+        aktualisiertes_fabling.status["letztes_leckerli"] = gegenstand_id
+        aktualisiertes_fabling.status["letztes_leckerli_bevorzugt"] = lieblingsfutter
+        if lieblingsfutter:
+            aktualisiertes_fabling.status["lieblingsleckerli_gefunden"] = True
+            aktualisiertes_fabling.status["leckerli_buff_quelle"] = gegenstand_id
+            aktualisiertes_fabling.status["leckerli_buff_bis"] = (
+                datetime.now(timezone.utc) + timedelta(seconds=self._skalierte_dauer(LECKERLI_BUFF_SPIELSEKUNDEN))
+            ).isoformat()
+            reaktion = f"{aktualisiertes_fabling.spitzname} erkennt das Leckerli sofort und wird sichtbar aufmerksamer."
+        else:
+            reaktion = f"{aktualisiertes_fabling.spitzname} nimmt das Leckerli an, bleibt aber eher höflich als begeistert."
 
         self.spieler.speichern(aktualisierter_spieler)
         self.fabelwesen.speichern(aktualisiertes_fabling)
@@ -623,6 +633,7 @@ class SpielDienst:
             name=gegenstand.name,
             lieblingsfutter=lieblingsfutter,
             änderungen=änderungen,
+            reaktion=reaktion,
         )
 
     def _tutorial_nach_auftrag_aktualisieren(self, spieler: SpielerProfil, auftrag: AktiverAuftrag) -> SpielerProfil:
@@ -752,8 +763,10 @@ class SpielDienst:
             return f"{fabelwesen.spitzname} sollte zuerst eine vollständige Ruhephase abschließen."
         if auftrag.ziele.get("gefüttert"):
             return f"{fabelwesen.spitzname} wurde noch nicht passend versorgt."
+        if auftrag.ziele.get("lieblingsleckerli_gegeben"):
+            return f"{fabelwesen.spitzname} zeigt noch nicht, dass du sein bevorzugtes Leckerli gefunden hast."
         if auftrag.ziele.get("futter_priorität"):
-            return f"{fabelwesen.spitzname} braucht erst die passende Futterpräferenz."
+            return f"{fabelwesen.spitzname} zeigt noch nicht, welches Leckerli er bevorzugt."
         if auftrag.ziele.get("betreuungsdauer_sekunden"):
             return f"{fabelwesen.spitzname} wurde noch nicht lange genug betreut."
         return f"{fabelwesen.spitzname} erfüllt den Auftrag noch nicht überzeugend."
@@ -928,6 +941,10 @@ class SpielDienst:
         anteil: float,
     ) -> tuple[Fabelwesen, dict[str, int], dict[str, int], dict[str, int]]:
         daten = fabelwesen.model_copy(deep=True)
+        if self._leckerli_buff_aktiv(daten):
+            effekte = self._leckerli_buff_anwenden(effekte)
+            wettbewerb_effekte = self._leckerli_buff_anwenden(wettbewerb_effekte)
+            sport_effekte = self._leckerli_buff_anwenden(sport_effekte)
         änderungen = self._werte_anteilig_anwenden(daten.zustand, effekte, anteil, standardwert=0)
         wettbewerb_änderungen = self._werte_anteilig_anwenden(daten.wettbewerbswerte, wettbewerb_effekte, anteil, standardwert=0)
         sport_änderungen = self._werte_anteilig_anwenden(daten.sportwerte, sport_effekte, anteil, standardwert=0)
@@ -1056,19 +1073,22 @@ class SpielDienst:
         daten.status["sättigung_geprüft_am"] = jetzt.isoformat()
 
         spieler_geändert = False
-        while int(daten.zustand.get("sättigung", 0)) <= SÄTTIGUNG_FRESSSCHWELLE:
+        while int(daten.zustand.get("sättigung", 0)) < SÄTTIGUNG_GRUNDVERSORGUNG_ZIELWERT:
             futter_id = self._automatisches_futter_wählen(spieler, daten)
             if futter_id is None:
                 break
             spieler.inventar[futter_id] = self._inventar_anzahl(spieler.inventar.get(futter_id)) - 1
             if self._inventar_anzahl(spieler.inventar[futter_id]) <= 0:
                 del spieler.inventar[futter_id]
-            daten.zustand["sättigung"] = begrenze_prozent(int(daten.zustand.get("sättigung", 0)) + self._futter_nährwert(daten, futter_id))
+            daten.zustand["sättigung"] = min(
+                SÄTTIGUNG_GRUNDVERSORGUNG_ZIELWERT,
+                begrenze_prozent(int(daten.zustand.get("sättigung", 0)) + self._futter_nährwert(daten, futter_id)),
+            )
             daten.status["zuletzt_gefressen_am"] = jetzt.isoformat()
             daten.status["letztes_futter"] = futter_id
             daten.status["letztes_futter_art"] = self._futter_art(daten, futter_id)
             spieler_geändert = True
-            if int(daten.zustand.get("sättigung", 0)) >= SÄTTIGUNG_ZIELWERT:
+            if int(daten.zustand.get("sättigung", 0)) >= SÄTTIGUNG_GRUNDVERSORGUNG_ZIELWERT:
                 break
 
         self._hungereffekte_anwenden(daten)
@@ -1077,19 +1097,9 @@ class SpielDienst:
         return daten, spieler_geändert
 
     def _automatisches_futter_wählen(self, spieler: SpielerProfil, fabelwesen: Fabelwesen) -> str | None:
-        kandidaten = self._verfügbare_futter_ids(spieler)
+        kandidaten = self._verfügbare_standardfutter_ids(spieler)
         if not kandidaten:
             return None
-
-        priorität = fabelwesen.status.get("futter_priorität", [])
-        if isinstance(priorität, list):
-            for futter_id in priorität:
-                if str(futter_id) in kandidaten:
-                    return str(futter_id)
-
-        lieblingsfutter = fabelwesen.persönlichkeit.get("lieblingsfutter")
-        if isinstance(lieblingsfutter, str) and lieblingsfutter in kandidaten:
-            return lieblingsfutter
 
         neutrale = [
             futter_id
@@ -1100,6 +1110,13 @@ class SpielDienst:
             return sorted(neutrale)[0]
         return sorted(kandidaten)[0]
 
+    def _verfügbare_standardfutter_ids(self, spieler: SpielerProfil) -> list[str]:
+        return [
+            gegenstand_id
+            for gegenstand_id in self._verfügbare_futter_ids(spieler)
+            if self._ist_standardfutter(gegenstand_id)
+        ]
+
     def _verfügbare_futter_ids(self, spieler: SpielerProfil) -> list[str]:
         return [
             gegenstand_id
@@ -1108,6 +1125,49 @@ class SpielDienst:
             and (gegenstand := self.inhalte.gegenstände.get(gegenstand_id)) is not None
             and gegenstand.kategorie == "futter"
         ]
+
+    def verfügbare_leckerli_ids(self, nutzer_id: str) -> list[str]:
+        spieler = self.stelle_spieler_sicher(nutzer_id)
+        return [
+            gegenstand_id
+            for gegenstand_id in self._verfügbare_futter_ids(spieler)
+            if self._ist_leckerli(gegenstand_id)
+        ]
+
+    def _ist_leckerli(self, gegenstand_id: str) -> bool:
+        gegenstand = self.inhalte.gegenstände.get(gegenstand_id)
+        return gegenstand is not None and "leckerli" in gegenstand.markierungen
+
+    def _ist_standardfutter(self, gegenstand_id: str) -> bool:
+        gegenstand = self.inhalte.gegenstände.get(gegenstand_id)
+        return gegenstand is not None and (
+            "standardfutter" in gegenstand.markierungen
+            or ("normal" in gegenstand.markierungen and "leckerli" not in gegenstand.markierungen)
+        )
+
+    @staticmethod
+    def _ist_lieblingsleckerli(fabelwesen: Fabelwesen, gegenstand_id: str) -> bool:
+        return fabelwesen.persönlichkeit.get("lieblingsfutter") == gegenstand_id
+
+    def _leckerli_buff_aktiv(self, fabelwesen: Fabelwesen) -> bool:
+        wert = fabelwesen.status.get("leckerli_buff_bis")
+        if wert is None:
+            return False
+        try:
+            return datetime.fromisoformat(str(wert)) > datetime.now(timezone.utc)
+        except ValueError:
+            return False
+
+    @staticmethod
+    def _leckerli_buff_anwenden(effekte: dict[str, int]) -> dict[str, int]:
+        gebufft: dict[str, int] = {}
+        for schlüssel, wert in effekte.items():
+            if wert <= 0:
+                gebufft[schlüssel] = wert
+                continue
+            erhöhter_wert = int(round(wert * LECKERLI_BUFF_FAKTOR))
+            gebufft[schlüssel] = max(wert + 1, erhöhter_wert)
+        return gebufft
 
     def _futter_nährwert(self, fabelwesen: Fabelwesen, gegenstand_id: str) -> int:
         art = self._futter_art(fabelwesen, gegenstand_id)

@@ -44,3 +44,6 @@ sport_neigungen:
   beweglichkeit: 1.2
   kontrolle: 1.1
   technik: 1.0
+
+lieblingsfutter:
+  - "apfelstücke"

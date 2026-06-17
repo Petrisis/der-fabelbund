@@ -16,22 +16,23 @@ class LadenBefehle(commands.Cog):
     @app_commands.command(name="laden", description="Öffnet den Fabelbund-Laden.")
     async def laden(self, interaction: discord.Interaction) -> None:
         nutzer_id = str(interaction.user.id)
-        await interaction.response.send_message(embed=laden_einbettung(self.kontext, nutzer_id), view=LadenAnsicht(self.kontext, nutzer_id), ephemeral=True)
+        await interaction.response.send_message(
+            embed=laden_einbettung(self.kontext, nutzer_id),
+            view=LadenAnsicht(self.kontext, nutzer_id),
+            ephemeral=True,
+        )
 
 
 class LadenAnsicht(discord.ui.View):
-    def __init__(self, kontext: Anwendungskontext, nutzer_id: str) -> None:
+    def __init__(self, kontext: Anwendungskontext, nutzer_id: str, kategorie: str | None = None) -> None:
         super().__init__(timeout=EPHEMERE_ANSICHT_TIMEOUT_SEKUNDEN)
         self.kontext = kontext
         self.nutzer_id = nutzer_id
-        for gegenstand in kontext.spiel.inhalte.gegenstände.values():
-            button = discord.ui.Button(
-                label=f"{gegenstand.name} ({siegel(gegenstand.preis)})",
-                style=discord.ButtonStyle.secondary,
-                custom_id=f"laden:kaufen:{gegenstand.gegenstand_id}",
-            )
-            button.callback = self._kaufen_callback(gegenstand.gegenstand_id)
-            self.add_item(button)
+        self.kategorie = kategorie
+        if kategorie == "leckerli":
+            self._leckerli_buttons_anlegen()
+        else:
+            self._hauptsortiment_buttons_anlegen()
         self.add_item(self._navigation_button("Fablinge", "laden:fablinge", self._fablinge_öffnen))
         self.add_item(self._navigation_button("Inventar", "laden:inventar", self._inventar_öffnen))
         self.add_item(self._navigation_button("Aufträge", "laden:aufträge", self._aufträge_öffnen))
@@ -42,6 +43,59 @@ class LadenAnsicht(discord.ui.View):
         await interaction.response.send_message("Dieser Ladenbesuch gehört einem anderen Spieler.", ephemeral=True)
         return False
 
+    def _hauptsortiment_buttons_anlegen(self) -> None:
+        leckerli_button = discord.ui.Button(label="🍬 Leckerlis", style=discord.ButtonStyle.primary, custom_id="laden:kategorie:leckerli", row=0)
+
+        async def leckerli_callback(interaction: discord.Interaction) -> None:
+            await interaction.response.edit_message(
+                embed=laden_einbettung(self.kontext, self.nutzer_id, "leckerli"),
+                view=LadenAnsicht(self.kontext, self.nutzer_id, "leckerli"),
+            )
+
+        leckerli_button.callback = leckerli_callback
+        self.add_item(leckerli_button)
+        gegenstände = [
+            gegenstand
+            for gegenstand in self.kontext.spiel.inhalte.gegenstände.values()
+            if "leckerli" not in gegenstand.markierungen
+        ]
+        for index, gegenstand in enumerate(sorted(gegenstände, key=lambda eintrag: (eintrag.preis, eintrag.name)), start=1):
+            button = discord.ui.Button(
+                label=f"{gegenstand.name} ({siegel(gegenstand.preis)})",
+                style=discord.ButtonStyle.secondary,
+                custom_id=f"laden:kaufen:{gegenstand.gegenstand_id}",
+                row=index // 5,
+            )
+            button.callback = self._kaufen_callback(gegenstand.gegenstand_id)
+            self.add_item(button)
+
+    def _leckerli_buttons_anlegen(self) -> None:
+        leckerlis = [
+            gegenstand
+            for gegenstand in self.kontext.spiel.inhalte.gegenstände.values()
+            if "leckerli" in gegenstand.markierungen
+        ]
+        for index, gegenstand in enumerate(sorted(leckerlis, key=lambda eintrag: (eintrag.preis, eintrag.name))[:21]):
+            button = discord.ui.Button(
+                label=f"{leckerli_emoji(gegenstand.gegenstand_id)} {gegenstand.name} ({siegel(gegenstand.preis)})",
+                style=discord.ButtonStyle.secondary,
+                custom_id=f"laden:kaufen:{gegenstand.gegenstand_id}",
+                row=index // 5,
+            )
+            button.callback = self._kaufen_callback(gegenstand.gegenstand_id)
+            self.add_item(button)
+
+        zurück_button = discord.ui.Button(label="Zurück", style=discord.ButtonStyle.primary, custom_id="laden:zurück", row=4)
+
+        async def zurück_callback(interaction: discord.Interaction) -> None:
+            await interaction.response.edit_message(
+                embed=laden_einbettung(self.kontext, self.nutzer_id),
+                view=LadenAnsicht(self.kontext, self.nutzer_id),
+            )
+
+        zurück_button.callback = zurück_callback
+        self.add_item(zurück_button)
+
     def _kaufen_callback(self, gegenstand_id: str):
         async def callback(interaction: discord.Interaction) -> None:
             try:
@@ -49,7 +103,10 @@ class LadenAnsicht(discord.ui.View):
             except ValueError as fehler:
                 await interaction.response.send_message(str(fehler), ephemeral=True)
                 return
-            await interaction.response.edit_message(embed=kauf_einbettung(ergebnis), view=LadenAnsicht(self.kontext, self.nutzer_id))
+            await interaction.response.edit_message(
+                embed=kauf_einbettung(ergebnis),
+                view=LadenAnsicht(self.kontext, self.nutzer_id, self.kategorie),
+            )
 
         return callback
 
@@ -91,16 +148,48 @@ class LadenAnsicht(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=AuftragAnsicht(self.kontext, self.nutzer_id))
 
 
-def laden_einbettung(kontext: Anwendungskontext, nutzer_id: str) -> discord.Embed:
+def laden_einbettung(kontext: Anwendungskontext, nutzer_id: str, kategorie: str | None = None) -> discord.Embed:
     spieler = kontext.spiel.stelle_spieler_sicher(nutzer_id)
-    embed = discord.Embed(title="Fabelbund-Laden", color=discord.Color.green())
+    titel = "Fabelbund-Laden: Leckerlis" if kategorie == "leckerli" else "Fabelbund-Laden"
+    embed = discord.Embed(title=titel, color=discord.Color.green())
     embed.add_field(name="Bundsiegel", value=siegel(spieler.geld), inline=True)
-    embed.add_field(name="Sortiment", value=sortiment_text(kontext), inline=False)
+    embed.add_field(name="Sortiment", value=sortiment_text(kontext, kategorie), inline=False)
     return embed
 
 
-def sortiment_text(kontext: Anwendungskontext) -> str:
+def sortiment_text(kontext: Anwendungskontext, kategorie: str | None = None) -> str:
+    gegenstände = list(kontext.spiel.inhalte.gegenstände.values())
+    if kategorie == "leckerli":
+        gegenstände = [gegenstand for gegenstand in gegenstände if "leckerli" in gegenstand.markierungen]
+    else:
+        gegenstände = [gegenstand for gegenstand in gegenstände if "leckerli" not in gegenstand.markierungen]
     zeilen = []
-    for gegenstand in kontext.spiel.inhalte.gegenstände.values():
-        zeilen.append(f"{gegenstand.name}: {siegel(gegenstand.preis)}")
+    for gegenstand in sorted(gegenstände, key=lambda eintrag: (eintrag.preis, eintrag.name)):
+        name = f"{leckerli_emoji(gegenstand.gegenstand_id)} {gegenstand.name}" if "leckerli" in gegenstand.markierungen else gegenstand.name
+        zeilen.append(f"{name}: {siegel(gegenstand.preis)}")
     return "\n".join(zeilen)
+
+
+def leckerli_emoji(gegenstand_id: str) -> str:
+    return {
+        "apfelstücke": "🍎",
+        "honigbeeren": "🍯",
+        "kräuterheu": "🌿",
+        "farnspitzen": "🌱",
+        "erdknollen": "🥔",
+        "rauchbeeren": "🫐",
+        "geröstete_nüsse": "🌰",
+        "geröstete_wurzeln": "🍠",
+        "warme_samen": "🌻",
+        "waldbeeren": "🍓",
+        "weiche_wurzeln": "🥕",
+        "bachlarven": "🐛",
+        "weiche_algen": "🪸",
+        "herbe_beeren": "🍇",
+        "dornensamen": "🌵",
+        "glanzkörner": "✨",
+        "moorbeeren": "🫐",
+        "nachtkörner": "🌙",
+        "schilfsprossen": "🎋",
+        "wasserkräuter": "💧",
+    }.get(gegenstand_id, "🍬")

@@ -50,3 +50,6 @@ sport_neigungen:
   deckung: 0.8
   stärke: 0.7
 
+lieblingsfutter:
+  - "kräuterheu"
+

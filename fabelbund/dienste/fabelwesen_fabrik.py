@@ -60,6 +60,7 @@ class FabelwesenFabrik:
             "mag_nicht": ["übertraining"],
             "stärken": ["harmonie"],
             "schwächen": ["stress"],
+            "lieblingsfutter": random.choice(art.lieblingsfutter) if art.lieblingsfutter else None,
         }
 
 

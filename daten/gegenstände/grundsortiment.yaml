@@ -31,12 +31,185 @@ gegenstände:
   kräuterheu:
     name: "Kräuterheu"
     kategorie: "futter"
-    preis: 7
+    preis: 28
     beschreibung: "Ein duftendes Leckerli, das ruhige Fablinge oft vorsichtig annehmen."
     effekte:
       gesundheit: 1
       energie: 2
       stress: -1
+    markierungen: ["futter", "leckerli"]
+
+  farnspitzen:
+    name: "Farnspitzen"
+    kategorie: "futter"
+    preis: 14
+    beschreibung: "Zarte Farnspitzen für waldnahe Fablinge."
+    effekte:
+      stimmung: 3
+      energie: 1
+    markierungen: ["futter", "leckerli"]
+
+  erdknollen:
+    name: "Erdknollen"
+    kategorie: "futter"
+    preis: 12
+    beschreibung: "Kleine würzige Knollen mit erdigem Duft."
+    effekte:
+      stimmung: 2
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  rauchbeeren:
+    name: "Rauchbeeren"
+    kategorie: "futter"
+    preis: 24
+    beschreibung: "Dunkle Beeren mit warmem Rauchduft."
+    effekte:
+      stimmung: 3
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  geröstete_nüsse:
+    name: "Geröstete Nüsse"
+    kategorie: "futter"
+    preis: 16
+    beschreibung: "Knackige Nüsse mit kräftiger Röstaroma-Note."
+    effekte:
+      stimmung: 3
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  geröstete_wurzeln:
+    name: "Geröstete Wurzeln"
+    kategorie: "futter"
+    preis: 13
+    beschreibung: "Warme Wurzelstücke für robuste Glut-Fablinge."
+    effekte:
+      stimmung: 2
+      energie: 3
+    markierungen: ["futter", "leckerli"]
+
+  warme_samen:
+    name: "Warme Samen"
+    kategorie: "futter"
+    preis: 11
+    beschreibung: "Milde Samen, die noch etwas Wärme halten."
+    effekte:
+      stimmung: 2
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  waldbeeren:
+    name: "Waldbeeren"
+    kategorie: "futter"
+    preis: 15
+    beschreibung: "Frische Beeren aus schattigen Waldsäumen."
+    effekte:
+      stimmung: 4
+      energie: 1
+    markierungen: ["futter", "leckerli"]
+
+  weiche_wurzeln:
+    name: "Weiche Wurzeln"
+    kategorie: "futter"
+    preis: 13
+    beschreibung: "Weiche Wurzelstücke für vorsichtige Esser."
+    effekte:
+      stimmung: 2
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  bachlarven:
+    name: "Bachlarven"
+    kategorie: "futter"
+    preis: 14
+    beschreibung: "Proteinhaltige Leckerbissen aus klaren Bachläufen."
+    effekte:
+      stimmung: 2
+      energie: 3
+    markierungen: ["futter", "leckerli"]
+
+  weiche_algen:
+    name: "Weiche Algen"
+    kategorie: "futter"
+    preis: 12
+    beschreibung: "Sanfte Algenstreifen für wassernahe Fablinge."
+    effekte:
+      stimmung: 2
+      energie: 1
+      stress: -1
+    markierungen: ["futter", "leckerli"]
+
+  herbe_beeren:
+    name: "Herbe Beeren"
+    kategorie: "futter"
+    preis: 35
+    beschreibung: "Kräftige Beeren für Fablinge mit eigenwilligem Geschmack."
+    effekte:
+      stimmung: 4
+      energie: 1
+    markierungen: ["futter", "leckerli"]
+
+  dornensamen:
+    name: "Dornensamen"
+    kategorie: "futter"
+    preis: 34
+    beschreibung: "Kleine feste Samen aus dornenreichen Sträuchern."
+    effekte:
+      stimmung: 3
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  glanzkörner:
+    name: "Glanzkörner"
+    kategorie: "futter"
+    preis: 45
+    beschreibung: "Schimmernde Körner, die luftige und wache Fablinge reizen."
+    effekte:
+      stimmung: 4
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  moorbeeren:
+    name: "Moorbeeren"
+    kategorie: "futter"
+    preis: 38
+    beschreibung: "Dunkle Beeren aus nebligen Moorgebieten."
+    effekte:
+      stimmung: 3
+      energie: 1
+      stress: -1
+    markierungen: ["futter", "leckerli"]
+
+  nachtkörner:
+    name: "Nachtkörner"
+    kategorie: "futter"
+    preis: 40
+    beschreibung: "Ruhige Körner, die nachtaktive Fablinge aufmerksam machen."
+    effekte:
+      stimmung: 3
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  schilfsprossen:
+    name: "Schilfsprossen"
+    kategorie: "futter"
+    preis: 32
+    beschreibung: "Knackige Sprossen aus flachen Uferzonen."
+    effekte:
+      stimmung: 3
+      energie: 2
+    markierungen: ["futter", "leckerli"]
+
+  wasserkräuter:
+    name: "Wasserkräuter"
+    kategorie: "futter"
+    preis: 30
+    beschreibung: "Frische Kräuter aus kühlen Wasserläufen."
+    effekte:
+      gesundheit: 1
+      stimmung: 2
+      energie: 1
     markierungen: ["futter", "leckerli"]
 
   einfache_bürste:

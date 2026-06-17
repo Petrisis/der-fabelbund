@@ -16,6 +16,7 @@ class ArtDefinition(BaseModel):
     persönlichkeits_gewichte: dict[str, int] = Field(default_factory=dict)
     wettbewerbs_neigungen: dict[str, float] = Field(default_factory=dict)
     sport_neigungen: dict[str, float] = Field(default_factory=dict)
+    lieblingsfutter: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def prüfe_grundwerte(self) -> "ArtDefinition":

@@ -24,6 +24,7 @@ from fabelbund.discord.befehle.inventar import InventarAnsicht
 from fabelbund.discord.befehle.profil import ProfilAnsicht, profil_einbettung_mit_inventar
 from fabelbund.discord.auftragswand import AuftragsnavigationAnsicht, EinzelauftragAnsicht
 from fabelbund.discord.ansichten.stall_ansicht import StallAnsicht
+from fabelbund.discord.befehle.laden import LadenAnsicht, sortiment_text
 from fabelbund.discord.darstellung import (
     aktivität_ergebnis_einbettung,
     auftrag_einbettung,
@@ -1183,6 +1184,24 @@ class SpielDienstTests(unittest.TestCase):
         self.assertFalse(any("geben" in str(kind.label).lower() for kind in inventar.children))
         inventar_feld = next(feld for feld in embed.fields if feld.name == "Inventar")
         self.assertIn("Apfelstücke", inventar_feld.value)
+
+    def test_laden_hat_leckerli_untermenü_mit_discord_grenze(self) -> None:
+        katalog = YamlLader(Path("daten")).lade_alle()
+        with tempfile.TemporaryDirectory() as tmp:
+            spiel = self.baue_spiel(Path(tmp) / "test.sqlite3")
+            spiel.inhalte = katalog
+            self.speichere_offiziellen_spieler(spiel)
+            kontext = SimpleNamespace(spiel=spiel)
+
+            hauptansicht = LadenAnsicht(kontext, "123")
+            leckerli_ansicht = LadenAnsicht(kontext, "123", "leckerli")
+            text = sortiment_text(kontext, "leckerli")
+
+        self.assertLessEqual(len(hauptansicht.children), 25)
+        self.assertLessEqual(len(leckerli_ansicht.children), 25)
+        self.assertTrue(any(kind.label == "🍬 Leckerlis" for kind in hauptansicht.children))
+        self.assertIn("🍎 Apfelstücke", text)
+        self.assertIn("✨ Glanzkörner", text)
 
     def test_fablinge_fressen_automatisch_nur_standardfutter(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
